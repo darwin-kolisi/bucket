@@ -1,5 +1,8 @@
+'use client';
+
 import KanbanColumn from './KanbanColumn';
 import './Dashboard.css';
+import { useState } from 'react';
 
 const todoTasks = [
   {
@@ -26,6 +29,17 @@ const inProgressTasks = [];
 const doneTasks = [];
 
 export default function Dashboard() {
+  let [isModalOpen, setIsModalOpen] = useState(false);
+  console.log('Is the modal supposed to be open?', isModalOpen);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
@@ -42,7 +56,9 @@ export default function Dashboard() {
         <div className="header-right">
           <button className="filter-btn">Filter</button>
           <button className="filter-btn">Sort</button>
-          <button className="new-task-btn">New task</button>
+          <button className="new-task-btn" onClick={handleOpenModal}>
+            New task
+          </button>
         </div>
       </header>
 
@@ -51,6 +67,31 @@ export default function Dashboard() {
         <KanbanColumn title="In progress" tasks={inProgressTasks} />
         <KanbanColumn title="Done" tasks={doneTasks} />
       </main>
+
+      {isModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <div
+            style={{
+              backgroundColor: 'white',
+              padding: '20px',
+              borderRadius: '8px',
+            }}>
+            <h2>Modal</h2>
+            <button onClick={handleCloseModal}>x</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
