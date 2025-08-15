@@ -54,9 +54,11 @@ export default function Dashboard() {
     setTasks([...tasks, newTask]);
   };
 
-  const editTask = (id, taskData) => {
+  const editTask = (taskData) => {
+    if (!editingTask) return;
+
     const updatedTask = {
-      id: id,
+      id: editingTask.id,
       title: taskData.taskName,
       subtitle: taskData.description || 'No description',
       date: taskData.dueDate
@@ -71,8 +73,9 @@ export default function Dashboard() {
             year: 'numeric',
           }),
     };
-
-    setTasks(tasks.map((task) => (task.id === id ? updatedTask : task)));
+    setTasks(
+      tasks.map((task) => (task.id === editingTask.id ? updatedTask : task))
+    );
   };
 
   const duplicateTask = (id) => {
@@ -91,11 +94,6 @@ export default function Dashboard() {
     setTasks(tasks.filter((task) => task.id !== id));
   };
 
-  const handleOpenAddModal = () => {
-    setEditingTask(null);
-    setIsModalOpen(true);
-  };
-
   const handleOpenEditModal = (task) => {
     setEditingTask(task);
     setIsModalOpen(true);
@@ -104,14 +102,6 @@ export default function Dashboard() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingTask(null);
-  };
-
-  const handleCreateOrEditTask = (taskData) => {
-    if (editingTask) {
-      editTask(editingTask.id, taskData);
-    } else {
-      addTasks(taskData);
-    }
   };
 
   return (
@@ -130,7 +120,12 @@ export default function Dashboard() {
         <div className="header-right">
           <button className="filter-btn">Filter</button>
           <button className="filter-btn">Sort</button>
-          <button className="new-task-btn" onClick={() => setIsModalOpen(true)}>
+          <button
+            className="new-task-btn"
+            onClick={() => {
+              setEditingTask(null);
+              setIsModalOpen(true);
+            }}>
             New task
           </button>
         </div>
@@ -162,8 +157,9 @@ export default function Dashboard() {
 
       {isModalOpen && (
         <AddTaskModal
-          onClose={() => setIsModalOpen(false)}
+          onClose={handleCloseModal}
           onCreateTask={addTasks}
+          onEditTask={editTask}
           editingTask={editingTask}
           isEditing={!!editingTask}
         />
