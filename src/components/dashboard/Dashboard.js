@@ -1,6 +1,7 @@
 'use client';
 
 import KanbanColumn from './KanbanColumn';
+import AddTaskModal from './AddTaskModal';
 import './Dashboard.css';
 import { useState } from 'react';
 
@@ -29,15 +30,27 @@ const inProgressTasks = [];
 const doneTasks = [];
 
 export default function Dashboard() {
-  let [isModalOpen, setIsModalOpen] = useState(false);
-  console.log('Is the modal supposed to be open?', isModalOpen);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [tasks, setTasks] = useState(todoTasks);
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const addTasks = (taskData) => {
+    const newTask = {
+      id: tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
+      title: taskData.taskName,
+      subtitle: taskData.description || 'No description',
+      date: taskData.dueDate
+        ? new Date(taskData.dueDate).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          })
+        : new Date().toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          }),
+    };
+    setTasks([...tasks, newTask]);
   };
 
   return (
@@ -56,41 +69,23 @@ export default function Dashboard() {
         <div className="header-right">
           <button className="filter-btn">Filter</button>
           <button className="filter-btn">Sort</button>
-          <button className="new-task-btn" onClick={handleOpenModal}>
+          <button className="new-task-btn" onClick={() => setIsModalOpen(true)}>
             New task
           </button>
         </div>
       </header>
 
       <main className="kanban-board">
-        <KanbanColumn title="To do" tasks={todoTasks} />
+        <KanbanColumn title="To do" tasks={tasks} />
         <KanbanColumn title="In progress" tasks={inProgressTasks} />
         <KanbanColumn title="Done" tasks={doneTasks} />
       </main>
 
       {isModalOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <div
-            style={{
-              backgroundColor: 'white',
-              padding: '20px',
-              borderRadius: '8px',
-            }}>
-            <h2>Modal</h2>
-            <button onClick={handleCloseModal}>x</button>
-          </div>
-        </div>
+        <AddTaskModal
+          onClose={() => setIsModalOpen(false)}
+          onCreateTask={addTasks}
+        />
       )}
     </div>
   );
