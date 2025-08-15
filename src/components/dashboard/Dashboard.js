@@ -32,6 +32,7 @@ const doneTasks = [];
 export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tasks, setTasks] = useState(todoTasks);
+  const [editingTask, setEditingTask] = useState(null);
 
   const addTasks = (taskData) => {
     const newTask = {
@@ -51,6 +52,66 @@ export default function Dashboard() {
           }),
     };
     setTasks([...tasks, newTask]);
+  };
+
+  const editTask = (id, taskData) => {
+    const updatedTask = {
+      id: id,
+      title: taskData.taskName,
+      subtitle: taskData.description || 'No description',
+      date: taskData.dueDate
+        ? new Date(taskData.dueDate).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          })
+        : new Date().toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          }),
+    };
+
+    setTasks(tasks.map((task) => (task.id === id ? updatedTask : task)));
+  };
+
+  const duplicateTask = (id) => {
+    const taskToDuplicate = tasks.find((task) => task.id === id);
+    if (taskToDuplicate) {
+      const duplicatedTask = {
+        ...taskToDuplicate,
+        id: tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
+        title: `${taskToDuplicate.title} (duplicate)`,
+      };
+      setTasks([...tasks, duplicatedTask]);
+    }
+  };
+
+  const deleteTask = (id) => {
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingTask(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (task) => {
+    setEditingTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingTask(null);
+  };
+
+  const handleCreateOrEditTask = (taskData) => {
+    if (editingTask) {
+      editTask(editingTask.id, taskData);
+    } else {
+      addTasks(taskData);
+    }
   };
 
   return (
@@ -76,15 +137,35 @@ export default function Dashboard() {
       </header>
 
       <main className="kanban-board">
-        <KanbanColumn title="To do" tasks={tasks} />
-        <KanbanColumn title="In progress" tasks={inProgressTasks} />
-        <KanbanColumn title="Done" tasks={doneTasks} />
+        <KanbanColumn
+          title="To do"
+          tasks={tasks}
+          onEditTask={handleOpenEditModal}
+          onDuplicateTask={duplicateTask}
+          onDeleteTask={deleteTask}
+        />
+        <KanbanColumn
+          title="In progress"
+          tasks={inProgressTasks}
+          onEditTask={handleOpenEditModal}
+          onDuplicateTask={duplicateTask}
+          onDeleteTask={deleteTask}
+        />
+        <KanbanColumn
+          title="Done"
+          tasks={doneTasks}
+          onEditTask={handleOpenEditModal}
+          onDuplicateTask={duplicateTask}
+          onDeleteTask={deleteTask}
+        />
       </main>
 
       {isModalOpen && (
         <AddTaskModal
           onClose={() => setIsModalOpen(false)}
           onCreateTask={addTasks}
+          editingTask={editingTask}
+          isEditing={!!editingTask}
         />
       )}
     </div>
