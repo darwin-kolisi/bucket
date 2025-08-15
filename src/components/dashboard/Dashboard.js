@@ -34,6 +34,14 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState(todoTasks);
   const [editingTask, setEditingTask] = useState(null);
 
+  const sortTasksByDate = (tasks) => {
+    return [...tasks].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA - dateB;
+    });
+  };
+
   const addTasks = (taskData) => {
     const newTask = {
       id: tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
@@ -134,21 +142,21 @@ export default function Dashboard() {
       <main className="kanban-board">
         <KanbanColumn
           title="To do"
-          tasks={tasks}
+          tasks={sortTasksByDate(tasks)}
           onEditTask={handleOpenEditModal}
           onDuplicateTask={duplicateTask}
           onDeleteTask={deleteTask}
         />
         <KanbanColumn
           title="In progress"
-          tasks={inProgressTasks}
+          tasks={sortTasksByDate(inProgressTasks)}
           onEditTask={handleOpenEditModal}
           onDuplicateTask={duplicateTask}
           onDeleteTask={deleteTask}
         />
         <KanbanColumn
           title="Done"
-          tasks={doneTasks}
+          tasks={sortTasksByDate(doneTasks)}
           onEditTask={handleOpenEditModal}
           onDuplicateTask={duplicateTask}
           onDeleteTask={deleteTask}
