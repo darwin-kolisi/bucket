@@ -11,18 +11,24 @@ const todoTasks = [
     title: 'Create landing page design',
     subtitle: 'Marketing website',
     date: '15 Aug 2024',
+    progress: 7,
+    total: 10,
   },
   {
     id: 2,
     title: 'Update component library',
     subtitle: 'Design system',
     date: '18 Aug 2024',
+    progress: 4,
+    total: 8,
   },
   {
     id: 3,
     title: 'Build responsive layout',
     subtitle: 'E-commerce project',
     date: '20 Aug 2024',
+    progress: 9,
+    total: 12,
   },
 ];
 
@@ -58,6 +64,8 @@ export default function Dashboard() {
             month: 'short',
             year: 'numeric',
           }),
+      progress: 0,
+      total: 10,
     };
     setTasks([...tasks, newTask]);
   };
@@ -66,7 +74,7 @@ export default function Dashboard() {
     if (!editingTask) return;
 
     const updatedTask = {
-      id: editingTask.id,
+      ...editingTask,
       title: taskData.taskName,
       subtitle: taskData.description || 'No description',
       date: taskData.dueDate

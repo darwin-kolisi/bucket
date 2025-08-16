@@ -89,7 +89,7 @@
 .modal-form input:focus,
 .modal-form textarea:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: #3e6cc2;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   background-color: #ffffff;
 }
@@ -135,12 +135,12 @@
 }
 
 .add-btn {
-  background-color: #2563eb;
+  background-color: #3e6cc2;
   color: white;
 }
 
 .add-btn:hover {
-  background-color: #1d4ed8;
+  background-color: #4162aa;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }

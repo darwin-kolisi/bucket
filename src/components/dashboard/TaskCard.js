@@ -30,11 +30,6 @@ export default function TaskCard({
     setIsMenuOpen(false);
   };
 
-  const handleEditTask = () => {
-    onEditTask(task);
-    setIsMenuOpen(false);
-  };
-
   const handleDuplicate = () => {
     onDuplicateTask(task.id);
     setIsMenuOpen(false);
@@ -44,6 +39,9 @@ export default function TaskCard({
     onDeleteTask(task.id);
     setIsMenuOpen(false);
   };
+
+  const progressPercentage =
+    task.total > 0 ? Math.round((task.progress / task.total) * 100) : 0;
 
   return (
     <div className="task-card">
@@ -72,6 +70,20 @@ export default function TaskCard({
         </div>
       </div>
       <p className="card-subtitle">{task.subtitle}</p>
+      <div className="progress-container">
+        <span className="progress-label">Progress</span>
+        <span className="progress-percentage">{progressPercentage}%</span>
+      </div>
+      <div className="progress-bar-wrapper">
+        {Array.from({ length: task.total }).map((_, index) => (
+          <div
+            key={index}
+            className={`progress-square ${
+              index < task.progress ? 'filled' : ''
+            }`}
+          />
+        ))}
+      </div>
       <div className="card-footer">
         <div className="date-badge">{task.date}</div>
       </div>
