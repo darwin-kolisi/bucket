@@ -19,7 +19,6 @@ export default function AddTaskModal({
         editingTask.subtitle === 'No description' ? '' : editingTask.subtitle
       );
 
-      // Convert the displayed date back to YYYY-MM-DD format for the date input
       if (editingTask.date) {
         const dateParts = editingTask.date.split(' ');
         const months = [
@@ -83,7 +82,7 @@ export default function AddTaskModal({
             <input
               id="task-name"
               type="text"
-              placeholder="e.g., Enter task title"
+              placeholder="Enter task title"
               value={taskName}
               onChange={(e) => setTaskName(e.target.value)}
               required
