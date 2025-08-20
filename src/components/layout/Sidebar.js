@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import './Sidebar.css';
 
 export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
-  const [searchQuery, setSearchQuery] = useState('');
-
   const navigationItems = [
     {
       id: 'dashboard',
@@ -17,7 +16,7 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.5">
+          strokeWidth="2">
           <rect x="3" y="3" width="7" height="9" rx="1" />
           <rect x="14" y="3" width="7" height="5" rx="1" />
           <rect x="14" y="12" width="7" height="9" rx="1" />
@@ -35,14 +34,14 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.5">
+          strokeWidth="2">
           <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
         </svg>
       ),
     },
     {
-      id: 'tasks',
-      label: 'Tasks',
+      id: 'calendar',
+      label: 'Calendar',
       icon: (
         <svg
           width="20"
@@ -50,9 +49,11 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.5">
-          <path d="m9 11 3 3L22 4" />
-          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.24 0 2.42.25 3.5.7" />
+          strokeWidth="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
         </svg>
       ),
     },
@@ -62,51 +63,20 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
     {
       id: 'personal',
       label: 'Personal',
-      icon: (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
+      count: 12,
+      color: '#3b82f6',
     },
     {
       id: 'work',
       label: 'Work',
-      icon: (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5">
-          <path d="M12 12h.01" />
-          <path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-          <path d="M22 13a18.15 18.15 0 0 1-20 0V9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2Z" />
-        </svg>
-      ),
+      count: 8,
+      color: '#10b981',
     },
     {
       id: 'learning',
       label: 'Learning',
-      icon: (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5">
-          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-          <path d="M6 12v5c3 3 9 3 12 0v-5" />
-        </svg>
-      ),
+      count: 5,
+      color: '#f59e0b',
     },
   ];
 
@@ -120,8 +90,16 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
     <div className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <div className="logo-icon"></div>
-          <span className="logo-text">bucket</span>
+          <Image
+            src="/cat.gif"
+            alt=""
+            className="logo-icon"
+            width={30}
+            height={30}
+          />
+          <div className="logo-text-container">
+            <h3 className="logo-text">BUCKET</h3>
+          </div>
         </div>
 
         <div className="sidebar-close">
@@ -137,29 +115,6 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
             </svg>
           </button>
         </div>
-
-        <div className="search-container">
-          <div className="search-input-wrapper">
-            <svg
-              className="search-icon"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
       </div>
 
       <nav className="sidebar-nav">
@@ -167,11 +122,7 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
           {navigationItems.map((item) => (
             <button
               key={item.id}
-              className={`nav-item ${activeItem === item.id ? 'active' : ''} ${
-                activeItem === item.id && item.id === 'dashboard'
-                  ? 'dashboard-active'
-                  : ''
-              }`}
+              className={`nav-item ${activeItem === item.id ? 'active' : ''}`}
               onClick={() => handleItemClick(item.id)}>
               <span className="nav-icon">{item.icon}</span>
               <span className="nav-label">{item.label}</span>
@@ -181,7 +132,7 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
 
         <div className="nav-section">
           <div className="section-header">
-            <span className="section-title">BUCKETS</span>
+            <span className="section-title">Buckets</span>
           </div>
           {bucketItems.map((item) => (
             <button
@@ -190,8 +141,11 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
                 activeItem === item.id ? 'active' : ''
               }`}
               onClick={() => handleItemClick(item.id)}>
-              <span className="nav-icon">{item.icon}</span>
+              <div
+                className="bucket-indicator"
+                style={{ backgroundColor: item.color }}></div>
               <span className="nav-label">{item.label}</span>
+              <span className="item-count">{item.count}</span>
             </button>
           ))}
         </div>
@@ -199,9 +153,7 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
 
       <div className="sidebar-footer">
         <div className="user-profile">
-          <div className="user-avatar">
-            <span>BS</span>
-          </div>
+          <div className="user-avatar">BS</div>
           <div className="user-info">
             <div className="user-name">Black Sabbath</div>
             <div className="user-email">beepboop@example.com</div>
@@ -213,8 +165,8 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="1.5">
-              <path d="m6 9 6 6 6-6" />
+              strokeWidth="2">
+              <polyline points="6,9 12,15 18,9" />
             </svg>
           </button>
         </div>
