@@ -1,0 +1,212 @@
+.tasks-container {
+  background-color: #ffffff;
+  padding: 32px 48px;
+  font-family: sans-serif;
+  color: #111827;
+  min-height: 100vh;
+}
+
+.tasks-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.tasks-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.new-task-btn {
+  background-color: #3e6cc2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.kanban-column {
+  background-color: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 200px;
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.column-header h2 {
+  font-size: 16px;
+  margin: 0;
+  color: #111827;
+  font-weight: 600;
+}
+
+.column-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.task-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.card-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.options-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.card-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.date-badge {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.empty-column-message {
+  padding: 16px;
+  text-align: center;
+  color: #9ca3af;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.options-container {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  min-width: 160px;
+  z-index: 100;
+  margin-top: 4px;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  margin-bottom: 2px;
+}
+
+.menu-item:last-child {
+  margin-bottom: 0;
+}
+
+.menu-item:hover {
+  background-color: #f3f4f6;
+}
+
+.menu-item.delete {
+  color: #dc2626;
+}
+
+.menu-item.delete:hover {
+  background-color: #fee2e2;
+}
+
+.progress-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progress-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.progress-percentage {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.progress-bar-wrapper {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  height: 16px;
+  align-items: center;
+}
+
+.progress-square {
+  width: 16px;
+  height: 16px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.progress-square.filled {
+  background-color: #3e6cc2;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
