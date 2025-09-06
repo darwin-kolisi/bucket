@@ -41,11 +41,13 @@ const projects = [
 
 export default function Projects() {
   return (
-    <div className="projects-container">
-      <div className="projects-grid">
-        {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
+    <div className="page-scroll-container">
+      <div className="projects-container">
+        <div className="projects-grid">
+          {projects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
       </div>
     </div>
   );
