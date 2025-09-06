@@ -19,7 +19,6 @@ export default function Dashboard() {
             width={30}
             height={30}
           />
-
           <h1 className="dashboard-title">bucket</h1>
         </div>
       </div>

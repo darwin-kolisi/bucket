@@ -1,14 +1,28 @@
+.page-scroll-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
 .projects-container {
   padding: 32px;
   background-color: #ffffff;
   font-family: sans-serif;
-  min-height: 100vh;
+  flex: 1;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar-collapsed .projects-container {
+  margin-left: 88px;
 }
 
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
+  padding-bottom: 20px;
 }
 
 .project-card {
@@ -90,4 +104,19 @@
 .status-badge.status-completed {
   background-color: #f3f4f6;
   color: #4b5563;
+}
+
+@media (max-width: 768px) {
+  .projects-container {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .sidebar-collapsed .projects-container {
+    margin-left: 0;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
 }

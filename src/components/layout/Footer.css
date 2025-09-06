@@ -2,6 +2,12 @@
   background-color: #ffffff;
   border-top: 1px solid #f0f0f0;
   margin-top: auto;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar-collapsed .main-footer {
+  margin-left: 88px;
 }
 
 .footer-container {
@@ -83,6 +89,14 @@
 }
 
 @media (max-width: 768px) {
+  .main-footer {
+    margin-left: 0;
+  }
+
+  .sidebar-collapsed .main-footer {
+    margin-left: 0;
+  }
+
   .footer-container {
     padding: 24px 20px 20px;
   }

@@ -19,7 +19,6 @@ export default function Layout({ children }) {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  // Render content based on active item
   const renderContent = () => {
     switch (activeItem) {
       case 'dashboard':
@@ -43,7 +42,7 @@ export default function Layout({ children }) {
         isSidebarCollapsed ? 'sidebar-collapsed' : ''
       }`}>
       <Header />
-      <div className="main-container">
+      <div className="main-content-wrapper">
         <Sidebar
           activeItem={activeItem}
           onItemSelect={handleItemSelect}
