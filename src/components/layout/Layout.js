@@ -5,7 +5,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import Projects from '../projects/Projects';
-import Dashboard from '@/components/dashboard/Dashboard';
+import Dashboard from '../dashboard/Dashboard';
 
 export default function Layout({ children }) {
   const [activeItem, setActiveItem] = useState('dashboard');
