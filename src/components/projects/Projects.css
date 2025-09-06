@@ -3,6 +3,8 @@
   background-color: #ffffff;
   font-family: sans-serif;
   min-height: 100vh;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
 }
 
 .projects-grid {
@@ -58,6 +60,10 @@
   align-items: center;
 }
 
+.sidebar-collapsed .projects-container {
+  margin-left: 88px;
+}
+
 .due-date {
   font-size: 14px;
   color: #4b5563;
@@ -90,4 +96,19 @@
 .status-badge.status-completed {
   background-color: #f3f4f6;
   color: #4b5563;
+}
+
+@media (max-width: 768px) {
+  .projects-container {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .sidebar-collapsed .projects-container {
+    margin-left: 0;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
 }
