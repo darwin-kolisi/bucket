@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
 import './Sidebar.css';
 
-export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
+export default function Sidebar({
+  activeItem = 'dashboard',
+  onItemSelect,
+  isCollapsed,
+  onToggleCollapse,
+}) {
   const navigationItems = [
     {
       id: 'dashboard',
@@ -16,7 +20,9 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2">
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round">
           <rect x="3" y="3" width="7" height="9" rx="1" />
           <rect x="14" y="3" width="7" height="5" rx="1" />
           <rect x="14" y="12" width="7" height="9" rx="1" />
@@ -34,7 +40,9 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2">
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round">
           <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
         </svg>
       ),
@@ -49,7 +57,9 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2">
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
           <line x1="16" y1="2" x2="16" y2="6" />
           <line x1="8" y1="2" x2="8" y2="6" />
@@ -60,24 +70,9 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
   ];
 
   const bucketItems = [
-    {
-      id: 'personal',
-      label: 'Personal',
-      count: 12,
-      color: '#3b82f6',
-    },
-    {
-      id: 'work',
-      label: 'Work',
-      count: 8,
-      color: '#10b981',
-    },
-    {
-      id: 'learning',
-      label: 'Learning',
-      count: 5,
-      color: '#f59e0b',
-    },
+    { id: 'personal', label: 'Personal', count: 12, color: '#3b82f6' },
+    { id: 'work', label: 'Work', count: 8, color: '#10b981' },
+    { id: 'learning', label: 'Learning', count: 5, color: '#f59e0b' },
   ];
 
   const handleItemClick = (itemId) => {
@@ -87,12 +82,12 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
   };
 
   return (
-    <div className="sidebar">
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <Image
             src="/cat.gif"
-            alt=""
+            alt="logo"
             className="logo-icon"
             width={30}
             height={30}
@@ -103,7 +98,7 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
         </div>
 
         <div className="sidebar-close">
-          <button className="close-sidebar-btn">
+          <button className="close-sidebar-btn" onClick={onToggleCollapse}>
             <svg
               width="20"
               height="20"
@@ -171,6 +166,6 @@ export default function Sidebar({ activeItem = 'dashboard', onItemSelect }) {
           </button>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

@@ -5,6 +5,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
 }
 
 .header-container {
@@ -12,7 +14,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 32px;
-  max-width: 1200px;
+  max-width: calc(100% - 280px);
   margin: 0 auto;
 }
 
@@ -167,4 +169,12 @@
   .logo-subtitle {
     display: none;
   }
+}
+
+.sidebar-collapsed .main-header {
+  margin-left: 88px;
+}
+
+.sidebar-collapsed .header-container {
+  max-width: calc(100% - 88px);
 }
