@@ -5,6 +5,7 @@ export default function ProjectCard({
   onEditProject,
   onDuplicateProject,
   onDeleteProject,
+  onProjectClick,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -24,6 +25,12 @@ export default function ProjectCard({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isMenuOpen]);
+
+  const handleCardClick = (e) => {
+    if (!e.target.closest('.options-container')) {
+      onProjectClick(project);
+    }
+  };
 
   const handleEdit = () => {
     onEditProject(project);
@@ -56,7 +63,7 @@ export default function ProjectCard({
   };
 
   return (
-    <div className="project-card">
+    <div className="project-card" onClick={handleCardClick}>
       <div className="project-card-header">
         <h3>{project.name}</h3>
         <div className="options-container" ref={menuRef}>

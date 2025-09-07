@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ProjectCard from './ProjectCard';
+import ProjectKanbanModal from './ProjectKanbanModal';
 import './Projects.css';
 
 const initialProjects = [
@@ -42,6 +43,15 @@ const initialProjects = [
 
 export default function Projects() {
   const [projects, setProjects] = useState(initialProjects);
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  const handleProjectClick = (project) => {
+    setSelectedProject(project);
+  };
+
+  const handleCloseKanban = () => {
+    setSelectedProject(null);
+  };
 
   const editProject = (project) => {
     console.log('Edit project:', project);
@@ -75,9 +85,16 @@ export default function Projects() {
               onEditProject={editProject}
               onDuplicateProject={duplicateProject}
               onDeleteProject={deleteProject}
+              onProjectClick={handleProjectClick}
             />
           ))}
         </div>
+        {selectedProject && (
+          <ProjectKanbanModal
+            project={selectedProject}
+            onClose={handleCloseKanban}
+          />
+        )}
       </div>
     </div>
   );
