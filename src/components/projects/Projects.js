@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import ProjectCard from './ProjectCard';
+import ProjectKanbanModal from './ProjectKanbanModal';
 import './Projects.css';
 
-const projects = [
+const initialProjects = [
   {
     id: 1,
     name: 'bucket',
@@ -40,14 +42,59 @@ const projects = [
 ];
 
 export default function Projects() {
+  const [projects, setProjects] = useState(initialProjects);
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  const handleProjectClick = (project) => {
+    setSelectedProject(project);
+  };
+
+  const handleCloseKanban = () => {
+    setSelectedProject(null);
+  };
+
+  const editProject = (project) => {
+    console.log('Edit project:', project);
+  };
+
+  const duplicateProject = (id) => {
+    const projectToDuplicate = projects.find((project) => project.id === id);
+    if (projectToDuplicate) {
+      const duplicatedProject = {
+        ...projectToDuplicate,
+        id:
+          projects.length > 0 ? Math.max(...projects.map((p) => p.id)) + 1 : 1,
+        name: `${projectToDuplicate.name} (duplicate)`,
+      };
+      setProjects([...projects, duplicatedProject]);
+    }
+  };
+
+  const deleteProject = (id) => {
+    setProjects(projects.filter((project) => project.id !== id));
+  };
+
   return (
     <div className="page-scroll-container">
       <div className="projects-container">
         <div className="projects-grid">
           {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+            <ProjectCard
+              key={project.id}
+              project={project}
+              onEditProject={editProject}
+              onDuplicateProject={duplicateProject}
+              onDeleteProject={deleteProject}
+              onProjectClick={handleProjectClick}
+            />
           ))}
         </div>
+        {selectedProject && (
+          <ProjectKanbanModal
+            project={selectedProject}
+            onClose={handleCloseKanban}
+          />
+        )}
       </div>
     </div>
   );
