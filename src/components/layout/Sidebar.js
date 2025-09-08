@@ -1,7 +1,7 @@
 'use client';
-
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { EllipsisVerticalIcon } from '@heroicons/react/20/solid';
 import Image from 'next/image';
-import './Sidebar.css';
 
 export default function Sidebar({
   activeItem = 'dashboard',
@@ -68,103 +68,176 @@ export default function Sidebar({
       ),
     },
   ];
-
   const bucketItems = [
-    { id: 'personal', label: 'Personal', count: 12, color: '#3b82f6' },
-    { id: 'work', label: 'Work', count: 8, color: '#10b981' },
-    { id: 'learning', label: 'Learning', count: 5, color: '#f59e0b' },
+    { id: 'personal', label: 'Personal', count: 12, color: 'bg-blue-500' },
+    { id: 'work', label: 'Work', count: 8, color: 'bg-green-500' },
+    { id: 'learning', label: 'Learning', count: 5, color: 'bg-yellow-500' },
   ];
-
   const handleItemClick = (itemId) => {
     if (onItemSelect) {
       onItemSelect(itemId);
     }
   };
-
   return (
-    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
+    <aside
+      className={`fixed top-0 left-0 z-50 flex h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 ${
+        isCollapsed ? 'w-[88px]' : 'w-[280px]'
+      }`}>
+      <div
+        className={`relative flex items-center justify-between border-b border-gray-200 px-5 transition-all duration-300 ${
+          isCollapsed ? 'h-[78px]' : 'h-[78px]'
+        }`}>
+        <div className="flex items-center gap-3">
           <Image
             src="/cat.gif"
             alt="logo"
-            className="logo-icon"
             width={30}
             height={30}
+            className="flex-shrink-0 rounded-full"
           />
-          <div className="logo-text-container">
-            <h3 className="logo-text">BUCKET</h3>
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+            }`}>
+            <h3 className="whitespace-nowrap text-lg font-semibold text-gray-900">
+              BUCKET
+            </h3>
           </div>
         </div>
-
-        <div className="sidebar-close">
-          <button className="close-sidebar-btn" onClick={onToggleCollapse}>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5">
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-          </button>
-        </div>
+        <button
+          onClick={onToggleCollapse}
+          className="absolute -right-3 top-[28px] rounded-full border border-gray-200 bg-white p-1 shadow-sm hover:bg-gray-50">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            className={`text-gray-500 transition-transform duration-300 ${
+              isCollapsed ? 'rotate-180' : ''
+            }`}>
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </button>
       </div>
 
-      <nav className="sidebar-nav">
-        <div className="nav-section">
+      <nav className="flex-1 overflow-y-auto px-4 py-8">
+        <div>
           {navigationItems.map((item) => (
             <button
               key={item.id}
-              className={`nav-item ${activeItem === item.id ? 'active' : ''}`}
+              className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 mb-2 text-sm transition-colors ${
+                activeItem === item.id
+                  ? 'bg-gray-100 border-gray-200 font-semibold text-gray-900'
+                  : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-200 hover:text-gray-900'
+              }`}
               onClick={() => handleItemClick(item.id)}>
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
+              <span className="flex-shrink-0">{item.icon}</span>
+              {!isCollapsed && <span className="nav-label">{item.label}</span>}
             </button>
           ))}
         </div>
 
-        <div className="nav-section">
-          <div className="section-header">
-            <span className="section-title">Buckets</span>
-          </div>
-          {bucketItems.map((item) => (
-            <button
-              key={item.id}
-              className={`nav-item bucket-item ${
-                activeItem === item.id ? 'active' : ''
-              }`}
-              onClick={() => handleItemClick(item.id)}>
-              <div
-                className="bucket-indicator"
-                style={{ backgroundColor: item.color }}></div>
-              <span className="nav-label">{item.label}</span>
-              <span className="item-count">{item.count}</span>
-            </button>
-          ))}
+        <div className="mt-8">
+          {!isCollapsed && (
+            <div className="mb-3 px-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Buckets
+            </div>
+          )}
+          {bucketItems.map((item) => {
+            const isActive = activeItem === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleItemClick(item.id)}
+                className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 mb-2 text-sm transition-colors ${
+                  activeItem === item.id
+                    ? 'bg-gray-100 border-gray-200 font-semibold text-gray-900'
+                    : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-200 hover:text-gray-900'
+                }`}>
+                <span
+                  className={`h-2 w-2 flex-shrink-0 rounded-full ${item.color}`}
+                />
+                {!isCollapsed && (
+                  <div className="flex w-full items-center justify-between">
+                    <span className="truncate">{item.label}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        isActive
+                          ? 'bg-white text-gray-600'
+                          : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+                      }`}>
+                      {item.count}
+                    </span>
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </nav>
 
-      <div className="sidebar-footer">
-        <div className="user-profile">
-          <div className="user-avatar">BS</div>
-          <div className="user-info">
-            <div className="user-name">Black Sabbath</div>
-            <div className="user-email">beepboop@example.com</div>
-          </div>
-          <button className="user-menu-btn">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2">
-              <polyline points="6,9 12,15 18,9" />
-            </svg>
-          </button>
-        </div>
+      <div className="border-t border-gray-200 p-4">
+        <Menu as="div" className="relative">
+          <MenuButton className="flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition hover:border-gray-200 hover:bg-gray-50">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-900 text-xs font-semibold text-white">
+              BS
+            </div>
+            <div
+              className={`flex-1 overflow-hidden transition-all duration-300 ${
+                isCollapsed ? 'w-0 opacity-0' : 'w-full opacity-100'
+              }`}>
+              <div className="truncate text-sm font-medium text-gray-900">
+                Black Sabbath
+              </div>
+              <div className="truncate text-xs text-gray-500">
+                beepboop@example.com
+              </div>
+            </div>
+            <div
+              className={`transition-all duration-300 ${
+                isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+              }`}>
+              <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
+            </div>
+          </MenuButton>
+          <MenuItems
+            transition
+            className="absolute bottom-full mb-2 w-[200px] origin-bottom-left rounded-xl border border-gray-200 bg-white p-1 text-sm/6 text-gray-900 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0">
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 ${
+                    focus ? 'bg-gray-100' : ''
+                  }`}>
+                  View Profile
+                </button>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 ${
+                    focus ? 'bg-gray-100' : ''
+                  }`}>
+                  Settings
+                </button>
+              )}
+            </MenuItem>
+            <div className="my-1 h-px bg-gray-200" />
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-red-600 ${
+                    focus ? 'bg-red-50' : ''
+                  }`}>
+                  Logout
+                </button>
+              )}
+            </MenuItem>
+          </MenuItems>
+        </Menu>
       </div>
     </aside>
   );

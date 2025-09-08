@@ -36,28 +36,34 @@ export default function ProjectCard({
     onDeleteProject(project.id);
   };
 
-  const getStatusClass = (status) => {
+  const getStatusClasses = (status) => {
     switch (status.toLowerCase()) {
       case 'in progress':
-        return 'status-in-progress';
+        return 'bg-blue-100 text-blue-800';
       case 'on track':
-        return 'status-on-track';
+        return 'bg-green-100 text-green-800';
       case 'at risk':
-        return 'status-at-risk';
+        return 'bg-red-100 text-red-800';
       case 'completed':
-        return 'status-completed';
+        return 'bg-gray-100 text-gray-600';
       default:
-        return '';
+        return 'bg-gray-100 text-gray-600';
     }
   };
 
   return (
-    <div className="project-card" onClick={handleCardClick}>
-      <div className="project-card-header">
-        <h3>{project.name}</h3>
-        <div className="options-container" ref={menuRef}>
+    <div
+      className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+      onClick={handleCardClick}>
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-lg font-semibold text-gray-900 m-0">
+          {project.name}
+        </h3>
+        <div className="options-container relative" ref={menuRef}>
           <Menu>
-            <MenuButton className="options-btn">⋯</MenuButton>
+            <MenuButton className="text-2xl text-gray-400 bg-none border-none cursor-pointer p-0 leading-none hover:text-gray-600 transition-colors">
+              ⋯
+            </MenuButton>
             <MenuItems
               transition
               anchor="bottom end"
@@ -112,7 +118,7 @@ export default function ProjectCard({
                       className={`ml-auto font-sans text-xs text-gray-500 ${
                         focus ? 'inline' : 'hidden'
                       }`}>
-                      ⌘⌫
+                      ⌘D
                     </kbd>
                   </button>
                 )}
@@ -121,10 +127,17 @@ export default function ProjectCard({
           </Menu>
         </div>
       </div>
-      <p className="project-description">{project.description}</p>
-      <div className="project-card-footer">
-        <span className="due-date">Due: {project.dueDate}</span>
-        <span className={`status-badge ${getStatusClass(project.status)}`}>
+      <p className="text-sm text-gray-600 m-0 mb-6 leading-relaxed flex-grow">
+        {project.description}
+      </p>
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-gray-700 font-medium">
+          Due: {project.dueDate}
+        </span>
+        <span
+          className={`px-2.5 py-1 rounded-xl text-xs font-semibold uppercase ${getStatusClasses(
+            project.status
+          )}`}>
           {project.status}
         </span>
       </div>
