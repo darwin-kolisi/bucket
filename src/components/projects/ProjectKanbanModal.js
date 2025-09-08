@@ -7,9 +7,6 @@ export default function ProjectKanbanModal({ project, onClose }) {
   const [tasks, setTasks] = useState([]);
   const [editingTask, setEditingTask] = useState(null);
 
-  const inProgressTasks = [];
-  const doneTasks = [];
-
   const sortTasksByDate = (tasks) => {
     return [...tasks].sort((a, b) => {
       const dateA = new Date(a.date);
@@ -17,6 +14,10 @@ export default function ProjectKanbanModal({ project, onClose }) {
       return dateA - dateB;
     });
   };
+
+  const todoTasks = tasks.filter((t) => t.status === 'todo');
+  const inProgressTasks = tasks.filter((t) => t.status === 'in-progress');
+  const doneTasks = tasks.filter((t) => t.status === 'done');
 
   const addTasks = (taskData) => {
     const newTask = {
@@ -36,6 +37,7 @@ export default function ProjectKanbanModal({ project, onClose }) {
           }),
       progress: 0,
       total: 10,
+      status: 'todo',
     };
     setTasks([...tasks, newTask]);
   };
@@ -91,33 +93,49 @@ export default function ProjectKanbanModal({ project, onClose }) {
   };
 
   return (
-    <div className="project-kanban-overlay">
-      <div className="project-kanban-modal">
-        <div className="project-kanban-header">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="flex h-[90%] w-[95%] max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-gray-400 px-8 py-6">
           <div>
-            <h2>{project.name}</h2>
-            <p className="project-modal-description">{project.description}</p>
+            <h2 className="text-2xl font-semibold text-gray-900">
+              {project.name}
+            </h2>
+            <p className="mt-1 text-sm text-gray-600">{project.description}</p>
           </div>
-          <button className="close-btn" onClick={onClose}>
-            ×
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="h-6 w-6">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
         </div>
 
-        <div className="kanban-modal-actions">
+        <div className="flex justify-end border-b border-gray-600 bg-white/50 px-8 py-4">
           <button
-            className="new-task-btn"
             onClick={() => {
               setEditingTask(null);
               setIsTaskModalOpen(true);
-            }}>
-            New task
+            }}
+            className="rounded-lg border border-gray-400 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm transition-colors hover:bg-gray-100 hover:border-gray-400">
+            New Task
           </button>
         </div>
 
-        <div className="kanban-board">
+        <div className="grid flex-1 grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto bg-gray-50 p-8">
           <KanbanColumn
             title="To do"
-            tasks={sortTasksByDate(tasks)}
+            tasks={sortTasksByDate(todoTasks)}
             onEditTask={handleOpenEditModal}
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
@@ -137,17 +155,17 @@ export default function ProjectKanbanModal({ project, onClose }) {
             onDeleteTask={deleteTask}
           />
         </div>
-
-        {isTaskModalOpen && (
-          <AddTaskModal
-            onClose={handleCloseTaskModal}
-            onCreateTask={addTasks}
-            onEditTask={editTask}
-            editingTask={editingTask}
-            isEditing={!!editingTask}
-          />
-        )}
       </div>
+
+      {isTaskModalOpen && (
+        <AddTaskModal
+          onClose={handleCloseTaskModal}
+          onCreateTask={addTasks}
+          onEditTask={editTask}
+          editingTask={editingTask}
+          isEditing={!!editingTask}
+        />
+      )}
     </div>
   );
 }
