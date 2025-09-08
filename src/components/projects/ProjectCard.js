@@ -21,15 +21,18 @@ export default function ProjectCard({
     }
   };
 
-  const handleEdit = () => {
+  const handleEdit = (e) => {
+    e.stopPropagation();
     onEditProject(project);
   };
 
-  const handleDuplicate = () => {
+  const handleDuplicate = (e) => {
+    e.stopPropagation();
     onDuplicateProject(project.id);
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e) => {
+    e.stopPropagation();
     onDeleteProject(project.id);
   };
 
