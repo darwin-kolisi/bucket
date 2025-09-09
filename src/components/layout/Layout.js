@@ -51,7 +51,7 @@ export default function Layout({ children }) {
         />
         <main className="content-area">{renderContent()}</main>
       </div>
-      <Footer />
+      <Footer isCollapsed={isSidebarCollapsed} />
     </div>
   );
 }
