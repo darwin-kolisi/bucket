@@ -5,10 +5,10 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import Projects from '../projects/Projects';
-import Dashboard from '../dashboard/Dashboard';
+import NotFound from './NotFound';
 
 export default function Layout({ children }) {
-  const [activeItem, setActiveItem] = useState('dashboard');
+  const [activeItem, setActiveItem] = useState('projects');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const handleItemSelect = (itemId) => {
@@ -21,16 +21,18 @@ export default function Layout({ children }) {
 
   const renderContent = () => {
     switch (activeItem) {
-      case 'dashboard':
-        return <Dashboard />;
       case 'projects':
-        return <Projects />;
+        // Pass the isCollapsed prop to Projects
+        return <Projects isCollapsed={isSidebarCollapsed} />;
+
+      // All other cases will now render the NotFoundPage
+      case 'dashboard':
       case 'calendar':
-        return <div>Calendar coming soon...</div>;
       case 'personal':
       case 'work':
       case 'learning':
-        return <div>{activeItem} bucket coming soon...</div>;
+        return <NotFound isCollapsed={isSidebarCollapsed} />;
+
       default:
         return children;
     }
