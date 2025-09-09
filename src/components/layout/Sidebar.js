@@ -84,9 +84,7 @@ export default function Sidebar({
         isCollapsed ? 'w-[88px]' : 'w-[280px]'
       }`}>
       <div
-        className={`relative flex items-center justify-between border-b border-gray-200 px-5 transition-all duration-300 ${
-          isCollapsed ? 'h-[78px]' : 'h-[78px]'
-        }`}>
+        className={`relative flex h-20 items-center justify-between border-b border-gray-200 px-5 transition-all duration-300`}>
         <div className="flex items-center gap-3">
           <Image
             src="/cat.gif"
@@ -99,14 +97,19 @@ export default function Sidebar({
             className={`overflow-hidden transition-all duration-300 ${
               isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
             }`}>
-            <h3 className="whitespace-nowrap text-lg font-semibold text-gray-900">
-              BUCKET
-            </h3>
+            <div className="flex flex-col">
+              <h3 className="whitespace-nowrap text-lg font-bold leading-tight text-gray-900">
+                BUCKET
+              </h3>
+              <span className="whitespace-nowrap text-xs leading-tight text-gray-500">
+                project management
+              </span>
+            </div>
           </div>
         </div>
         <button
           onClick={onToggleCollapse}
-          className="absolute -right-3 top-[28px] rounded-full border border-gray-200 bg-white p-1 shadow-sm hover:bg-gray-50">
+          className="absolute -right-3 top-1/2 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-1 shadow-sm hover:bg-gray-50">
           <svg
             width="18"
             height="18"
@@ -206,35 +209,23 @@ export default function Sidebar({
             transition
             className="absolute bottom-full mb-2 w-[200px] origin-bottom-left rounded-xl border border-gray-200 bg-white p-1 text-sm/6 text-gray-900 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0">
             <MenuItem>
-              {({ focus }) => (
-                <button
-                  className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 ${
-                    focus ? 'bg-gray-100' : ''
-                  }`}>
-                  View Profile
-                </button>
-              )}
+              <button
+                className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100`}>
+                View Profile
+              </button>
             </MenuItem>
             <MenuItem>
-              {({ focus }) => (
-                <button
-                  className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 ${
-                    focus ? 'bg-gray-100' : ''
-                  }`}>
-                  Settings
-                </button>
-              )}
+              <button
+                className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100`}>
+                Settings
+              </button>
             </MenuItem>
             <div className="my-1 h-px bg-gray-200" />
             <MenuItem>
-              {({ focus }) => (
-                <button
-                  className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-red-600 ${
-                    focus ? 'bg-red-50' : ''
-                  }`}>
-                  Logout
-                </button>
-              )}
+              <button
+                className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 data-[focus]:bg-red-50`}>
+                Logout
+              </button>
             </MenuItem>
           </MenuItems>
         </Menu>

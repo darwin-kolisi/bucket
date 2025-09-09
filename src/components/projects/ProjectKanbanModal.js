@@ -95,7 +95,7 @@ export default function ProjectKanbanModal({ project, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="flex h-[90%] w-[95%] max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-gray-400 px-8 py-6">
+        <div className="flex items-start justify-between border-b border-gray-200 px-8 py-6">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900">
               {project.name}
@@ -121,13 +121,13 @@ export default function ProjectKanbanModal({ project, onClose }) {
           </button>
         </div>
 
-        <div className="flex justify-end border-b border-gray-600 bg-white/50 px-8 py-4">
+        <div className="flex justify-end border-b border-gray-200 bg-white/50 px-8 py-4">
           <button
             onClick={() => {
               setEditingTask(null);
               setIsTaskModalOpen(true);
             }}
-            className="rounded-lg border border-gray-400 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm transition-colors hover:bg-gray-100 hover:border-gray-400">
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm transition-colors hover:bg-gray-100 hover:border-gray-400">
             New Task
           </button>
         </div>

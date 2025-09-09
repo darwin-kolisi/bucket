@@ -41,7 +41,7 @@ export default function Layout({ children }) {
       className={`app-container ${
         isSidebarCollapsed ? 'sidebar-collapsed' : ''
       }`}>
-      <Header />
+      <Header isCollapsed={isSidebarCollapsed} />
       <div className="main-content-wrapper">
         <Sidebar
           activeItem={activeItem}
