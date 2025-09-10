@@ -19,13 +19,15 @@ export default function Layout({ children }) {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
+  const handleCreateProject = (type) => {
+    console.log('Creating new project of type:', type);
+  };
+
   const renderContent = () => {
     switch (activeItem) {
       case 'projects':
-        // Pass the isCollapsed prop to Projects
         return <Projects isCollapsed={isSidebarCollapsed} />;
 
-      // All other cases will now render the NotFoundPage
       case 'dashboard':
       case 'calendar':
       case 'personal':
@@ -43,7 +45,11 @@ export default function Layout({ children }) {
       className={`app-container ${
         isSidebarCollapsed ? 'sidebar-collapsed' : ''
       }`}>
-      <Header isCollapsed={isSidebarCollapsed} />
+      <Header
+        isCollapsed={isSidebarCollapsed}
+        currentPage={activeItem}
+        onCreateProject={handleCreateProject}
+      />
       <div className="main-content-wrapper">
         <Sidebar
           activeItem={activeItem}
