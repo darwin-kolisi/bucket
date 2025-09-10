@@ -11,6 +11,7 @@ export default function ProjectKanban({
 }) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [tasks, setTasks] = useState(initialTasks || []);
+  const [draggedTask, setDraggedTask] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
 
   useState(() => {
@@ -28,6 +29,51 @@ export default function ProjectKanban({
   const todoTasks = tasks.filter((t) => t.status === 'todo');
   const inProgressTasks = tasks.filter((t) => t.status === 'in-progress');
   const doneTasks = tasks.filter((t) => t.status === 'done');
+
+  const handleDragStart = (e, task) => {
+    setDraggedTask(task);
+    e.dataTransfer.setData('text/plain', task.id.toString());
+    e.dataTransfer.effectAllowed = 'move';
+
+    setTimeout(() => {
+      e.target.classList.add('opacity-50');
+    }, 0);
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.classList.remove('opacity-50');
+    setDraggedTask(null);
+  };
+
+  const handleDragOver = (e, status) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const column = e.currentTarget;
+    column.classList.add('bg-blue-50', 'border-blue-200');
+  };
+
+  const handleDragLeave = (e) => {
+    const column = e.currentTarget;
+    column.classList.remove('bg-blue-50', 'border-blue-200');
+  };
+
+  const handleDrop = (e, targetStatus) => {
+    e.preventDefault();
+
+    const column = e.currentTarget;
+    column.classList.remove('bg-blue-50', 'border-blue-200');
+
+    if (!draggedTask) return;
+
+    const updatedTasks = tasks.map((task) =>
+      task.id === draggedTask.id ? { ...task, status: targetStatus } : task
+    );
+
+    setTasks(updatedTasks);
+    onUpdateTasks(updatedTasks);
+    setDraggedTask(null);
+  };
 
   const addTasks = (taskData) => {
     const newTask = {
@@ -115,30 +161,48 @@ export default function ProjectKanban({
 
   return (
     <main
-      className={`flex-1 overflow-hidden bg-gray-50 transition-all duration-300 ${
+      className={`flex-1 bg-gray-50 transition-all duration-300 ${
         isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
       }`}>
-      <div className="grid h-full grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto p-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 h-[calc(50vh-2rem)]">
         <KanbanColumn
           title="To do"
           tasks={sortTasksByDate(todoTasks)}
+          status="todo"
           onEditTask={handleOpenEditModal}
           onDuplicateTask={duplicateTask}
           onDeleteTask={deleteTask}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         />
         <KanbanColumn
           title="In progress"
           tasks={sortTasksByDate(inProgressTasks)}
+          status="in-progress"
           onEditTask={handleOpenEditModal}
           onDuplicateTask={duplicateTask}
           onDeleteTask={deleteTask}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         />
         <KanbanColumn
           title="Done"
           tasks={sortTasksByDate(doneTasks)}
+          status="done"
           onEditTask={handleOpenEditModal}
           onDuplicateTask={duplicateTask}
           onDeleteTask={deleteTask}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         />
       </div>
 
