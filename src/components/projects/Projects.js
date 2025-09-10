@@ -11,6 +11,26 @@ export default function Projects({ isCollapsed }) {
       description: 'project management app',
       dueDate: '15 Aug 2025',
       status: 'In Progress',
+      tasks: [
+        {
+          id: 1,
+          title: 'Create landing page design',
+          subtitle: 'Marketing website',
+          date: '15 Aug 2024',
+          progress: 7,
+          total: 10,
+          status: 'todo',
+        },
+        {
+          id: 2,
+          title: 'Update component library',
+          subtitle: 'Design system',
+          date: '18 Aug 2024',
+          progress: 4,
+          total: 8,
+          status: 'todo',
+        },
+      ],
     },
     {
       id: 2,
@@ -18,6 +38,26 @@ export default function Projects({ isCollapsed }) {
       description: 'media log',
       dueDate: '18 Aug 2025',
       status: 'On Track',
+      tasks: [
+        {
+          id: 1,
+          title: 'Design media upload interface',
+          subtitle: 'User experience',
+          date: '16 Aug 2024',
+          progress: 5,
+          total: 8,
+          status: 'todo',
+        },
+        {
+          id: 2,
+          title: 'Implement search functionality',
+          subtitle: 'Backend integration',
+          date: '19 Aug 2024',
+          progress: 3,
+          total: 6,
+          status: 'todo',
+        },
+      ],
     },
     {
       id: 3,
@@ -25,6 +65,7 @@ export default function Projects({ isCollapsed }) {
       description: 'my resume/cv website',
       dueDate: '20 Aug 2025',
       status: 'At Risk',
+      tasks: [],
     },
     {
       id: 4,
@@ -32,6 +73,7 @@ export default function Projects({ isCollapsed }) {
       description: 'get a job...',
       dueDate: '25 Aug 2025',
       status: 'At Risk',
+      tasks: [],
     },
     {
       id: 5,
@@ -39,6 +81,7 @@ export default function Projects({ isCollapsed }) {
       description: 'want to get into circuits and physics',
       dueDate: '28 Aug 2025',
       status: 'At Risk',
+      tasks: [],
     },
   ];
 
@@ -64,6 +107,10 @@ export default function Projects({ isCollapsed }) {
         ...projectToDuplicate,
         id: Math.max(...projects.map((p) => p.id)) + 1,
         name: `${projectToDuplicate.name} (duplicate)`,
+        tasks: projectToDuplicate.tasks.map((task) => ({
+          ...task,
+          id: Math.max(...projectToDuplicate.tasks.map((t) => t.id)) + 1,
+        })),
       };
       setProjects([...projects, duplicatedProject]);
     }
@@ -73,12 +120,24 @@ export default function Projects({ isCollapsed }) {
     setProjects(projects.filter((project) => project.id !== id));
   };
 
+  const updateProjectTasks = (projectId, updatedTasks) => {
+    setProjects(
+      projects.map((project) =>
+        project.id === projectId ? { ...project, tasks: updatedTasks } : project
+      )
+    );
+  };
+
   if (selectedProject) {
     return (
       <ProjectKanban
         project={selectedProject}
         onBack={handleBackToProjects}
         isCollapsed={isCollapsed}
+        tasks={selectedProject.tasks}
+        onUpdateTasks={(updatedTasks) =>
+          updateProjectTasks(selectedProject.id, updatedTasks)
+        }
       />
     );
   }
