@@ -2,10 +2,20 @@ import { useState } from 'react';
 import AddTaskModal from '../tasks/AddTaskModal';
 import KanbanColumn from '../tasks/KanbanColumn';
 
-export default function ProjectKanban({ project, onBack, isCollapsed }) {
+export default function ProjectKanban({
+  project,
+  onBack,
+  isCollapsed,
+  tasks: initialTasks,
+  onUpdateTasks,
+}) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState(initialTasks || []);
   const [editingTask, setEditingTask] = useState(null);
+
+  useState(() => {
+    setTasks(initialTasks || []);
+  }, [initialTasks]);
 
   const sortTasksByDate = (tasks) => {
     return [...tasks].sort((a, b) => {
@@ -39,7 +49,10 @@ export default function ProjectKanban({ project, onBack, isCollapsed }) {
       total: 10,
       status: 'todo',
     };
-    setTasks([...tasks, newTask]);
+
+    const updatedTasks = [...tasks, newTask];
+    setTasks(updatedTasks);
+    onUpdateTasks(updatedTasks);
   };
 
   const editTask = (taskData) => {
@@ -61,9 +74,12 @@ export default function ProjectKanban({ project, onBack, isCollapsed }) {
             year: 'numeric',
           }),
     };
-    setTasks(
-      tasks.map((task) => (task.id === editingTask.id ? updatedTask : task))
+
+    const updatedTasks = tasks.map((task) =>
+      task.id === editingTask.id ? updatedTask : task
     );
+    setTasks(updatedTasks);
+    onUpdateTasks(updatedTasks);
   };
 
   const duplicateTask = (id) => {
@@ -74,12 +90,17 @@ export default function ProjectKanban({ project, onBack, isCollapsed }) {
         id: tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
         title: `${taskToDuplicate.title} (duplicate)`,
       };
-      setTasks([...tasks, duplicatedTask]);
+
+      const updatedTasks = [...tasks, duplicatedTask];
+      setTasks(updatedTasks);
+      onUpdateTasks(updatedTasks);
     }
   };
 
   const deleteTask = (id) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+    const updatedTasks = tasks.filter((task) => task.id !== id);
+    setTasks(updatedTasks);
+    onUpdateTasks(updatedTasks);
   };
 
   const handleOpenEditModal = (task) => {
