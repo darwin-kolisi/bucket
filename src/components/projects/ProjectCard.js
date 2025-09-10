@@ -1,4 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import {
+  PencilIcon,
+  Square2StackIcon,
+  TrashIcon,
+} from '@heroicons/react/16/solid';
 
 export default function ProjectCard({
   project,
@@ -7,24 +13,7 @@ export default function ProjectCard({
   onDeleteProject,
   onProjectClick,
 }) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
 
   const handleCardClick = (e) => {
     if (!e.target.closest('.options-container')) {
@@ -32,66 +21,123 @@ export default function ProjectCard({
     }
   };
 
-  const handleEdit = () => {
+  const handleEdit = (e) => {
+    e.stopPropagation();
     onEditProject(project);
-    setIsMenuOpen(false);
   };
 
-  const handleDuplicate = () => {
+  const handleDuplicate = (e) => {
+    e.stopPropagation();
     onDuplicateProject(project.id);
-    setIsMenuOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e) => {
+    e.stopPropagation();
     onDeleteProject(project.id);
-    setIsMenuOpen(false);
   };
 
-  const getStatusClass = (status) => {
+  const getStatusClasses = (status) => {
     switch (status.toLowerCase()) {
       case 'in progress':
-        return 'status-in-progress';
+        return 'bg-blue-100 text-blue-800';
       case 'on track':
-        return 'status-on-track';
+        return 'bg-green-100 text-green-800';
       case 'at risk':
-        return 'status-at-risk';
+        return 'bg-red-100 text-red-800';
       case 'completed':
-        return 'status-completed';
+        return 'bg-gray-100 text-gray-600';
       default:
-        return '';
+        return 'bg-gray-100 text-gray-600';
     }
   };
 
   return (
-    <div className="project-card" onClick={handleCardClick}>
-      <div className="project-card-header">
-        <h3>{project.name}</h3>
-        <div className="options-container" ref={menuRef}>
-          <button
-            className="options-btn"
-            onClick={() => setIsMenuOpen(true)}
-            aria-expanded={isMenuOpen}>
-            ⋯
-          </button>
-          {isMenuOpen && (
-            <div className="dropdown-menu">
-              <button className="menu-item" onClick={handleEdit}>
-                Edit
-              </button>
-              <button className="menu-item" onClick={handleDuplicate}>
-                Duplicate
-              </button>
-              <button className="menu-item delete" onClick={handleDelete}>
-                Delete
-              </button>
-            </div>
-          )}
+    <div
+      className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+      onClick={handleCardClick}>
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-lg font-semibold text-gray-900 m-0">
+          {project.name}
+        </h3>
+        <div className="options-container relative" ref={menuRef}>
+          <Menu>
+            <MenuButton className="text-2xl text-gray-400 bg-none border-none cursor-pointer p-0 leading-none hover:text-gray-600 transition-colors">
+              ⋯
+            </MenuButton>
+            <MenuItems
+              transition
+              anchor="bottom end"
+              className="w-52 origin-top-right rounded-xl border border-gray-200 bg-white p-1 text-sm/6 text-gray-900 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0 z-50">
+              <MenuItem>
+                {({ focus }) => (
+                  <button
+                    onClick={handleEdit}
+                    className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 ${
+                      focus ? 'bg-gray-100' : ''
+                    }`}>
+                    <PencilIcon className="size-4 fill-gray-400" />
+                    Edit
+                    <kbd
+                      className={`ml-auto font-sans text-xs text-gray-500 ${
+                        focus ? 'inline' : 'hidden'
+                      }`}>
+                      ⌘E
+                    </kbd>
+                  </button>
+                )}
+              </MenuItem>
+              <MenuItem>
+                {({ focus }) => (
+                  <button
+                    onClick={handleDuplicate}
+                    className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 ${
+                      focus ? 'bg-gray-100' : ''
+                    }`}>
+                    <Square2StackIcon className="size-4 fill-gray-400" />
+                    Duplicate
+                    <kbd
+                      className={`ml-auto font-sans text-xs text-gray-500 ${
+                        focus ? 'inline' : 'hidden'
+                      }`}>
+                      ⌘D
+                    </kbd>
+                  </button>
+                )}
+              </MenuItem>
+              <div className="my-1 h-px bg-gray-200" />
+              <MenuItem>
+                {({ focus }) => (
+                  <button
+                    onClick={handleDelete}
+                    className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-red-600 ${
+                      focus ? 'bg-red-50' : ''
+                    }`}>
+                    <TrashIcon className="size-4 fill-red-400" />
+                    Delete
+                    <kbd
+                      className={`ml-auto font-sans text-xs text-gray-500 ${
+                        focus ? 'inline' : 'hidden'
+                      }`}>
+                      ⌘D
+                    </kbd>
+                  </button>
+                )}
+              </MenuItem>
+            </MenuItems>
+          </Menu>
         </div>
       </div>
-      <p className="project-description">{project.description}</p>
-      <div className="project-card-footer">
-        <span className="due-date">Due: {project.dueDate}</span>
-        <span className={`status-badge ${getStatusClass(project.status)}`}>
+      <p className="text-sm text-gray-600 m-0 mb-6 leading-relaxed flex-grow">
+        {project.description}
+      </p>
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-gray-700 font-medium">
+          Due: {project.dueDate}
+        </span>
+        <span
+          className={`px-2.5 py-1 rounded-xl text-xs font-semibold uppercase ${getStatusClasses(
+            project.status
+          )}`}>
           {project.status}
         </span>
       </div>
