@@ -2,7 +2,7 @@ import { useState } from 'react';
 import AddTaskModal from '../tasks/AddTaskModal';
 import KanbanColumn from '../tasks/KanbanColumn';
 
-export default function ProjectKanbanModal({ project, onClose }) {
+export default function ProjectKanban({ project, onBack, isCollapsed }) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [editingTask, setEditingTask] = useState(null);
@@ -93,68 +93,32 @@ export default function ProjectKanbanModal({ project, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="flex h-[90%] w-[95%] max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-gray-200 px-8 py-6">
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-900">
-              {project.name}
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">{project.description}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="h-6 w-6">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div className="flex justify-end border-b border-gray-200 bg-white/50 px-8 py-4">
-          <button
-            onClick={() => {
-              setEditingTask(null);
-              setIsTaskModalOpen(true);
-            }}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm transition-colors hover:bg-gray-100 hover:border-gray-400">
-            New Task
-          </button>
-        </div>
-
-        <div className="grid flex-1 grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto bg-gray-50 p-8">
-          <KanbanColumn
-            title="To do"
-            tasks={sortTasksByDate(todoTasks)}
-            onEditTask={handleOpenEditModal}
-            onDuplicateTask={duplicateTask}
-            onDeleteTask={deleteTask}
-          />
-          <KanbanColumn
-            title="In progress"
-            tasks={sortTasksByDate(inProgressTasks)}
-            onEditTask={handleOpenEditModal}
-            onDuplicateTask={duplicateTask}
-            onDeleteTask={deleteTask}
-          />
-          <KanbanColumn
-            title="Done"
-            tasks={sortTasksByDate(doneTasks)}
-            onEditTask={handleOpenEditModal}
-            onDuplicateTask={duplicateTask}
-            onDeleteTask={deleteTask}
-          />
-        </div>
+    <main
+      className={`flex-1 overflow-hidden bg-gray-50 transition-all duration-300 ${
+        isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
+      }`}>
+      <div className="grid h-full grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto p-8">
+        <KanbanColumn
+          title="To do"
+          tasks={sortTasksByDate(todoTasks)}
+          onEditTask={handleOpenEditModal}
+          onDuplicateTask={duplicateTask}
+          onDeleteTask={deleteTask}
+        />
+        <KanbanColumn
+          title="In progress"
+          tasks={sortTasksByDate(inProgressTasks)}
+          onEditTask={handleOpenEditModal}
+          onDuplicateTask={duplicateTask}
+          onDeleteTask={deleteTask}
+        />
+        <KanbanColumn
+          title="Done"
+          tasks={sortTasksByDate(doneTasks)}
+          onEditTask={handleOpenEditModal}
+          onDuplicateTask={duplicateTask}
+          onDeleteTask={deleteTask}
+        />
       </div>
 
       {isTaskModalOpen && (
@@ -166,6 +130,6 @@ export default function ProjectKanbanModal({ project, onClose }) {
           isEditing={!!editingTask}
         />
       )}
-    </div>
+    </main>
   );
 }

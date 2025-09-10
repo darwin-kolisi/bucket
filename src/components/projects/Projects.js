@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import ProjectCard from './ProjectCard';
-import ProjectKanbanModal from './ProjectKanbanModal';
+import ProjectKanban from './ProjectKanban';
 
 export default function Projects({ isCollapsed }) {
   const initialProjects = [
@@ -49,7 +49,7 @@ export default function Projects({ isCollapsed }) {
     setSelectedProject(project);
   };
 
-  const handleCloseKanban = () => {
+  const handleBackToProjects = () => {
     setSelectedProject(null);
   };
 
@@ -73,6 +73,16 @@ export default function Projects({ isCollapsed }) {
     setProjects(projects.filter((project) => project.id !== id));
   };
 
+  if (selectedProject) {
+    return (
+      <ProjectKanban
+        project={selectedProject}
+        onBack={handleBackToProjects}
+        isCollapsed={isCollapsed}
+      />
+    );
+  }
+
   return (
     <main
       className={`flex-1 overflow-y-auto bg-white transition-all duration-300 ${
@@ -92,13 +102,6 @@ export default function Projects({ isCollapsed }) {
           ))}
         </div>
       </div>
-
-      {selectedProject && (
-        <ProjectKanbanModal
-          project={selectedProject}
-          onClose={handleCloseKanban}
-        />
-      )}
     </main>
   );
 }
