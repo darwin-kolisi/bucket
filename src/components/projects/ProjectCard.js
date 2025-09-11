@@ -8,6 +8,9 @@ import {
 
 export default function ProjectCard({
   project,
+  progress = 0,
+  totalTasks = 0,
+  completedTasks = 0,
   onEditProject,
   onDuplicateProject,
   onDeleteProject,
@@ -130,6 +133,22 @@ export default function ProjectCard({
       <p className="text-sm text-gray-600 m-0 mb-6 leading-relaxed flex-grow">
         {project.description}
       </p>
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium text-gray-500">Progress</span>
+        <span className="text-sm font-semibold text-gray-900">{progress}%</span>
+      </div>
+      <div className="flex gap-1.5 mb-4 h-4 items-center">
+        {Array.from({ length: 10 }).map((_, index) => (
+          <div
+            key={index}
+            className={`w-4 h-4 rounded ${
+              index < Math.floor(progress / 10)
+                ? 'bg-black shadow-sm'
+                : 'bg-gray-200'
+            }`}
+          />
+        ))}
+      </div>
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-700 font-medium">
           Due: {project.dueDate}
