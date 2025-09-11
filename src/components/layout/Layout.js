@@ -10,9 +10,11 @@ import NotFound from './NotFound';
 export default function Layout({ children }) {
   const [activeItem, setActiveItem] = useState('projects');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
 
   const handleItemSelect = (itemId) => {
     setActiveItem(itemId);
+    setSelectedProject(null);
   };
 
   const toggleSidebar = () => {
@@ -23,10 +25,24 @@ export default function Layout({ children }) {
     console.log('Creating new project of type:', type);
   };
 
+  const handleBackToProjects = () => {
+    setSelectedProject(null);
+  };
+
+  const handleProjectSelect = (project) => {
+    setSelectedProject(project);
+  };
+
   const renderContent = () => {
     switch (activeItem) {
       case 'projects':
-        return <Projects isCollapsed={isSidebarCollapsed} />;
+        return (
+          <Projects
+            isCollapsed={isSidebarCollapsed}
+            onProjectSelect={handleProjectSelect}
+            selectedProject={selectedProject}
+          />
+        );
 
       case 'dashboard':
       case 'calendar':
@@ -48,6 +64,8 @@ export default function Layout({ children }) {
       <Header
         isCollapsed={isSidebarCollapsed}
         currentPage={activeItem}
+        currentProject={selectedProject}
+        onBack={handleBackToProjects}
         onCreateProject={handleCreateProject}
       />
       <div className="main-content-wrapper">

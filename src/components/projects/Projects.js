@@ -3,7 +3,11 @@ import { useState } from 'react';
 import ProjectCard from './ProjectCard';
 import ProjectKanban from './ProjectKanban';
 
-export default function Projects({ isCollapsed }) {
+export default function Projects({
+  isCollapsed,
+  onProjectSelect,
+  selectedProject,
+}) {
   const initialProjects = [
     {
       id: 1,
@@ -86,14 +90,14 @@ export default function Projects({ isCollapsed }) {
   ];
 
   const [projects, setProjects] = useState(initialProjects);
-  const [selectedProject, setSelectedProject] = useState(null);
+  // const [selectedProject, setSelectedProject] = useState(null);
 
   const handleProjectClick = (project) => {
-    setSelectedProject(project);
+    onProjectSelect(project);
   };
 
   const handleBackToProjects = () => {
-    setSelectedProject(null);
+    onProjectSelect(null);
   };
 
   const editProject = (project) => {
@@ -142,6 +146,22 @@ export default function Projects({ isCollapsed }) {
     );
   }
 
+  const projectsWithProgress = projects.map((project) => {
+    const totalTasks = project.tasks.length;
+    const completedTasks = project.tasks.filter(
+      (task) => task.status === 'done'
+    ).length;
+    const progress =
+      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    return {
+      ...project,
+      progress,
+      totalTasks,
+      completedTasks,
+    };
+  });
+
   return (
     <main
       className={`flex-1 overflow-y-auto bg-white transition-all duration-300 ${
@@ -149,10 +169,13 @@ export default function Projects({ isCollapsed }) {
       }`}>
       <div className="p-8">
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-          {projects.map((project) => (
+          {projectsWithProgress.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
+              progress={project.progress}
+              totalTasks={project.totalTasks}
+              completedTasks={project.completedTasks}
               onEditProject={editProject}
               onDuplicateProject={duplicateProject}
               onDeleteProject={deleteProject}
