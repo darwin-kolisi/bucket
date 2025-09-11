@@ -1,8 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
-export default function Header({ isCollapsed, currentPage, onCreateProject }) {
+export default function Header({
+  isCollapsed,
+  currentPage,
+  currentProject,
+  onBack,
+  onCreateProject,
+}) {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
@@ -11,7 +18,7 @@ export default function Header({ isCollapsed, currentPage, onCreateProject }) {
   const projectsDropdownRef = useRef(null);
   const createDropdownRef = useRef(null);
 
-  const showProjectControls = currentPage === 'projects';
+  const showProjectControls = currentPage === 'projects' && !currentProject;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -58,8 +65,19 @@ export default function Header({ isCollapsed, currentPage, onCreateProject }) {
       className={`sticky top-0 z-40 border-b border-gray-200 bg-white transition-[margin-left] duration-300 ease-in-out ${
         isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
       }`}>
-      <div className={`w-full ${showProjectControls ? 'px-8 py-5' : 'h-19'}`}>
-        {showProjectControls && (
+      <div className={`w-full ${currentProject ? 'px-8 py-5' : 'px-8 py-5'}`}>
+        {currentProject ? (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
+              <ArrowLeftIcon className="h-5 w-5" />
+            </button>
+            <h1 className="text-sm font-medium text-gray-700 py-2">
+              {currentProject.name}
+            </h1>
+          </div>
+        ) : showProjectControls ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
@@ -213,6 +231,12 @@ export default function Header({ isCollapsed, currentPage, onCreateProject }) {
                 Create Project
               </button>
             </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold text-gray-900 capitalize">
+              {currentPage}
+            </h1>
           </div>
         )}
       </div>

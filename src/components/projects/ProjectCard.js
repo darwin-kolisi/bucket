@@ -153,12 +153,6 @@ export default function ProjectCard({
         <span className="text-sm text-gray-700 font-medium">
           Due: {project.dueDate}
         </span>
-        <span
-          className={`px-2.5 py-1 rounded-xl text-xs font-semibold uppercase ${getStatusClasses(
-            project.status
-          )}`}>
-          {project.status}
-        </span>
       </div>
     </div>
   );

@@ -3,7 +3,11 @@ import { useState } from 'react';
 import ProjectCard from './ProjectCard';
 import ProjectKanban from './ProjectKanban';
 
-export default function Projects({ isCollapsed }) {
+export default function Projects({
+  isCollapsed,
+  onProjectSelect,
+  selectedProject,
+}) {
   const initialProjects = [
     {
       id: 1,
@@ -86,14 +90,14 @@ export default function Projects({ isCollapsed }) {
   ];
 
   const [projects, setProjects] = useState(initialProjects);
-  const [selectedProject, setSelectedProject] = useState(null);
+  // const [selectedProject, setSelectedProject] = useState(null);
 
   const handleProjectClick = (project) => {
-    setSelectedProject(project);
+    onProjectSelect(project);
   };
 
   const handleBackToProjects = () => {
-    setSelectedProject(null);
+    onProjectSelect(null);
   };
 
   const editProject = (project) => {
@@ -142,7 +146,6 @@ export default function Projects({ isCollapsed }) {
     );
   }
 
-  // For each project, calculate progress based on tasks
   const projectsWithProgress = projects.map((project) => {
     const totalTasks = project.tasks.length;
     const completedTasks = project.tasks.filter(
