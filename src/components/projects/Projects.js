@@ -1,96 +1,18 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProjectCard from './ProjectCard';
 import ProjectKanban from './ProjectKanban';
+import AddProjectModal from './AddProjectModal';
 
 export default function Projects({
   isCollapsed,
   onProjectSelect,
   selectedProject,
+  projects,
+  setProjects,
 }) {
-  const initialProjects = [
-    {
-      id: 1,
-      name: 'bucket',
-      description: 'project management app',
-      dueDate: '15 Aug 2025',
-      status: 'In Progress',
-      tasks: [
-        {
-          id: 1,
-          title: 'Create landing page design',
-          subtitle: 'Marketing website',
-          date: '15 Aug 2024',
-          progress: 7,
-          total: 10,
-          status: 'todo',
-        },
-        {
-          id: 2,
-          title: 'Update component library',
-          subtitle: 'Design system',
-          date: '18 Aug 2024',
-          progress: 4,
-          total: 8,
-          status: 'todo',
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: 'consumption-doc',
-      description: 'media log',
-      dueDate: '18 Aug 2025',
-      status: 'On Track',
-      tasks: [
-        {
-          id: 1,
-          title: 'Design media upload interface',
-          subtitle: 'User experience',
-          date: '16 Aug 2024',
-          progress: 5,
-          total: 8,
-          status: 'todo',
-        },
-        {
-          id: 2,
-          title: 'Implement search functionality',
-          subtitle: 'Backend integration',
-          date: '19 Aug 2024',
-          progress: 3,
-          total: 6,
-          status: 'todo',
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: 'beep boop',
-      description: 'my resume/cv website',
-      dueDate: '20 Aug 2025',
-      status: 'At Risk',
-      tasks: [],
-    },
-    {
-      id: 4,
-      name: 'employment',
-      description: 'get a job...',
-      dueDate: '25 Aug 2025',
-      status: 'At Risk',
-      tasks: [],
-    },
-    {
-      id: 5,
-      name: 'physics',
-      description: 'want to get into circuits and physics',
-      dueDate: '28 Aug 2025',
-      status: 'At Risk',
-      tasks: [],
-    },
-  ];
-
-  const [projects, setProjects] = useState(initialProjects);
-  // const [selectedProject, setSelectedProject] = useState(null);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
 
   const handleProjectClick = (project) => {
     onProjectSelect(project);
@@ -100,8 +22,78 @@ export default function Projects({
     onProjectSelect(null);
   };
 
-  const editProject = (project) => {
-    console.log('Edit project:', project);
+  const openCreateProjectModal = () => {
+    setEditingProject(null);
+    setIsProjectModalOpen(true);
+  };
+
+  const createProject = (projectData) => {
+    const newProject = {
+      id: Math.max(...projects.map((p) => p.id), 0) + 1,
+      name: projectData.projectName,
+      description: projectData.description || 'Describe your project here',
+      dueDate: projectData.dueDate
+        ? new Date(projectData.dueDate).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          })
+        : new Date().toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          }),
+      status: projectData.status || 'In Progress',
+      tasks: [],
+    };
+
+    setProjects([...projects, newProject]);
+  };
+
+  useEffect(() => {
+    const handleCreateProject = (event) => {
+      openCreateProjectModal();
+    };
+
+    window.addEventListener('createProject', handleCreateProject);
+
+    return () => {
+      window.removeEventListener('createProject', handleCreateProject);
+    };
+  }, []);
+
+  const editProject = (projectData) => {
+    if (!editingProject) return;
+
+    const updatedProject = {
+      ...editingProject,
+      name: projectData.projectName,
+      description: projectData.description || editingProject.description,
+      dueDate: projectData.dueDate
+        ? new Date(projectData.dueDate).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          })
+        : editingProject.dueDate,
+      status: projectData.status || editingProject.status,
+    };
+
+    setProjects(
+      projects.map((project) =>
+        project.id === editingProject.id ? updatedProject : project
+      )
+    );
+  };
+
+  const handleOpenEditModal = (project) => {
+    setEditingProject(project);
+    setIsProjectModalOpen(true);
+  };
+
+  const handleCloseProjectModal = () => {
+    setIsProjectModalOpen(false);
+    setEditingProject(null);
   };
 
   const duplicateProject = (id) => {
@@ -113,7 +105,7 @@ export default function Projects({
         name: `${projectToDuplicate.name} (duplicate)`,
         tasks: projectToDuplicate.tasks.map((task) => ({
           ...task,
-          id: Math.max(...projectToDuplicate.tasks.map((t) => t.id)) + 1,
+          id: Math.max(...projectToDuplicate.tasks.map((t) => t.id), 0) + 1,
         })),
       };
       setProjects([...projects, duplicatedProject]);
@@ -163,27 +155,39 @@ export default function Projects({
   });
 
   return (
-    <main
-      className={`flex-1 overflow-y-auto bg-white transition-all duration-300 ${
-        isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
-      }`}>
-      <div className="p-8">
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-          {projectsWithProgress.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              progress={project.progress}
-              totalTasks={project.totalTasks}
-              completedTasks={project.completedTasks}
-              onEditProject={editProject}
-              onDuplicateProject={duplicateProject}
-              onDeleteProject={deleteProject}
-              onProjectClick={handleProjectClick}
-            />
-          ))}
+    <>
+      <main
+        className={`flex-1 overflow-y-auto bg-white transition-all duration-300 ${
+          isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
+        }`}>
+        <div className="p-8">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+            {projectsWithProgress.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                progress={project.progress}
+                totalTasks={project.totalTasks}
+                completedTasks={project.completedTasks}
+                onEditProject={handleOpenEditModal}
+                onDuplicateProject={duplicateProject}
+                onDeleteProject={deleteProject}
+                onProjectClick={handleProjectClick}
+              />
+            ))}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+
+      {isProjectModalOpen && (
+        <AddProjectModal
+          onClose={handleCloseProjectModal}
+          onCreateProject={createProject}
+          onEditProject={editProject}
+          editingProject={editingProject}
+          isEditing={!!editingProject}
+        />
+      )}
+    </>
   );
 }

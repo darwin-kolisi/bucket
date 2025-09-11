@@ -9,14 +9,15 @@ export default function Header({
   currentProject,
   onBack,
   onCreateProject,
+  projects = [],
+  onProjectSelect,
 }) {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
-  const [showCreateDropdown, setShowCreateDropdown] = useState(false);
 
   const projectsDropdownRef = useRef(null);
-  const createDropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const showProjectControls = currentPage === 'projects' && !currentProject;
 
@@ -28,17 +29,17 @@ export default function Header({
       ) {
         setShowProjectsDropdown(false);
       }
-      if (
-        createDropdownRef.current &&
-        !createDropdownRef.current.contains(event.target)
-      ) {
-        setShowCreateDropdown(false);
-      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
 
   const handleSearchClick = () => {
     setShowSearch(!showSearch);
@@ -47,17 +48,37 @@ export default function Header({
     }
   };
 
-  const handleCreateProject = (type) => {
-    console.log('Creating new:', type);
-    setShowCreateDropdown(false);
-    if (onCreateProject) {
-      onCreateProject(type);
-    }
-  };
-
   const handleProjectFilter = (filter) => {
     console.log('Filter by:', filter);
     setShowProjectsDropdown(false);
+  };
+
+  const filteredProjects = searchQuery.trim()
+    ? projects
+        .filter(
+          (project) =>
+            project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            project.description
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
+        )
+        .slice(0, 10)
+    : [];
+
+  const handleProjectSelect = (project) => {
+    setSearchQuery('');
+    setShowSearch(false);
+    if (onProjectSelect) {
+      onProjectSelect(project);
+    }
+  };
+
+  const handleSearchBlur = (e) => {
+    if (!e.relatedTarget?.closest('.search-results')) {
+      if (!searchQuery.trim()) {
+        setShowSearch(false);
+      }
+    }
   };
 
   return (
@@ -65,50 +86,122 @@ export default function Header({
       className={`sticky top-0 z-40 border-b border-gray-200 bg-white transition-[margin-left] duration-300 ease-in-out ${
         isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
       }`}>
-      <div className={`w-full ${currentProject ? 'px-8 py-5' : 'px-8 py-5'}`}>
+      <div className={`w-full px-8 py-5`}>
         {currentProject ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors p-1 rounded-lg hover:bg-gray-100">
+                <ArrowLeftIcon className="h-4 w-4" />
+              </button>
+              <h1 className="text-sm font-medium text-gray-700">
+                {currentProject.name}
+              </h1>
+            </div>
+
             <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
-              <ArrowLeftIcon className="h-5 w-5" />
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent('openTaskModal'))
+              }
+              className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4.5v15m7.5-7.5h-15"
+                />
+              </svg>
+              New Task
             </button>
-            <h1 className="text-sm font-medium text-gray-700 py-2">
-              {currentProject.name}
-            </h1>
           </div>
         ) : showProjectControls ? (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-end">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSearchClick}
-                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100">
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                    />
-                  </svg>
-                </button>
-
-                {showSearch && (
-                  <div className="flex-1 min-w-[200px]">
+              <div className="flex items-center gap-2">
+                {showSearch ? (
+                  <div className="relative">
                     <input
+                      ref={searchInputRef}
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      onBlur={handleSearchBlur}
                       placeholder="Search projects"
-                      className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
-                      autoFocus
+                      className="w-[200px] px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                     />
+
+                    {searchQuery.trim() && (
+                      <div className="absolute top-full right-0 mt-1 w-80 origin-top-right rounded-xl border border-gray-200 bg-white p-2 text-sm text-gray-900 shadow-lg z-50 search-results">
+                        <div className="mb-2 px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Search Results
+                        </div>
+
+                        {filteredProjects.length > 0 ? (
+                          <div className="max-h-60 overflow-y-auto">
+                            {filteredProjects.map((project) => (
+                              <button
+                                key={project.id}
+                                onClick={() => handleProjectSelect(project)}
+                                className="group flex w-full items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
+                                <div className="flex-shrink-0 mt-1">
+                                  <div
+                                    className={`w-2 h-2 rounded-full ${
+                                      project.status === 'In Progress'
+                                        ? 'bg-blue-500'
+                                        : project.status === 'On Track'
+                                        ? 'bg-green-500'
+                                        : project.status === 'At Risk'
+                                        ? 'bg-red-500'
+                                        : 'bg-gray-400'
+                                    }`}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-gray-900 truncate">
+                                    {project.name}
+                                  </div>
+                                  <div className="text-gray-500 text-xs truncate">
+                                    {project.description}
+                                  </div>
+                                  <div className="text-gray-400 text-xs mt-1">
+                                    Due: {project.dueDate} •{' '}
+                                    {project.totalTasks || 0} tasks
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="px-3 py-4 text-center text-gray-500">
+                            No projects found for {searchQuery}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
+                ) : (
+                  <button
+                    onClick={handleSearchClick}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100">
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                      />
+                    </svg>
+                  </button>
                 )}
               </div>
 
@@ -132,7 +225,7 @@ export default function Header({
                 </button>
 
                 {showProjectsDropdown && (
-                  <div className="absolute top-full left-0 mt-1 w-48 origin-top-left rounded-xl border border-gray-200 bg-white p-1 text-sm text-gray-900 shadow-lg z-50">
+                  <div className="absolute top-full right-0 mt-1 w-48 origin-top-right rounded-xl border border-gray-200 bg-white p-1 text-sm text-gray-900 shadow-lg z-50">
                     <button
                       onClick={() => handleProjectFilter('all')}
                       className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
@@ -222,11 +315,12 @@ export default function Header({
                   </div>
                 )}
               </div>
-            </div>
-
-            <div className="relative" ref={createDropdownRef}>
               <button
-                onClick={() => setShowCreateDropdown(!showCreateDropdown)}
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent('createProject', { detail: 'default' })
+                  )
+                }
                 className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
                 Create Project
               </button>
