@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import './AddTaskModal.css';
 
 export default function AddTaskModal({
   onClose,
@@ -67,50 +66,69 @@ export default function AddTaskModal({
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <header className="modal-header">
-          <h2>{isEditing ? 'Edit Task' : 'New Task'}</h2>
-          <button className="close-btn" type="button" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-40 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-4 shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {isEditing ? 'Edit Task' : 'New Task'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-xl p-1 rounded-lg transition-colors">
             ×
           </button>
-        </header>
-        <hr className="modal-separator" />
-        <form className="modal-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="task-name">Task Name</label>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">
+              Task Name
+            </label>
             <input
-              id="task-name"
               type="text"
-              placeholder="Enter task title"
               value={taskName}
               onChange={(e) => setTaskName(e.target.value)}
+              placeholder="Enter task title"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
               required
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="task-due-date">Due Date</label>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">
+              Due Date
+            </label>
             <input
-              id="task-due-date"
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="task-description">Description</label>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">
+              Description
+            </label>
             <textarea
-              id="task-description"
-              placeholder="Enter task description (optional)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter task description (optional)"
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none text-gray-900"
             />
           </div>
-          <div className="modal-actions">
-            <button className="cancel-btn" type="button" onClick={onClose}>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
               Cancel
             </button>
-            <button className="add-btn" type="submit">
+            <button
+              type="submit"
+              className="px-3 py-2 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-colors">
               {isEditing ? 'Update Task' : 'Create Task'}
             </button>
           </div>
