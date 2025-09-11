@@ -248,7 +248,11 @@ export default function Header({
 
             <div className="relative" ref={createDropdownRef}>
               <button
-                onClick={() => setShowCreateDropdown(!showCreateDropdown)}
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent('createProject', { detail: 'default' })
+                  )
+                }
                 className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
                 Create Project
               </button>
