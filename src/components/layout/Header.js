@@ -17,6 +17,7 @@ export default function Header({
 
   const projectsDropdownRef = useRef(null);
   const createDropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const showProjectControls = currentPage === 'projects' && !currentProject;
 
@@ -39,6 +40,12 @@ export default function Header({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
 
   const handleSearchClick = () => {
     setShowSearch(!showSearch);
@@ -100,9 +107,26 @@ export default function Header({
             </button>
           </div>
         ) : showProjectControls ? (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-end">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center">
+                {showSearch && (
+                  <div className="mr-2">
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search projects"
+                      className="w-[200px] px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
+                      onBlur={() => {
+                        if (!searchQuery.trim()) {
+                          setShowSearch(false);
+                        }
+                      }}
+                    />
+                  </div>
+                )}
                 <button
                   onClick={handleSearchClick}
                   className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100">
@@ -119,19 +143,6 @@ export default function Header({
                     />
                   </svg>
                 </button>
-
-                {showSearch && (
-                  <div className="flex-1 min-w-[200px]">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search projects"
-                      className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
-                      autoFocus
-                    />
-                  </div>
-                )}
               </div>
 
               <div className="relative" ref={projectsDropdownRef}>
@@ -154,7 +165,7 @@ export default function Header({
                 </button>
 
                 {showProjectsDropdown && (
-                  <div className="absolute top-full left-0 mt-1 w-48 origin-top-left rounded-xl border border-gray-200 bg-white p-1 text-sm text-gray-900 shadow-lg z-50">
+                  <div className="absolute top-full right-0 mt-1 w-48 origin-top-right rounded-xl border border-gray-200 bg-white p-1 text-sm text-gray-900 shadow-lg z-50">
                     <button
                       onClick={() => handleProjectFilter('all')}
                       className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
@@ -244,18 +255,17 @@ export default function Header({
                   </div>
                 )}
               </div>
-            </div>
-
-            <div className="relative" ref={createDropdownRef}>
-              <button
-                onClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent('createProject', { detail: 'default' })
-                  )
-                }
-                className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
-                Create Project
-              </button>
+              <div className="relative" ref={createDropdownRef}>
+                <button
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent('createProject', { detail: 'default' })
+                    )
+                  }
+                  className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                  Create Project
+                </button>
+              </div>
             </div>
           </div>
         ) : (
