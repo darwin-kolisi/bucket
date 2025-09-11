@@ -67,15 +67,37 @@ export default function Header({
       }`}>
       <div className={`w-full ${currentProject ? 'px-8 py-5' : 'px-8 py-5'}`}>
         {currentProject ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors p-1 rounded-lg hover:bg-gray-100">
+                <ArrowLeftIcon className="h-4 w-4" />
+              </button>
+              <h1 className="text-sm font-medium text-gray-700">
+                {currentProject.name}
+              </h1>
+            </div>
+
             <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
-              <ArrowLeftIcon className="h-5 w-5" />
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent('openTaskModal'))
+              }
+              className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4.5v15m7.5-7.5h-15"
+                />
+              </svg>
+              New Task
             </button>
-            <h1 className="text-sm font-medium text-gray-700 py-2">
-              {currentProject.name}
-            </h1>
           </div>
         ) : showProjectControls ? (
           <div className="flex items-center justify-between">

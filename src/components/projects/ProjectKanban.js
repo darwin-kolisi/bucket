@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AddTaskModal from '../tasks/AddTaskModal';
 import KanbanColumn from '../tasks/KanbanColumn';
 
@@ -74,6 +74,19 @@ export default function ProjectKanban({
     onUpdateTasks(updatedTasks);
     setDraggedTask(null);
   };
+
+  useEffect(() => {
+    const handleOpenModal = () => {
+      setEditingTask(null);
+      setIsTaskModalOpen(true);
+    };
+
+    window.addEventListener('openTaskModal', handleOpenModal);
+
+    return () => {
+      window.removeEventListener('openTaskModal', handleOpenModal);
+    };
+  }, []);
 
   const addTasks = (taskData) => {
     const newTask = {
