@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Bucket
 
-## Getting Started
+A lightweight project management app I’m building to organize my personal projects.
+Still a work in progress.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What I’m working on now
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Progress bar logic**
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+  1. Tasks move from **Todo** → **In Progress** → **Complete**, and the bar updates accordingly (0% → 50% → 100%).
+  2. If a task card has subtasks, checking them off contributes to that card’s progress.
+     - Dragging the card to _In Progress_ doesn’t change anything automatically — the subtasks drive progress.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Filtering**
 
-## Learn More
+  - Being able to filter tasks
+  - Being able to filter projects
 
-To learn more about Next.js, take a look at the following resources:
+- **Project creation tweaks**  
+  No status field when creating a project — the status should come from whether the tasks inside it are complete or not.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Search logic**  
+  When searching for a project, results should appear directly on the projects page too.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **UI issues (currently annoying me)**
+  - Project kanban page doesn’t scroll.
+  - Projects page footer gets pushed down if there are too many projects.
+  - “Add new task” modal doesn’t allow a status code (but the projects page does).
+  - The UI isn’t responsive at all yet — I’ll probably tackle this later. For mobile, I want to reuse my portfolio header.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Questions I’m figuring out
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Filtering logic:**  
+  Tasks have priority codes right now (`high`, `medium`, `low`).  
+  I’m torn between:
+  - Keeping it simple → just edit the priority when needed, or
+  - Making it smarter → use due dates + subtask completion to auto-adjust, and maybe send notifications. (If I go this route, I’ll borrow ideas from the campus safety app project and how my friend did real-time notifications.)
+
+---
+
+## Planned features
+
+Stuff I want to add once the basics are stable:
+
+- **User authentication** (probably Auth0, or maybe custom auth)
+- **Database & persistence**
+- **Advanced task features**: priorities, labels, attachments, comments, subtasks
+- **Time tracking**
+- **Notifications**
+- **Reporting & analytics**
+
+---

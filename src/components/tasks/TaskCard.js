@@ -6,6 +6,7 @@ export default function TaskCard({
   onDeleteTask,
   onDuplicateTask,
   onEditTask,
+  onToggleSubtask,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -160,6 +161,39 @@ export default function TaskCard({
         </div>
       </div>
       <p className="text-sm text-gray-500 m-0 mb-4">{task.subtitle}</p>
+      {task.subtasks && task.subtasks.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-600">Subtasks</span>
+            <span className="text-xs text-gray-400">
+              {task.subtasks.filter((st) => st.completed).length}/
+              {task.subtasks.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {task.subtasks.map((subtask) => (
+              <label
+                key={subtask.id}
+                className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={subtask.completed}
+                  onChange={() => onToggleSubtask(task.id, subtask.id)}
+                  className="rounded border-gray-300 text-black focus:ring-black"
+                />
+                <span
+                  className={`text-sm ${
+                    subtask.completed
+                      ? 'line-through text-gray-400'
+                      : 'text-gray-700'
+                  }`}>
+                  {subtask.title}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-gray-500">Progress</span>
         <span className="text-sm font-semibold text-gray-900">

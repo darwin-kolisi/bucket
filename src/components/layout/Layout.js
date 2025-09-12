@@ -29,6 +29,11 @@ export default function Layout({ children }) {
           total: 10,
           status: 'todo',
           priority: 'high',
+          subtasks: [
+            { id: 1, title: 'Design header section', completed: false },
+            { id: 2, title: 'Create hero banner', completed: false },
+            { id: 3, title: 'Design footer', completed: false },
+          ],
         },
         {
           id: 2,

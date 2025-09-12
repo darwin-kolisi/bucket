@@ -79,19 +79,63 @@ export default function ProjectKanban({
       }
     };
 
-    const updatedTasks = tasks.map((task) =>
-      task.id === draggedTask.id
-        ? {
+    const updatedTasks = tasks.map((task) => {
+      if (task.id === draggedTask.id) {
+        if (!task.subtasks || task.subtasks.length === 0) {
+          const getProgressByStatus = (status) => {
+            switch (status) {
+              case 'todo':
+                return 0;
+              case 'in-progress':
+                return 5;
+              case 'done':
+                return 10;
+              default:
+                return 0;
+            }
+          };
+          return {
             ...task,
             status: targetStatus,
             progress: getProgressByStatus(targetStatus),
-          }
-        : task
-    );
+          };
+        } else {
+          return { ...task, status: targetStatus };
+        }
+      }
+      return task;
+    });
 
     setTasks(updatedTasks);
     onUpdateTasks(updatedTasks);
     setDraggedTask(null);
+  };
+
+  const calculateProgress = (subtasks) => {
+    if (!subtasks || subtasks.length === 0) return 0;
+    const completed = subtasks.filter((st) => st.completed).length;
+    return Math.round((completed / subtasks.length) * 10);
+  };
+
+  const handleToggleSubtask = (taskId, subtaskId) => {
+    const updatedTasks = tasks.map((task) => {
+      if (task.id === taskId) {
+        const updatedSubtasks = task.subtasks.map((subtask) =>
+          subtask.id === subtaskId
+            ? { ...subtask, completed: !subtask.completed }
+            : subtask
+        );
+        return {
+          ...task,
+          subtasks: updatedSubtasks,
+          progress: calculateProgress(updatedSubtasks),
+        };
+      }
+      return task;
+    });
+
+    setTasks(updatedTasks);
+    onUpdateTasks(updatedTasks);
   };
 
   useEffect(() => {
@@ -112,6 +156,7 @@ export default function ProjectKanban({
       id: tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
       title: taskData.taskName,
       subtitle: taskData.description || 'No description',
+      subtasks: taskData.subtasks || [],
       date: taskData.dueDate
         ? new Date(taskData.dueDate).toLocaleDateString('en-GB', {
             day: '2-digit',
@@ -209,6 +254,7 @@ export default function ProjectKanban({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          onToggleSubtask={handleToggleSubtask}
         />
         <KanbanColumn
           title="In progress"
@@ -222,6 +268,7 @@ export default function ProjectKanban({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          onToggleSubtask={handleToggleSubtask}
         />
         <KanbanColumn
           title="Done"
@@ -235,6 +282,7 @@ export default function ProjectKanban({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          onToggleSubtask={handleToggleSubtask}
         />
       </div>
 
