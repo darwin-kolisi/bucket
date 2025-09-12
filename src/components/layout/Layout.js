@@ -25,18 +25,25 @@ export default function Layout({ children }) {
           title: 'Create landing page design',
           subtitle: 'Marketing website',
           date: '15 Aug 2024',
-          progress: 7,
+          progress: 0,
           total: 10,
           status: 'todo',
+          priority: 'high',
+          subtasks: [
+            { id: 1, title: 'Design header section', completed: false },
+            { id: 2, title: 'Create hero banner', completed: false },
+            { id: 3, title: 'Design footer', completed: false },
+          ],
         },
         {
           id: 2,
           title: 'Update component library',
           subtitle: 'Design system',
           date: '18 Aug 2024',
-          progress: 4,
+          progress: 0,
           total: 8,
           status: 'todo',
+          priority: 'low',
         },
       ],
     },
@@ -52,18 +59,20 @@ export default function Layout({ children }) {
           title: 'Design media upload interface',
           subtitle: 'User experience',
           date: '16 Aug 2024',
-          progress: 5,
+          progress: 0,
           total: 8,
           status: 'todo',
+          priority: 'high',
         },
         {
           id: 2,
           title: 'Implement search functionality',
           subtitle: 'Backend integration',
           date: '19 Aug 2024',
-          progress: 3,
+          progress: 0,
           total: 6,
           status: 'todo',
+          priority: 'medium',
         },
       ],
     },
@@ -116,22 +125,6 @@ export default function Layout({ children }) {
     setSelectedProject(project);
   };
 
-  const projectsWithProgress = projects.map((project) => {
-    const totalTasks = project.tasks.length;
-    const completedTasks = project.tasks.filter(
-      (task) => task.status === 'done'
-    ).length;
-    const progress =
-      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-    return {
-      ...project,
-      progress,
-      totalTasks,
-      completedTasks,
-    };
-  });
-
   const renderContent = () => {
     switch (activeItem) {
       case 'projects':
@@ -168,7 +161,7 @@ export default function Layout({ children }) {
         currentProject={selectedProject}
         onBack={handleBackToProjects}
         onCreateProject={handleCreateProject}
-        projects={projectsWithProgress}
+        projects={projects}
         onProjectSelect={handleProjectSelect}
       />
       <div className="main-content-wrapper">

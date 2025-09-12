@@ -6,6 +6,7 @@ export default function TaskCard({
   onDeleteTask,
   onDuplicateTask,
   onEditTask,
+  onToggleSubtask,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -25,6 +26,67 @@ export default function TaskCard({
   const handleDelete = () => {
     onDeleteTask(task.id);
     setIsMenuOpen(false);
+  };
+
+  const getPriorityIcon = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+        return (
+          <svg
+            className="h-3 w-3 text-red-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+            />
+          </svg>
+        );
+      case 'medium':
+        return (
+          <svg
+            className="h-3 w-3 text-yellow-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625Z"
+            />
+          </svg>
+        );
+      case 'low':
+        return (
+          <svg
+            className="h-3 w-3 text-green-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+            />
+          </svg>
+        );
+      default:
+        return (
+          <svg
+            className="h-3 w-3 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+          </svg>
+        );
+    }
   };
 
   return (
@@ -99,8 +161,72 @@ export default function TaskCard({
         </div>
       </div>
       <p className="text-sm text-gray-500 m-0 mb-4">{task.subtitle}</p>
+      {task.subtasks && task.subtasks.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-600">Subtasks</span>
+            <span className="text-xs text-gray-400">
+              {task.subtasks.filter((st) => st.completed).length}/
+              {task.subtasks.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {task.subtasks.map((subtask) => (
+              <label
+                key={subtask.id}
+                className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={subtask.completed}
+                  onChange={() => onToggleSubtask(task.id, subtask.id)}
+                  className="rounded border-gray-300 text-black focus:ring-black"
+                />
+                <span
+                  className={`text-sm ${
+                    subtask.completed
+                      ? 'line-through text-gray-400'
+                      : 'text-gray-700'
+                  }`}>
+                  {subtask.title}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium text-gray-500">Progress</span>
+        <span className="text-sm font-semibold text-gray-900">
+          {Math.round((task.progress / task.total) * 100)}%
+        </span>
+      </div>
+      <div className="flex gap-1 mb-3 h-2 items-center">
+        {Array.from({ length: 10 }).map((_, index) => (
+          <div
+            key={index}
+            className={`w-4 h-4 rounded-sm ${
+              index < Math.floor(((task.progress / task.total) * 100) / 10)
+                ? 'bg-black shadow-sm'
+                : 'bg-gray-200'
+            }`}
+          />
+        ))}
+      </div>
       <div className="flex justify-between items-center">
         <div className="text-sm font-medium text-gray-500">{task.date}</div>
+        <div
+          className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
+            task.priority?.toLowerCase() === 'high'
+              ? 'bg-red-100'
+              : task.priority?.toLowerCase() === 'medium'
+              ? 'bg-orange-100'
+              : 'bg-gray-100'
+          }`}>
+          {getPriorityIcon(task.priority || 'medium')}
+          <span className="text-xs font-medium text-gray-600 capitalize">
+            {task.priority || 'Medium'}
+          </span>
+        </div>
       </div>
     </div>
   );

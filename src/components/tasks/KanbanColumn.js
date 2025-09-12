@@ -12,6 +12,7 @@ export default function KanbanColumn({
   onDragOver,
   onDragLeave,
   onDrop,
+  onToggleSubtask,
 }) {
   return (
     <div
@@ -40,6 +41,7 @@ export default function KanbanColumn({
                 onEditTask={() => onEditTask(task)}
                 onDuplicateTask={() => onDuplicateTask(task.id)}
                 onDeleteTask={() => onDeleteTask(task.id)}
+                onToggleSubtask={onToggleSubtask}
               />
             </div>
           ))
