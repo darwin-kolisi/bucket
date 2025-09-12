@@ -66,8 +66,27 @@ export default function ProjectKanban({
 
     if (!draggedTask) return;
 
+    const getProgressByStatus = (status) => {
+      switch (status) {
+        case 'todo':
+          return 0;
+        case 'in-progress':
+          return 5;
+        case 'done':
+          return 10;
+        default:
+          return 0;
+      }
+    };
+
     const updatedTasks = tasks.map((task) =>
-      task.id === draggedTask.id ? { ...task, status: targetStatus } : task
+      task.id === draggedTask.id
+        ? {
+            ...task,
+            status: targetStatus,
+            progress: getProgressByStatus(targetStatus),
+          }
+        : task
     );
 
     setTasks(updatedTasks);
