@@ -27,6 +27,67 @@ export default function TaskCard({
     setIsMenuOpen(false);
   };
 
+  const getPriorityIcon = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+        return (
+          <svg
+            className="h-3 w-3 text-red-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+            />
+          </svg>
+        );
+      case 'medium':
+        return (
+          <svg
+            className="h-3 w-3 text-yellow-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625Z"
+            />
+          </svg>
+        );
+      case 'low':
+        return (
+          <svg
+            className="h-3 w-3 text-green-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+            />
+          </svg>
+        );
+      default:
+        return (
+          <svg
+            className="h-3 w-3 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+          </svg>
+        );
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
       <div className="flex justify-between items-center mb-1">
@@ -119,6 +180,19 @@ export default function TaskCard({
       </div>
       <div className="flex justify-between items-center">
         <div className="text-sm font-medium text-gray-500">{task.date}</div>
+        <div
+          className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
+            task.priority?.toLowerCase() === 'high'
+              ? 'bg-red-100'
+              : task.priority?.toLowerCase() === 'medium'
+              ? 'bg-orange-100'
+              : 'bg-gray-100'
+          }`}>
+          {getPriorityIcon(task.priority || 'medium')}
+          <span className="text-xs font-medium text-gray-600 capitalize">
+            {task.priority || 'Medium'}
+          </span>
+        </div>
       </div>
     </div>
   );

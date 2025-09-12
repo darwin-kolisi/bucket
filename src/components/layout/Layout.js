@@ -28,6 +28,7 @@ export default function Layout({ children }) {
           progress: 7,
           total: 10,
           status: 'todo',
+          priority: 'high',
         },
         {
           id: 2,
@@ -37,6 +38,7 @@ export default function Layout({ children }) {
           progress: 4,
           total: 8,
           status: 'todo',
+          priority: 'low',
         },
       ],
     },
@@ -55,6 +57,7 @@ export default function Layout({ children }) {
           progress: 5,
           total: 8,
           status: 'todo',
+          priority: 'high',
         },
         {
           id: 2,
@@ -64,6 +67,7 @@ export default function Layout({ children }) {
           progress: 3,
           total: 6,
           status: 'todo',
+          priority: 'medium',
         },
       ],
     },
