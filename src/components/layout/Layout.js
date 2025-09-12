@@ -116,22 +116,6 @@ export default function Layout({ children }) {
     setSelectedProject(project);
   };
 
-  const projectsWithProgress = projects.map((project) => {
-    const totalTasks = project.tasks.length;
-    const completedTasks = project.tasks.filter(
-      (task) => task.status === 'done'
-    ).length;
-    const progress =
-      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-    return {
-      ...project,
-      progress,
-      totalTasks,
-      completedTasks,
-    };
-  });
-
   const renderContent = () => {
     switch (activeItem) {
       case 'projects':
@@ -168,7 +152,7 @@ export default function Layout({ children }) {
         currentProject={selectedProject}
         onBack={handleBackToProjects}
         onCreateProject={handleCreateProject}
-        projects={projectsWithProgress}
+        projects={projects}
         onProjectSelect={handleProjectSelect}
       />
       <div className="main-content-wrapper">

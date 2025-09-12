@@ -99,6 +99,24 @@ export default function TaskCard({
         </div>
       </div>
       <p className="text-sm text-gray-500 m-0 mb-4">{task.subtitle}</p>
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium text-gray-500">Progress</span>
+        <span className="text-sm font-semibold text-gray-900">
+          {Math.round((task.progress / task.total) * 100)}%
+        </span>
+      </div>
+      <div className="flex gap-1 mb-3 h-2 items-center">
+        {Array.from({ length: 10 }).map((_, index) => (
+          <div
+            key={index}
+            className={`w-4 h-4 rounded-sm ${
+              index < Math.floor(((task.progress / task.total) * 100) / 10)
+                ? 'bg-black shadow-sm'
+                : 'bg-gray-200'
+            }`}
+          />
+        ))}
+      </div>
       <div className="flex justify-between items-center">
         <div className="text-sm font-medium text-gray-500">{task.date}</div>
       </div>
