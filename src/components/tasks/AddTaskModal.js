@@ -12,6 +12,9 @@ export default function AddTaskModal({
   const [dueDate, setDueDate] = useState('');
   const [subtasks, setSubtasks] = useState([]);
   const [newSubtask, setNewSubtask] = useState('');
+  const [priority, setPriority] = useState('Medium');
+
+  const priorityOptions = ['Low', 'Medium', 'High'];
 
   useEffect(() => {
     if (isEditing && editingTask) {
@@ -19,6 +22,7 @@ export default function AddTaskModal({
       setDescription(
         editingTask.subtitle === 'No description' ? '' : editingTask.subtitle
       );
+      setPriority(editingTask.priority || 'Medium');
 
       if (editingTask.date) {
         const dateParts = editingTask.date.split(' ');
@@ -58,6 +62,7 @@ export default function AddTaskModal({
         description: description.trim(),
         dueDate: dueDate,
         subtasks: subtasks,
+        priority: priority,
       };
 
       if (isEditing) {
@@ -121,6 +126,22 @@ export default function AddTaskModal({
               rows={3}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none text-gray-900"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">
+              Priority
+            </label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900">
+              {priorityOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
