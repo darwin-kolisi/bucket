@@ -159,7 +159,7 @@ export default function AddTaskModal({
                       updated[index].title = e.target.value;
                       setSubtasks(updated);
                     }}
-                    className="flex-1 px-2 py-1 border border-gray-200 rounded text-sm"
+                    className="flex-1 px-2 py-1 border border-gray-200 rounded text-sm text-black"
                   />
                   <button
                     type="button"
@@ -178,7 +178,7 @@ export default function AddTaskModal({
                 value={newSubtask}
                 onChange={(e) => setNewSubtask(e.target.value)}
                 placeholder="Add subtask"
-                className="flex-1 px-2 py-1 border border-gray-200 rounded text-sm"
+                className="flex-1 px-2 py-1 border border-gray-200 rounded text-sm text-gray-900"
               />
               <button
                 type="button"
@@ -195,7 +195,7 @@ export default function AddTaskModal({
                     setNewSubtask('');
                   }
                 }}
-                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm">
+                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm text-black">
                 Add
               </button>
             </div>

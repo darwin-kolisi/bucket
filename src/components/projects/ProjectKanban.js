@@ -186,6 +186,7 @@ export default function ProjectKanban({
       ...editingTask,
       title: taskData.taskName,
       subtitle: taskData.description || 'No description',
+      subtasks: taskData.subtasks || [],
       priority: taskData.priority,
       date: taskData.dueDate
         ? new Date(taskData.dueDate).toLocaleDateString('en-GB', {
