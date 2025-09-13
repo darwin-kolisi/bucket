@@ -11,9 +11,12 @@ export default function Header({
   onCreateProject,
   projects = [],
   onProjectSelect,
+  statusFilter,
+  onStatusFilterChange,
+  searchQuery,
+  onSearchChange,
 }) {
   const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
 
   const projectsDropdownRef = useRef(null);
@@ -44,12 +47,12 @@ export default function Header({
   const handleSearchClick = () => {
     setShowSearch(!showSearch);
     if (showSearch) {
-      setSearchQuery('');
+      onSearchChange('');
     }
   };
 
   const handleProjectFilter = (filter) => {
-    console.log('Filter by:', filter);
+    onStatusFilterChange(filter);
     setShowProjectsDropdown(false);
   };
 
@@ -66,7 +69,7 @@ export default function Header({
     : [];
 
   const handleProjectSelect = (project) => {
-    setSearchQuery('');
+    onSearchChange('');
     setShowSearch(false);
     if (onProjectSelect) {
       onProjectSelect(project);
@@ -130,7 +133,7 @@ export default function Header({
                       ref={searchInputRef}
                       type="text"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => onSearchChange(e.target.value)}
                       onBlur={handleSearchBlur}
                       placeholder="Search projects"
                       className="w-[200px] px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
@@ -209,7 +212,17 @@ export default function Header({
                 <button
                   onClick={() => setShowProjectsDropdown(!showProjectsDropdown)}
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100">
-                  All projects
+                  {statusFilter === 'all'
+                    ? 'All projects'
+                    : statusFilter === 'in-progress'
+                    ? 'In Progress'
+                    : statusFilter === 'on-track'
+                    ? 'On Track'
+                    : statusFilter === 'at-risk'
+                    ? 'At Risk'
+                    : statusFilter === 'completed'
+                    ? 'Completed'
+                    : 'All projects'}
                   <svg
                     className="h-4 w-4"
                     fill="none"
@@ -248,7 +261,7 @@ export default function Header({
                       onClick={() => handleProjectFilter('in-progress')}
                       className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
                       <svg
-                        className="h-4 w-4 text-gray-400"
+                        className="h-4 w-4 text-blue-500"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"
@@ -265,7 +278,7 @@ export default function Header({
                       onClick={() => handleProjectFilter('on-track')}
                       className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
                       <svg
-                        className="h-4 w-4 text-gray-400"
+                        className="h-4 w-4 text-green-500"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"
@@ -282,7 +295,7 @@ export default function Header({
                       onClick={() => handleProjectFilter('at-risk')}
                       className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
                       <svg
-                        className="h-4 w-4 text-gray-400"
+                        className="h-4 w-4 text-red-500"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"

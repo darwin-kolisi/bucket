@@ -10,6 +10,8 @@ export default function Projects({
   selectedProject,
   projects,
   setProjects,
+  statusFilter,
+  searchQuery,
 }) {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
@@ -138,15 +140,28 @@ export default function Projects({
     );
   }
 
+  const filteredProjects = projects.filter((project) => {
+    const matchesStatus =
+      statusFilter === 'all' ||
+      project.status.toLowerCase().replace(' ', '-') === statusFilter;
+
+    const matchesSearch =
+      !searchQuery.trim() ||
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesStatus && matchesSearch;
+  });
+
   return (
     <>
       <main
-        className={`flex-1 overflow-y-auto bg-white transition-all duration-300 ${
+        className={`overflow-y-auto flex-1 bg-white transition-all duration-300 ${
           isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
         }`}>
-        <div className="p-8">
+        <div className="p-8 h-[calc(50vh-2rem)]">
           <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}

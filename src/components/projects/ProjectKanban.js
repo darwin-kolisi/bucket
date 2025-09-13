@@ -66,14 +66,14 @@ export default function ProjectKanban({
 
     if (!draggedTask) return;
 
-    const getProgressByStatus = (status) => {
+    const getProgressByStatus = (status, total) => {
       switch (status) {
         case 'todo':
           return 0;
         case 'in-progress':
-          return 5;
+          return Math.round(total * 0.5);
         case 'done':
-          return 10;
+          return total;
         default:
           return 0;
       }
@@ -82,14 +82,14 @@ export default function ProjectKanban({
     const updatedTasks = tasks.map((task) => {
       if (task.id === draggedTask.id) {
         if (!task.subtasks || task.subtasks.length === 0) {
-          const getProgressByStatus = (status) => {
+          const getProgressByStatus = (status, total) => {
             switch (status) {
               case 'todo':
                 return 0;
               case 'in-progress':
-                return 5;
+                return Math.round(total * 0.5);
               case 'done':
-                return 10;
+                return total;
               default:
                 return 0;
             }
@@ -97,7 +97,7 @@ export default function ProjectKanban({
           return {
             ...task,
             status: targetStatus,
-            progress: getProgressByStatus(targetStatus),
+            progress: getProgressByStatus(targetStatus, task.total),
           };
         } else {
           return { ...task, status: targetStatus };
@@ -157,6 +157,7 @@ export default function ProjectKanban({
       title: taskData.taskName,
       subtitle: taskData.description || 'No description',
       subtasks: taskData.subtasks || [],
+      priority: taskData.priority,
       date: taskData.dueDate
         ? new Date(taskData.dueDate).toLocaleDateString('en-GB', {
             day: '2-digit',
@@ -185,6 +186,8 @@ export default function ProjectKanban({
       ...editingTask,
       title: taskData.taskName,
       subtitle: taskData.description || 'No description',
+      subtasks: taskData.subtasks || [],
+      priority: taskData.priority,
       date: taskData.dueDate
         ? new Date(taskData.dueDate).toLocaleDateString('en-GB', {
             day: '2-digit',
@@ -238,7 +241,7 @@ export default function ProjectKanban({
 
   return (
     <main
-      className={`flex-1 bg-gray-50 transition-all duration-300 ${
+      className={`overflow-y-auto flex-1 bg-gray-50 transition-all duration-300 ${
         isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
       }`}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 h-[calc(50vh-2rem)]">

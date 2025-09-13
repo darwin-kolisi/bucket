@@ -11,7 +11,7 @@ Still a work in progress.
 
   1. Tasks move from **Todo** → **In Progress** → **Complete**, and the bar updates accordingly (0% → 50% → 100%).
   2. If a task card has subtasks, checking them off contributes to that card’s progress.
-     - Dragging the card to _In Progress_ doesn’t change anything automatically — the subtasks drive progress.
+     - Dragging the card to _In Progress_ doesn’t change anything automatically, the subtasks drive progress.
 
 - **Filtering**
 
@@ -19,16 +19,16 @@ Still a work in progress.
   - Being able to filter projects
 
 - **Project creation tweaks**  
-  No status field when creating a project — the status should come from whether the tasks inside it are complete or not.
+  No status field when creating a project, the status should come from whether the tasks inside it are complete or not.
 
 - **Search logic**  
   When searching for a project, results should appear directly on the projects page too.
 
-- **UI issues (currently annoying me)**
+- **UI issues**
   - Project kanban page doesn’t scroll.
   - Projects page footer gets pushed down if there are too many projects.
   - “Add new task” modal doesn’t allow a status code (but the projects page does).
-  - The UI isn’t responsive at all yet — I’ll probably tackle this later. For mobile, I want to reuse my portfolio header.
+  - The UI isn’t responsive at all yet, I’ll probably do this later. For mobile, I want to reuse my portfolio header.
 
 ---
 

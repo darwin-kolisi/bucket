@@ -11,6 +11,8 @@ export default function Layout({ children }) {
   const [activeItem, setActiveItem] = useState('projects');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const initialProjects = [
     {
@@ -135,6 +137,8 @@ export default function Layout({ children }) {
             selectedProject={selectedProject}
             projects={projects}
             setProjects={setProjects}
+            statusFilter={statusFilter}
+            searchQuery={searchQuery}
           />
         );
 
@@ -163,6 +167,10 @@ export default function Layout({ children }) {
         onCreateProject={handleCreateProject}
         projects={projects}
         onProjectSelect={handleProjectSelect}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
       <div className="main-content-wrapper">
         <Sidebar
