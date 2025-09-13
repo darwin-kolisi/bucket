@@ -261,7 +261,7 @@ export default function Header({
                       onClick={() => handleProjectFilter('in-progress')}
                       className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
                       <svg
-                        className="h-4 w-4 text-gray-400"
+                        className="h-4 w-4 text-blue-500"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"
@@ -278,7 +278,7 @@ export default function Header({
                       onClick={() => handleProjectFilter('on-track')}
                       className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
                       <svg
-                        className="h-4 w-4 text-gray-400"
+                        className="h-4 w-4 text-green-500"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"
@@ -295,7 +295,7 @@ export default function Header({
                       onClick={() => handleProjectFilter('at-risk')}
                       className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
                       <svg
-                        className="h-4 w-4 text-gray-400"
+                        className="h-4 w-4 text-red-500"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"
