@@ -241,7 +241,7 @@ export default function ProjectKanban({
 
   return (
     <main
-      className={`flex-1 bg-gray-50 transition-all duration-300 ${
+      className={`overflow-y-auto flex-1 bg-gray-50 transition-all duration-300 ${
         isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
       }`}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 h-[calc(50vh-2rem)]">

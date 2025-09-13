@@ -27,7 +27,7 @@ export default function KanbanColumn({
         </span>
       </div>
 
-      <div className="flex flex-col gap-4 overflow-y-auto flex-grow">
+      <div className="flex flex-col gap-4 flex-1">
         {tasks.length > 0 ? (
           tasks.map((task) => (
             <div

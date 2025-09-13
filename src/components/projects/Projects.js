@@ -141,10 +141,10 @@ export default function Projects({
   return (
     <>
       <main
-        className={`flex-1 overflow-y-auto bg-white transition-all duration-300 ${
+        className={`overflow-y-auto flex-1 bg-white transition-all duration-300 ${
           isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
         }`}>
-        <div className="p-8">
+        <div className="p-8 h-[calc(50vh-2rem)]">
           <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
             {projects.map((project) => (
               <ProjectCard
