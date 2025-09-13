@@ -12,6 +12,7 @@ export default function Layout({ children }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const initialProjects = [
     {
@@ -137,6 +138,7 @@ export default function Layout({ children }) {
             projects={projects}
             setProjects={setProjects}
             statusFilter={statusFilter}
+            searchQuery={searchQuery}
           />
         );
 
@@ -167,6 +169,8 @@ export default function Layout({ children }) {
         onProjectSelect={handleProjectSelect}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
       <div className="main-content-wrapper">
         <Sidebar

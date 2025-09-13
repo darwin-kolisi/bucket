@@ -13,9 +13,10 @@ export default function Header({
   onProjectSelect,
   statusFilter,
   onStatusFilterChange,
+  searchQuery,
+  onSearchChange,
 }) {
   const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
 
   const projectsDropdownRef = useRef(null);
@@ -46,7 +47,7 @@ export default function Header({
   const handleSearchClick = () => {
     setShowSearch(!showSearch);
     if (showSearch) {
-      setSearchQuery('');
+      onSearchChange('');
     }
   };
 
@@ -68,7 +69,7 @@ export default function Header({
     : [];
 
   const handleProjectSelect = (project) => {
-    setSearchQuery('');
+    onSearchChange('');
     setShowSearch(false);
     if (onProjectSelect) {
       onProjectSelect(project);
@@ -132,7 +133,7 @@ export default function Header({
                       ref={searchInputRef}
                       type="text"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => onSearchChange(e.target.value)}
                       onBlur={handleSearchBlur}
                       placeholder="Search projects"
                       className="w-[200px] px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"

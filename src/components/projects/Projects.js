@@ -11,6 +11,7 @@ export default function Projects({
   projects,
   setProjects,
   statusFilter,
+  searchQuery,
 }) {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
@@ -139,13 +140,18 @@ export default function Projects({
     );
   }
 
-  const filteredProjects =
-    statusFilter === 'all'
-      ? projects
-      : projects.filter((project) => {
-          const projectStatus = project.status.toLowerCase().replace(' ', '-');
-          return projectStatus === statusFilter;
-        });
+  const filteredProjects = projects.filter((project) => {
+    const matchesStatus =
+      statusFilter === 'all' ||
+      project.status.toLowerCase().replace(' ', '-') === statusFilter;
+
+    const matchesSearch =
+      !searchQuery.trim() ||
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <>
