@@ -66,14 +66,14 @@ export default function ProjectKanban({
 
     if (!draggedTask) return;
 
-    const getProgressByStatus = (status) => {
+    const getProgressByStatus = (status, total) => {
       switch (status) {
         case 'todo':
           return 0;
         case 'in-progress':
-          return 5;
+          return Math.round(total * 0.5);
         case 'done':
-          return 10;
+          return total;
         default:
           return 0;
       }
@@ -82,14 +82,14 @@ export default function ProjectKanban({
     const updatedTasks = tasks.map((task) => {
       if (task.id === draggedTask.id) {
         if (!task.subtasks || task.subtasks.length === 0) {
-          const getProgressByStatus = (status) => {
+          const getProgressByStatus = (status, total) => {
             switch (status) {
               case 'todo':
                 return 0;
               case 'in-progress':
-                return 5;
+                return Math.round(total * 0.5);
               case 'done':
-                return 10;
+                return total;
               default:
                 return 0;
             }
@@ -97,7 +97,7 @@ export default function ProjectKanban({
           return {
             ...task,
             status: targetStatus,
-            progress: getProgressByStatus(targetStatus),
+            progress: getProgressByStatus(targetStatus, task.total),
           };
         } else {
           return { ...task, status: targetStatus };
