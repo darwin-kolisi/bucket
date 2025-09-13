@@ -10,6 +10,7 @@ export default function Projects({
   selectedProject,
   projects,
   setProjects,
+  statusFilter,
 }) {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
@@ -138,6 +139,14 @@ export default function Projects({
     );
   }
 
+  const filteredProjects =
+    statusFilter === 'all'
+      ? projects
+      : projects.filter((project) => {
+          const projectStatus = project.status.toLowerCase().replace(' ', '-');
+          return projectStatus === statusFilter;
+        });
+
   return (
     <>
       <main
@@ -146,7 +155,7 @@ export default function Projects({
         }`}>
         <div className="p-8 h-[calc(50vh-2rem)]">
           <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}

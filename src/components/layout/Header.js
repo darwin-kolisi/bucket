@@ -11,6 +11,8 @@ export default function Header({
   onCreateProject,
   projects = [],
   onProjectSelect,
+  statusFilter,
+  onStatusFilterChange,
 }) {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,7 +51,7 @@ export default function Header({
   };
 
   const handleProjectFilter = (filter) => {
-    console.log('Filter by:', filter);
+    onStatusFilterChange(filter);
     setShowProjectsDropdown(false);
   };
 
@@ -209,7 +211,17 @@ export default function Header({
                 <button
                   onClick={() => setShowProjectsDropdown(!showProjectsDropdown)}
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100">
-                  All projects
+                  {statusFilter === 'all'
+                    ? 'All projects'
+                    : statusFilter === 'in-progress'
+                    ? 'In Progress'
+                    : statusFilter === 'on-track'
+                    ? 'On Track'
+                    : statusFilter === 'at-risk'
+                    ? 'At Risk'
+                    : statusFilter === 'completed'
+                    ? 'Completed'
+                    : 'All projects'}
                   <svg
                     className="h-4 w-4"
                     fill="none"
