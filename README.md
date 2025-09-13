@@ -24,11 +24,11 @@ Still a work in progress.
 - **Search logic**  
   When searching for a project, results should appear directly on the projects page too.
 
-- **UI issues (currently annoying me)**
+- **UI issues**
   - Project kanban page doesn’t scroll.
   - Projects page footer gets pushed down if there are too many projects.
   - “Add new task” modal doesn’t allow a status code (but the projects page does).
-  - The UI isn’t responsive at all yet, I’ll probably tackle this later. For mobile, I want to reuse my portfolio header.
+  - The UI isn’t responsive at all yet, I’ll probably do this later. For mobile, I want to reuse my portfolio header.
 
 ---
 
