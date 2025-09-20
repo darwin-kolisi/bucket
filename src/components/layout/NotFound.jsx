@@ -1,4 +1,5 @@
 'use client';
+import { useAppContext } from '@/app/providers/Provider';
 
 const ArrowLeftIcon = () => (
   <svg
@@ -16,11 +17,13 @@ const ArrowLeftIcon = () => (
   </svg>
 );
 
-export default function NotFound({ isCollapsed }) {
+export default function NotFound() {
+  const { isSidebarCollapsed } = useAppContext();
+
   return (
     <main
       className={`flex-1 overflow-y-auto bg-white transition-all duration-300 ${
-        isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
+        isSidebarCollapsed ? 'ml-[88px]' : 'ml-[280px]'
       }`}>
       <div className="flex h-full flex-col items-center justify-center p-8 text-center">
         <p className="select-none text-8xl font-mono font-bold text-gray-200">
