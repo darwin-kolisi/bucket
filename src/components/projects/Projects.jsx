@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import ProjectCard from './ProjectCard';
-import ProjectKanban from './ProjectKanban';
 import AddProjectModal from './AddProjectModal';
 
 export default function Projects({
@@ -18,10 +17,6 @@ export default function Projects({
 
   const handleProjectClick = (project) => {
     onProjectSelect(project);
-  };
-
-  const handleBackToProjects = () => {
-    onProjectSelect(null);
   };
 
   const openCreateProjectModal = () => {
@@ -117,28 +112,6 @@ export default function Projects({
   const deleteProject = (id) => {
     setProjects(projects.filter((project) => project.id !== id));
   };
-
-  const updateProjectTasks = (projectId, updatedTasks) => {
-    setProjects(
-      projects.map((project) =>
-        project.id === projectId ? { ...project, tasks: updatedTasks } : project
-      )
-    );
-  };
-
-  if (selectedProject) {
-    return (
-      <ProjectKanban
-        project={selectedProject}
-        onBack={handleBackToProjects}
-        isCollapsed={isCollapsed}
-        tasks={selectedProject.tasks}
-        onUpdateTasks={(updatedTasks) =>
-          updateProjectTasks(selectedProject.id, updatedTasks)
-        }
-      />
-    );
-  }
 
   const filteredProjects = projects.filter((project) => {
     const matchesStatus =
