@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useAppContext } from '@/app/providers/Provider';
 
 const ArrowLeftIcon = () => (
@@ -19,20 +20,29 @@ const ArrowLeftIcon = () => (
 
 export default function NotFound() {
   const { isSidebarCollapsed } = useAppContext();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
-    <main
-      className={`flex-1 overflow-y-auto bg-white transition-all duration-300 ${
-        isSidebarCollapsed ? 'ml-[88px]' : 'ml-[280px]'
-      }`}>
-      <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-        <p className="select-none text-8xl font-mono font-bold text-gray-200">
+    <div className="flex-1 overflow-y-auto bg-white min-h-screen">
+      <div className="flex h-[calc(100vh-160px)] w-full flex-col items-center justify-center p-4 md:p-8 text-center">
+        <p className="select-none text-6xl md:text-8xl font-mono font-bold text-gray-200">
           Oops!
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-800">
+        <h1 className="mt-2 text-2xl md:text-3xl font-bold tracking-tight text-gray-800">
           Page Not Found
         </h1>
-        <p className="mt-4 max-w-sm text-base text-gray-600">
+        <p className="mt-4 max-w-sm text-sm md:text-base text-gray-600 px-4">
           This page is still under construction or does not exist. Please check
           back later or navigate to a different section.
         </p>
@@ -43,6 +53,6 @@ export default function NotFound() {
           Go to Projects
         </button>
       </div>
-    </main>
+    </div>
   );
 }

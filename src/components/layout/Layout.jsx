@@ -22,10 +22,9 @@ export default function Layout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Check if screen is mobile size
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
+      setIsMobile(window.innerWidth < 768);
     };
 
     checkMobile();
@@ -74,7 +73,6 @@ export default function Layout({ children }) {
   };
 
   const handleMenuClick = () => {
-    // You can implement mobile menu functionality here later
     console.log('Menu clicked on mobile');
   };
 

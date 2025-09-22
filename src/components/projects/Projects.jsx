@@ -128,9 +128,22 @@ export default function Projects({
 
   return (
     <>
-      <div className="overflow-y-auto flex-1 bg-white">
-        <div className="p-4 md:p-8 h-[calc(100vh-120px)]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 md:gap-6">
+      <div className="flex-1 overflow-y-auto bg-white min-h-screen">
+        <div className="p-4 md:p-8 min-h-[calc(100vh-160px)] pb-20">
+          <div className="block md:hidden space-y-4">
+            {filteredProjects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onEditProject={handleOpenEditModal}
+                onDuplicateProject={duplicateProject}
+                onDeleteProject={deleteProject}
+                onProjectClick={handleProjectClick}
+              />
+            ))}
+          </div>
+
+          <div className="hidden md:grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
             {filteredProjects.map((project) => (
               <ProjectCard
                 key={project.id}
