@@ -15,6 +15,8 @@ export default function Header({
   onStatusFilterChange,
   searchQuery,
   onSearchChange,
+  isMobile = false,
+  onMenuClick,
 }) {
   const [showSearch, setShowSearch] = useState(false);
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
@@ -87,9 +89,9 @@ export default function Header({
   return (
     <header
       className={`sticky top-0 z-40 border-b border-gray-200 bg-white transition-[margin-left] duration-300 ease-in-out ${
-        isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
+        isMobile ? 'ml-0' : isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
       }`}>
-      <div className={`w-full px-8 py-5`}>
+      <div className={`w-full px-4 md:px-8 py-5`}>
         {currentProject ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -98,34 +100,44 @@ export default function Header({
                 className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors p-1 rounded-lg hover:bg-gray-100">
                 <ArrowLeftIcon className="h-4 w-4" />
               </button>
-              <h1 className="text-sm font-medium text-gray-700">
+              <h1 className="text-sm font-medium text-gray-700 truncate">
                 {currentProject.name}
               </h1>
             </div>
 
-            <button
-              onClick={() =>
-                window.dispatchEvent(new CustomEvent('openTaskModal'))
-              }
-              className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
-                />
-              </svg>
-              New Task
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent('openTaskModal'))
+                }
+                className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4.5v15m7.5-7.5h-15"
+                  />
+                </svg>
+                <span className="hidden sm:inline">New Task</span>
+              </button>
+
+              {isMobile && (
+                <button
+                  onClick={onMenuClick}
+                  className="text-gray-700 hover:text-gray-900 transition-colors px-2 py-1 text-sm font-medium">
+                  Menu
+                </button>
+              )}
+            </div>
           </div>
         ) : showProjectControls ? (
           <div className="flex items-center justify-end">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <div className="flex items-center gap-2">
                 {showSearch ? (
                   <div className="relative">
@@ -136,7 +148,7 @@ export default function Header({
                       onChange={(e) => onSearchChange(e.target.value)}
                       onBlur={handleSearchBlur}
                       placeholder="Search projects"
-                      className="w-[200px] px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
+                      className="w-[150px] md:w-[200px] px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                     />
 
                     {searchQuery.trim() && (
@@ -212,17 +224,20 @@ export default function Header({
                 <button
                   onClick={() => setShowProjectsDropdown(!showProjectsDropdown)}
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100">
-                  {statusFilter === 'all'
-                    ? 'All projects'
-                    : statusFilter === 'in-progress'
-                    ? 'In Progress'
-                    : statusFilter === 'on-track'
-                    ? 'On Track'
-                    : statusFilter === 'at-risk'
-                    ? 'At Risk'
-                    : statusFilter === 'completed'
-                    ? 'Completed'
-                    : 'All projects'}
+                  <span className="hidden sm:inline">
+                    {statusFilter === 'all'
+                      ? 'All projects'
+                      : statusFilter === 'in-progress'
+                      ? 'In Progress'
+                      : statusFilter === 'on-track'
+                      ? 'On Track'
+                      : statusFilter === 'at-risk'
+                      ? 'At Risk'
+                      : statusFilter === 'completed'
+                      ? 'Completed'
+                      : 'All projects'}
+                  </span>
+                  <span className="sm:hidden">Filter</span>
                   <svg
                     className="h-4 w-4"
                     fill="none"
@@ -328,6 +343,7 @@ export default function Header({
                   </div>
                 )}
               </div>
+
               <button
                 onClick={() =>
                   window.dispatchEvent(
@@ -335,15 +351,34 @@ export default function Header({
                   )
                 }
                 className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
-                Create Project
+                <span className="hidden sm:inline">Create Project</span>
+                <span className="sm:hidden">Create</span>
               </button>
+
+              {isMobile && (
+                <button
+                  onClick={onMenuClick}
+                  className="text-gray-700 hover:text-gray-900 transition-colors px-2 py-1 text-sm font-medium">
+                  Menu
+                </button>
+              )}
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold text-gray-900 capitalize">
-              {currentPage}
-            </h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-lg font-semibold text-gray-900 capitalize">
+                {currentPage}
+              </h1>
+            </div>
+
+            {isMobile && (
+              <button
+                onClick={onMenuClick}
+                className="text-gray-700 hover:text-gray-900 transition-colors px-2 py-1 text-sm font-medium">
+                Menu
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -240,11 +240,8 @@ export default function ProjectKanban({
   };
 
   return (
-    <main
-      className={`overflow-y-auto flex-1 bg-gray-50 transition-all duration-300 ${
-        isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
-      }`}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 h-[calc(50vh-2rem)]">
+    <div className="overflow-y-auto flex-1 bg-gray-50">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 p-4 md:p-8 h-[calc(100vh-120px)]">
         <KanbanColumn
           title="To do"
           tasks={sortTasksByDate(todoTasks)}
@@ -298,6 +295,6 @@ export default function ProjectKanban({
           isEditing={!!editingTask}
         />
       )}
-    </main>
+    </div>
   );
 }

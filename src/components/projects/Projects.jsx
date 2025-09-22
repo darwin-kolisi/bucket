@@ -128,12 +128,9 @@ export default function Projects({
 
   return (
     <>
-      <main
-        className={`overflow-y-auto flex-1 bg-white transition-all duration-300 ${
-          isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
-        }`}>
-        <div className="p-8 h-[calc(50vh-2rem)]">
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+      <div className="overflow-y-auto flex-1 bg-white">
+        <div className="p-4 md:p-8 h-[calc(100vh-120px)]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 md:gap-6">
             {filteredProjects.map((project) => (
               <ProjectCard
                 key={project.id}
@@ -146,7 +143,7 @@ export default function Projects({
             ))}
           </div>
         </div>
-      </main>
+      </div>
 
       {isProjectModalOpen && (
         <AddProjectModal

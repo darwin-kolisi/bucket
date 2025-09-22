@@ -1,6 +1,7 @@
 'use client';
 import { useAppContext } from '@/app/providers/Provider';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
@@ -16,8 +17,22 @@ export default function Layout({ children }) {
     projects,
   } = useAppContext();
 
+  const [isMobile, setIsMobile] = useState(false);
+
   const pathname = usePathname();
   const router = useRouter();
+
+  // Check if screen is mobile size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const getCurrentPage = () => {
     if (pathname === '/') return 'dashboard';
@@ -58,6 +73,11 @@ export default function Layout({ children }) {
     console.log('Creating new project of type:', type);
   };
 
+  const handleMenuClick = () => {
+    // You can implement mobile menu functionality here later
+    console.log('Menu clicked on mobile');
+  };
+
   return (
     <div className="app-container">
       <Header
@@ -72,17 +92,26 @@ export default function Layout({ children }) {
         onStatusFilterChange={setStatusFilter}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        isMobile={isMobile}
+        onMenuClick={handleMenuClick}
       />
       <div className="main-content-wrapper">
-        <Sidebar
-          activeItem={currentPage}
-          onItemSelect={handleItemSelect}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={toggleSidebar}
-        />
-        <main className="content-area">{children}</main>
+        {!isMobile && (
+          <Sidebar
+            activeItem={currentPage}
+            onItemSelect={handleItemSelect}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={toggleSidebar}
+          />
+        )}
+        <main
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isMobile ? 'ml-0' : isSidebarCollapsed ? 'ml-[88px]' : 'ml-[280px]'
+          }`}>
+          {children}
+        </main>
       </div>
-      <Footer isCollapsed={isSidebarCollapsed} />
+      <Footer isCollapsed={isSidebarCollapsed} isMobile={isMobile} />
     </div>
   );
 }

@@ -61,3 +61,27 @@ body {
   flex-direction: column;
   min-height: 100vh;
 }
+
+.app-container {
+  @apply min-h-screen bg-gray-50;
+}
+
+.main-content-wrapper {
+  @apply flex min-h-screen;
+}
+
+/* Mobile-first responsive adjustments */
+@media (max-width: 767px) {
+  /* Mobile: no margins, full width */
+  .main-content-wrapper main {
+    margin-left: 0 !important;
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 768px) {
+  /* Desktop: maintain sidebar spacing */
+  .main-content-wrapper main {
+    transition: margin-left 0.3s ease-in-out;
+  }
+}
