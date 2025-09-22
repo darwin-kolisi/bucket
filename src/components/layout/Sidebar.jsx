@@ -81,10 +81,10 @@ export default function Sidebar({
   return (
     <aside
       className={`fixed top-0 left-0 z-50 h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 hidden md:flex ${
-        isCollapsed ? 'w-[88px]' : 'w-[280px]'
+        isCollapsed ? 'w-[70px]' : 'w-[220px]'
       }`}>
       <div
-        className={`relative flex h-19.5 items-center justify-between border-b border-gray-200 px-5 transition-all duration-300`}>
+        className={`relative flex h-18.5 items-center justify-between border-b border-gray-200 px-5 transition-all duration-300`}>
         <div className="flex items-center gap-3">
           <Image
             src="/cat.gif"
@@ -181,7 +181,7 @@ export default function Sidebar({
         </div>
       </nav>
 
-      <div className="border-t border-gray-200 px-4 py-5">
+      <div className="border-t border-gray-200 px-4 py-5.5">
         <Menu as="div" className="relative">
           <MenuButton className="flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition hover:border-gray-200 hover:bg-gray-50">
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-900 text-xs font-semibold text-white">

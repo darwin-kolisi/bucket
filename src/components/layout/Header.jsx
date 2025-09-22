@@ -89,9 +89,9 @@ export default function Header({
   return (
     <header
       className={`sticky top-0 z-40 border-b border-gray-200 bg-white transition-[margin-left] duration-300 ease-in-out ${
-        isMobile ? 'ml-0' : isCollapsed ? 'ml-[88px]' : 'ml-[280px]'
+        isMobile ? 'ml-0' : isCollapsed ? 'ml-[70px]' : 'ml-[220px]'
       }`}>
-      <div className={`w-full px-4 md:px-8 py-5`}>
+      <div className={`w-full h-18.5 px-5 md:px-8 py-5`}>
         {currentProject ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
