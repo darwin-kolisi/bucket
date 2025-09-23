@@ -16,7 +16,7 @@ export default function KanbanColumn({
 }) {
   return (
     <div
-      className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-colors duration-200 h-full min-w-[280px] max-w-[280px] flex-shrink-0"
+      className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3  transition-colors duration-200 h-full min-w-[280px] max-w-[280px] flex-shrink-0"
       onDragOver={(e) => onDragOver(e, status)}
       onDragLeave={onDragLeave}
       onDrop={(e) => onDrop(e, status)}>
