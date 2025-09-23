@@ -35,12 +35,14 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  @apply min-h-screen bg-gray-500;
 }
 
 .main-content-wrapper {
   display: flex;
   flex: 1;
   overflow: hidden;
+  @apply flex min-h-screen;
 }
 
 .content-scroll-container {
@@ -60,4 +62,101 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+html,
+body {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+}
+
+.main-content-wrapper {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+  .main-content-wrapper main,
+  .main-content-wrapper > div,
+  header {
+    margin-left: 0 !important;
+  }
+
+  .app-container {
+    @apply w-full;
+  }
+
+  button {
+    @apply min-h-[44px];
+  }
+
+  .modal-container {
+    @apply w-full max-w-none mx-2;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .main-content-wrapper main {
+    transition: margin-left 0.3s ease-in-out;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-content-wrapper main {
+    transition: margin-left 0.3s ease-in-out;
+  }
+
+  .hover-effects {
+    @apply transition-all duration-200 ease-in-out;
+  }
+}
+
+.responsive-grid-projects {
+  @apply grid grid-cols-1 gap-4;
+}
+
+@media (min-width: 640px) {
+  .responsive-grid-projects {
+    @apply grid-cols-2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid-projects {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    @apply gap-6;
+  }
+}
+
+.kanban-mobile {
+  @apply flex flex-col space-y-6;
+}
+
+.kanban-desktop {
+  @apply grid grid-cols-3 gap-6;
+}
+
+* {
+  transition: margin-left 0.3s ease-in-out;
+}
+
+.scroll-container {
+  @apply overflow-y-auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
 }

@@ -16,10 +16,7 @@ export default function ProjectDetailPage() {
   if (!project) {
     return (
       <Layout>
-        <main
-          className={`overflow-y-auto flex-1 bg-white transition-all duration-300 ${
-            isSidebarCollapsed ? 'ml-[88px]' : 'ml-[280px]'
-          }`}>
+        <div className="overflow-y-auto flex-1 bg-white">
           <div className="flex h-full flex-col items-center justify-center p-8 text-center">
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-800">
               Project Not Found
@@ -33,7 +30,7 @@ export default function ProjectDetailPage() {
               Back to Projects
             </button>
           </div>
-        </main>
+        </div>
       </Layout>
     );
   }
