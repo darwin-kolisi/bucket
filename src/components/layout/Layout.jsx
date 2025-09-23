@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
+import Settings from './Settings';
 
 export default function Layout({ children }) {
   const {
@@ -18,6 +19,7 @@ export default function Layout({ children }) {
   } = useAppContext();
 
   const [isMobile, setIsMobile] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -31,6 +33,16 @@ export default function Layout({ children }) {
     window.addEventListener('resize', checkMobile);
 
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const handleOpenSettings = () => {
+      setIsSettingsOpen(true);
+    };
+    window.addEventListener('openSettings', handleOpenSettings);
+    return () => {
+      window.removeEventListener('openSettings', handleOpenSettings);
+    };
   }, []);
 
   const getCurrentPage = () => {
@@ -112,6 +124,10 @@ export default function Layout({ children }) {
         </main>
       </div>
       <Footer isCollapsed={isSidebarCollapsed} isMobile={isMobile} />
+      <Settings
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 }

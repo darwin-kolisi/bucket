@@ -73,11 +73,17 @@ export default function Sidebar({
     { id: 'work', label: 'Work', count: 8, color: 'bg-green-500' },
     { id: 'learning', label: 'Learning', count: 5, color: 'bg-yellow-500' },
   ];
+
   const handleItemClick = (itemId) => {
     if (onItemSelect) {
       onItemSelect(itemId);
     }
   };
+
+  const handleSettingsClick = () => {
+    window.dispatchEvent(new CustomEvent('openSettings'));
+  };
+
   return (
     <aside
       className={`fixed top-0 left-0 z-50 h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 hidden md:flex ${
@@ -210,12 +216,7 @@ export default function Sidebar({
             className="absolute bottom-full mb-2 w-[180px] origin-bottom-left rounded-xl border border-gray-200 bg-white p-1 text-sm/6 text-gray-900 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0">
             <MenuItem>
               <button
-                className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100`}>
-                View Profile
-              </button>
-            </MenuItem>
-            <MenuItem>
-              <button
+                onClick={handleSettingsClick}
                 className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100`}>
                 Settings
               </button>
