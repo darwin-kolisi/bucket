@@ -40,6 +40,7 @@ export default function ProjectKanban({
 
   const todoTasks = tasks.filter((t) => t.status === 'todo');
   const inProgressTasks = tasks.filter((t) => t.status === 'in-progress');
+  const inReviewTasks = tasks.filter((t) => t.status === 'in-review');
   const doneTasks = tasks.filter((t) => t.status === 'done');
 
   const handleDragStart = (e, task) => {
@@ -100,6 +101,8 @@ export default function ProjectKanban({
                 return 0;
               case 'in-progress':
                 return Math.round(total * 0.5);
+              case 'in-review':
+                return Math.round(total * 0.8);
               case 'done':
                 return total;
               default:
@@ -252,55 +255,71 @@ export default function ProjectKanban({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50 min-h-screen">
-      <div className="block md:hidden p-4 space-y-4 min-h-full">
-        <div className="space-y-6">
-          <KanbanColumn
-            title="To do"
-            tasks={sortTasksByDate(todoTasks)}
-            status="todo"
-            onEditTask={handleOpenEditModal}
-            onDuplicateTask={duplicateTask}
-            onDeleteTask={deleteTask}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onToggleSubtask={handleToggleSubtask}
-          />
-          <KanbanColumn
-            title="In progress"
-            tasks={sortTasksByDate(inProgressTasks)}
-            status="in-progress"
-            onEditTask={handleOpenEditModal}
-            onDuplicateTask={duplicateTask}
-            onDeleteTask={deleteTask}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onToggleSubtask={handleToggleSubtask}
-          />
-          <KanbanColumn
-            title="Done"
-            tasks={sortTasksByDate(doneTasks)}
-            status="done"
-            onEditTask={handleOpenEditModal}
-            onDuplicateTask={duplicateTask}
-            onDeleteTask={deleteTask}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onToggleSubtask={handleToggleSubtask}
-          />
+    <div className="flex-1 overflow-hidden overflow-x-auto bg-white min-h-screen">
+      <div className="block md:hidden p-4 min-h-full">
+        <div className="block md:hidden p-4 min-h-full">
+          <div className="flex gap-4 overflow-x-auto pb-4 w-max min-w-full">
+            <KanbanColumn
+              title="To do"
+              tasks={sortTasksByDate(todoTasks)}
+              status="todo"
+              onEditTask={handleOpenEditModal}
+              onDuplicateTask={duplicateTask}
+              onDeleteTask={deleteTask}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onToggleSubtask={handleToggleSubtask}
+            />
+            <KanbanColumn
+              title="In progress"
+              tasks={sortTasksByDate(inProgressTasks)}
+              status="in-progress"
+              onEditTask={handleOpenEditModal}
+              onDuplicateTask={duplicateTask}
+              onDeleteTask={deleteTask}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onToggleSubtask={handleToggleSubtask}
+            />
+            <KanbanColumn
+              title="In Review"
+              tasks={sortTasksByDate(inReviewTasks)}
+              status="in-review"
+              onEditTask={handleOpenEditModal}
+              onDuplicateTask={duplicateTask}
+              onDeleteTask={deleteTask}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onToggleSubtask={handleToggleSubtask}
+            />
+            <KanbanColumn
+              title="Done"
+              tasks={sortTasksByDate(doneTasks)}
+              status="done"
+              onEditTask={handleOpenEditModal}
+              onDuplicateTask={duplicateTask}
+              onDeleteTask={deleteTask}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onToggleSubtask={handleToggleSubtask}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="hidden md:grid grid-cols-3 gap-6 p-8 min-h-full">
+      <div className="hidden md:flex gap-4 p-6 overflow-x-auto min-h-full">
         <KanbanColumn
           title="To do"
           tasks={sortTasksByDate(todoTasks)}
@@ -330,7 +349,21 @@ export default function ProjectKanban({
           onToggleSubtask={handleToggleSubtask}
         />
         <KanbanColumn
-          title="Done"
+          title="In Review"
+          tasks={sortTasksByDate(inReviewTasks)}
+          status="in-review"
+          onEditTask={handleOpenEditModal}
+          onDuplicateTask={duplicateTask}
+          onDeleteTask={deleteTask}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onToggleSubtask={handleToggleSubtask}
+        />
+        <KanbanColumn
+          title="Completed"
           tasks={sortTasksByDate(doneTasks)}
           status="done"
           onEditTask={handleOpenEditModal}
