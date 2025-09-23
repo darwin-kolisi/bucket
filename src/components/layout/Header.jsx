@@ -86,6 +86,84 @@ export default function Header({
     }
   };
 
+  if (isMobile && showSearch) {
+    return (
+      <header
+        className={`sticky top-0 z-40 border-b border-gray-200 bg-white h-20 transition-[margin-left] duration-300 ease-in-out ml-0`}>
+        <div className={`w-full px-4 py-5`}>
+          <div className="flex items-center justify-between">
+            <div className="flex-1 relative">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                onBlur={handleSearchBlur}
+                placeholder="Search projects"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
+              />
+              {searchQuery.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-1 w-full origin-top-right rounded-xl border border-gray-200 bg-white p-2 text-sm text-gray-900 shadow-lg z-50 search-results">
+                  <div className="mb-2 px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Search Results
+                  </div>
+                  {filteredProjects.length > 0 ? (
+                    <div className="max-h-60 overflow-y-auto">
+                      {filteredProjects.map((project) => (
+                        <button
+                          key={project.id}
+                          onClick={() => handleProjectSelect(project)}
+                          className="group flex w-full items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
+                          <div className="flex-shrink-0 mt-1">
+                            <div
+                              className={`w-2 h-2 rounded-full ${
+                                project.status === 'In Progress'
+                                  ? 'bg-blue-500'
+                                  : project.status === 'On Track'
+                                  ? 'bg-green-500'
+                                  : project.status === 'At Risk'
+                                  ? 'bg-red-500'
+                                  : 'bg-gray-400'
+                              }`}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 truncate">
+                              {project.name}
+                            </div>
+                            <div className="text-gray-500 text-xs truncate">
+                              {project.description}
+                            </div>
+                            <div className="text-gray-400 text-xs mt-1">
+                              Due: {project.dueDate} • {project.totalTasks || 0}{' '}
+                              tasks
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="px-3 py-4 text-center text-gray-500">
+                      No projects found for {searchQuery}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                setShowSearch(false);
+                onSearchChange('');
+              }}
+              className="ml-2 text-gray-700 hover:text-gray-900 transition-colors px-3 py-2 text-sm font-medium">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header
       className={`sticky top-0 z-40 border-b border-gray-200 bg-white transition-[margin-left] duration-300 ease-in-out ${

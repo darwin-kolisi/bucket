@@ -125,7 +125,7 @@ export default function Sidebar({
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-4 py-8">
+      <nav className="flex-1 overflow-y-auto px-3 py-8">
         <div>
           {navigationItems.map((item) => (
             <button
@@ -207,7 +207,7 @@ export default function Sidebar({
           </MenuButton>
           <MenuItems
             transition
-            className="absolute bottom-full mb-2 w-[200px] origin-bottom-left rounded-xl border border-gray-200 bg-white p-1 text-sm/6 text-gray-900 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0">
+            className="absolute bottom-full mb-2 w-[180px] origin-bottom-left rounded-xl border border-gray-200 bg-white p-1 text-sm/6 text-gray-900 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0">
             <MenuItem>
               <button
                 className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100`}>
