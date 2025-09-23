@@ -90,6 +90,8 @@ export default function Layout({ children }) {
         onStatusFilterChange={setStatusFilter}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onToggleSidebar={toggleSidebar}
+        onNavigate={handleItemSelect}
         isMobile={isMobile}
         onMenuClick={handleMenuClick}
       />
