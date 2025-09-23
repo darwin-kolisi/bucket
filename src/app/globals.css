@@ -64,6 +64,16 @@ body {
   min-height: 100vh;
 }
 
+html,
+body {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+}
+
+.main-content-wrapper {
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 767px) {
   .main-content-wrapper main,
   .main-content-wrapper > div,
