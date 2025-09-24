@@ -16,13 +16,13 @@ export default function KanbanColumn({
 }) {
   return (
     <div
-      className="flex flex-col gap-4 rounded-xl border border-gray-300 bg-white p-4 shadow-sm transition-colors duration-200 h-full"
+      className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3  transition-colors duration-200 h-full min-w-[280px] max-w-[280px] flex-shrink-0"
       onDragOver={(e) => onDragOver(e, status)}
       onDragLeave={onDragLeave}
       onDrop={(e) => onDrop(e, status)}>
-      <div className="flex items-center justify-between px-2">
-        <h2 className="text-base font-semibold text-gray-800">{title}</h2>
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-sm font-medium text-gray-700">{title}</h2>
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
           {tasks.length}
         </span>
       </div>

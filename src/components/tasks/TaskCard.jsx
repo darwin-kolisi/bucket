@@ -90,11 +90,9 @@ export default function TaskCard({
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+    <div className="bg-gray-50 rounded-lg p-3 border-b border-l border-gray-200 transition-shadow">
       <div className="flex justify-between items-center mb-1">
-        <h4 className="text-base font-semibold text-gray-900 m-0">
-          {task.title}
-        </h4>
+        <h4 className="text-sm font-medium text-gray-900 m-0">{task.title}</h4>
         <div className="relative" ref={menuRef}>
           <button
             className="text-gray-400 hover:text-gray-600 text-xl cursor-pointer p-0 bg-transparent border-none transition-colors"
