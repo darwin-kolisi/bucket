@@ -103,14 +103,28 @@ export default function ProjectCard({
     }
   };
 
+  const completionPercentage =
+    project.totalTasks > 0
+      ? Math.round((project.completedTasks / project.totalTasks) * 100)
+      : 0;
+
   return (
     <div
-      className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+      className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col cursor-pointer transition-shadow duration-150"
       onClick={handleCardClick}>
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-lg font-semibold text-gray-900 m-0">
-          {project.name}
-        </h3>
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">
+            {project.name}
+          </h3>
+          <div className="flex items-center gap-2">
+            {getStatusIcon(project.status)}
+            <span className="text-sm font-medium text-gray-600">
+              {project.status}
+            </span>
+          </div>
+        </div>
+
         <div className="options-container relative" ref={menuRef}>
           <Menu>
             <MenuButton className="text-2xl text-gray-400 bg-none border-none cursor-pointer p-0 leading-none hover:text-gray-600 transition-colors">
@@ -209,17 +223,95 @@ export default function ProjectCard({
       <p className="text-sm text-gray-600 m-0 mb-6 leading-relaxed flex-grow">
         {project.description}
       </p>
-      <div className="flex justify-between items-center">
-        <span className="text-sm text-gray-700 font-medium">
-          Due: {project.dueDate}
-        </span>
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50">
-          {getStatusIcon(project.status)}
-          <span className="text-xs font-medium text-gray-700">
-            {project.status}
+
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700">Progress</span>
+          <span className="text-sm font-semibold text-gray-900">
+            {completionPercentage}%
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className="bg-gray-900 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${completionPercentage}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+          <span>
+            {project.completedTasks || 0} of {project.totalTasks || 0} tasks
+            completed
           </span>
         </div>
       </div>
+
+      <div className="space-y-3 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg
+              className="h-4 w-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5a2.25 2.25 0 0 0 2.25-2.25m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5a2.25 2.25 0 0 1 2.25 2.25v7.5"
+              />
+            </svg>
+            <span className="text-sm font-medium text-gray-600">
+              Due: {project.dueDate}
+            </span>
+          </div>
+
+          {project.priority && (
+            <span
+              className={`px-2 py-1 rounded-md text-xs font-medium ${getPriorityColor(
+                project.priority
+              )}`}>
+              {project.priority}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <svg
+            className="h-4 w-4 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+            />
+          </svg>
+          <span className="text-sm text-gray-600">
+            {project.notesCount > 0
+              ? `${project.notesCount} notes`
+              : 'No notes yet'}
+          </span>
+        </div>
+      </div>
+
+      {project.tags && project.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {project.tags.slice(0, 3).map((tag, index) => (
+            <span
+              key={index}
+              className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
+              {tag}
+            </span>
+          ))}
+          {project.tags.length > 3 && (
+            <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-md text-xs font-medium">
+              +{project.tags.length - 3}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
