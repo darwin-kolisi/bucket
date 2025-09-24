@@ -255,7 +255,7 @@ export default function ProjectKanban({
   };
 
   return (
-    <div className="flex-1 overflow-hidden  bg-white min-h-screen">
+    <div className="flex-1 overflow-hidden  bg-gray-50 min-h-screen">
       <div className="block md:hidden p-4 min-h-full">
         <div className="block md:hidden p-4 min-h-full">
           <div className="flex gap-4 overflow-x-auto pb-4 w-max min-w-full">
