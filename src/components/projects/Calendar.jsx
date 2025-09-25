@@ -33,6 +33,38 @@ const Calendar = ({ projects = [] }) => {
     setCurrentDate(newDate);
   };
 
+  const calendarDays = [];
+
+  for (let i = 0; i < startingDayOfWeek; i++) {
+    const prevMonthDate = new Date(
+      currentYear,
+      currentMonth,
+      -startingDayOfWeek + i + 1
+    );
+    calendarDays.push({
+      day: prevMonthDate.getDate(),
+      isCurrentMonth: false,
+      isPrevMonth: true,
+    });
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    calendarDays.push({
+      day,
+      isCurrentMonth: true,
+      isPrevMonth: false,
+    });
+  }
+
+  const remainingCells = 42 - calendarDays.length;
+  for (let i = 1; i <= remainingCells; i++) {
+    calendarDays.push({
+      day: i,
+      isCurrentMonth: false,
+      isPrevMonth: false,
+    });
+  }
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -86,11 +118,23 @@ const Calendar = ({ projects = [] }) => {
       </div>
 
       <div className="grid grid-cols-7 gap-2">
-        {Array.from({ length: 35 }, (_, index) => (
+        {calendarDays.map((dateObj, index) => (
           <div
             key={index}
-            className="min-h-[80px] p-2 rounded-lg border border-gray-200 bg-gray-50">
-            <div className="text-sm font-medium text-gray-900">{index + 1}</div>
+            className={`
+              min-h-[80px] p-2 rounded-lg border transition-colors
+              ${
+                dateObj.isCurrentMonth
+                  ? 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                  : 'bg-gray-25 border-gray-100 text-gray-400'
+              }
+            `}>
+            <div
+              className={`text-sm font-medium ${
+                dateObj.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+              }`}>
+              {dateObj.day}
+            </div>
           </div>
         ))}
       </div>
