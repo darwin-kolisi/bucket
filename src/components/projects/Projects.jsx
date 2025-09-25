@@ -128,13 +128,16 @@ export default function Projects({
     return matchesStatus && matchesSearch;
   });
 
- const renderCalendarView = () => {
-  return (
-    <div className="p-4 md:p-8 min-h-[calc(100vh-160px)] pb-20 bg-gray-50">
-      <Calendar projects={filteredProjects} />
-    </div>
-  );
-};
+  const renderCalendarView = () => {
+    return (
+      <div className="p-4 md:p-8 min-h-[calc(100vh-160px)] pb-20 bg-gray-50">
+        <Calendar
+          projects={filteredProjects}
+          onProjectSelect={onProjectSelect}
+        />
+      </div>
+    );
+  };
 
   const renderBoardView = () => {
     return (

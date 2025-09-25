@@ -1,8 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 
-const Calendar = ({ projects = [] }) => {
+const Calendar = ({ projects = [], onProjectSelect }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
+  const [popupData, setPopupData] = useState(null);
+  const popupRef = useRef(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -13,6 +15,19 @@ const Calendar = ({ projects = [] }) => {
     window.addEventListener('resize', checkMobile);
 
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        setPopupData(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const currentMonth = currentDate.getMonth();
@@ -120,21 +135,43 @@ const Calendar = ({ projects = [] }) => {
     }
   };
 
+  const handleProjectClick = (project) => {
+    if (onProjectSelect) {
+      onProjectSelect(project);
+    }
+    setPopupData(null);
+  };
+
+  const handleDayClick = (e, dateObj) => {
+    if (isMobile || !dateObj.projects || dateObj.projects.length === 0) {
+      return;
+    }
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPopupData({
+      projects: dateObj.projects,
+      top: rect.bottom + window.scrollY + 5,
+      left: rect.left + window.scrollX,
+      minWidth: rect.width,
+    });
+  };
+
   const renderDesktopView = () => (
     <div className="grid grid-cols-7 gap-2">
       {calendarDays.map((dateObj, index) => (
         <div
           key={index}
+          onClick={(e) => handleDayClick(e, dateObj)}
           className={`
             min-h-[80px] p-2 rounded-xl border transition-colors relative
             ${
               dateObj.isCurrentMonth
-                ? 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                ? 'bg-gray-50 border-gray-200'
                 : 'bg-white border-gray-100'
             }
             ${
               dateObj.projects.length > 0 && dateObj.isCurrentMonth
-                ? 'ring-1 ring-gray-300'
+                ? 'ring-1 ring-gray-300 hover:bg-gray-100 cursor-pointer'
                 : ''
             }
           `}>
@@ -150,7 +187,7 @@ const Calendar = ({ projects = [] }) => {
               {dateObj.projects.slice(0, 2).map((project, projectIndex) => (
                 <div
                   key={projectIndex}
-                  className="flex items-center gap-1.5 text-xs bg-white border border-gray-200 rounded-md px-2 py-1 hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
+                  className="flex items-center gap-1.5 text-xs bg-white border border-gray-200 rounded-md px-2 py-1 shadow-sm"
                   title={`${project.name} - ${project.status}`}>
                   <div
                     className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(
@@ -182,8 +219,8 @@ const Calendar = ({ projects = [] }) => {
 
     if (daysWithProjects.length === 0) {
       return (
-        <div className="text-center text-sm py-8 text-gray-500  rounded-xl">
-          No projects scheduled
+        <div className="text-center text-sm py-8 text-gray-500 rounded-xl">
+          No projects scheduled for this month
         </div>
       );
     }
@@ -206,22 +243,17 @@ const Calendar = ({ projects = [] }) => {
                 }
               </span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               {dateObj.projects.map((project, projectIndex) => (
                 <button
                   key={projectIndex}
+                  onClick={() => handleProjectClick(project)}
                   className="group flex w-full items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 text-left transition-colors">
                   <div className="flex-shrink-0 mt-1">
                     <div
-                      className={`w-2 h-2 rounded-full ${
-                        project.status === 'In Progress'
-                          ? 'bg-blue-500'
-                          : project.status === 'On Track'
-                          ? 'bg-green-500'
-                          : project.status === 'At Risk'
-                          ? 'bg-red-500'
-                          : 'bg-gray-400'
-                      }`}
+                      className={`w-2 h-2 rounded-full ${getStatusColor(
+                        project.status
+                      )}`}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -300,7 +332,47 @@ const Calendar = ({ projects = [] }) => {
 
       {isMobile ? renderMobileView() : renderDesktopView()}
 
-      <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-gray-200">
+      {popupData && (
+        <div
+          ref={popupRef}
+          style={{
+            position: 'absolute',
+            top: `${popupData.top}px`,
+            left: `${popupData.left}px`,
+            minWidth: `${popupData.minWidth}px`,
+          }}
+          className="w-72 origin-top-right rounded-xl border border-gray-200 bg-white p-2 text-sm text-gray-900 shadow-lg z-50">
+          <div className="mb-2 px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Projects for this day
+          </div>
+          <div className="max-h-60 overflow-y-auto">
+            {popupData.projects.map((project) => (
+              <button
+                key={project.id}
+                onClick={() => handleProjectClick(project)}
+                className="group flex w-full items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
+                <div className="flex-shrink-0 mt-1">
+                  <div
+                    className={`w-2 h-2 rounded-full ${getStatusColor(
+                      project.status
+                    )}`}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-gray-900 truncate">
+                    {project.name}
+                  </div>
+                  <div className="text-gray-500 text-xs truncate">
+                    {project.description}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-center flex-wrap gap-4 mt-6 pt-4 border-t border-gray-200">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-blue-500" />
           <span className="text-xs text-gray-600">In Progress</span>
