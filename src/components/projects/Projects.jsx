@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import ProjectCard from './ProjectCard';
 import AddProjectModal from './AddProjectModal';
+import Calendar from './Calendar';
 
 export default function Projects({
   isCollapsed,
@@ -127,32 +128,13 @@ export default function Projects({
     return matchesStatus && matchesSearch;
   });
 
-  const renderCalendarView = () => {
-    return (
-      <div className="p-4 md:p-8 min-h-[calc(100vh-160px)] pb-20">
-        <div className="text-center py-16">
-          <svg
-            className="h-12 w-12 text-gray-300 mx-auto mb-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5a2.25 2.25 0 0 0 2.25-2.25m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5a2.25 2.25 0 0 1 2.25 2.25v7.5"
-            />
-          </svg>
-          <h3 className="text-m font-normal text-gray-900 mb-2">
-            Calendar View
-          </h3>
-          <p className="text-sm text-gray-500 max-w-sm mx-auto">
-            Calendar view is coming soon.
-          </p>
-        </div>
-      </div>
-    );
-  };
+ const renderCalendarView = () => {
+  return (
+    <div className="p-4 md:p-8 min-h-[calc(100vh-160px)] pb-20 bg-gray-50">
+      <Calendar projects={filteredProjects} />
+    </div>
+  );
+};
 
   const renderBoardView = () => {
     return (
@@ -188,7 +170,7 @@ export default function Projects({
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto bg-white min-h-screen">
+      <div className="flex-1 overflow-y-auto bg-gray-50 min-h-screen">
         <div className="border-b border-gray-200 bg-white px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center bg-gray-100 rounded-lg p-1">

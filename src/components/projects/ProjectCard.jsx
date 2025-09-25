@@ -110,7 +110,7 @@ export default function ProjectCard({
 
   return (
     <div
-      className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col cursor-pointer transition-shadow duration-150"
+      className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col cursor-pointer transition-shadow duration-150"
       onClick={handleCardClick}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1 min-w-0">
