@@ -117,7 +117,7 @@ export default function Layout({ children }) {
           />
         )}
         <main
-          className={`flex-1 transition-all duration-300 ease-in-out ${
+          className={`flex-1 overflow-y-auto transition-all duration-300 ease-in-out ${
             isMobile ? 'ml-0' : isSidebarCollapsed ? 'ml-[70px]' : 'ml-[220px]'
           }`}>
           {children}

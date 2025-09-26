@@ -35,14 +35,14 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  @apply min-h-screen bg-gray-500;
+  @apply min-h-screen bg-gray-50;
 }
 
 .main-content-wrapper {
   display: flex;
   flex: 1;
   overflow: hidden;
-  @apply flex min-h-screen;
+  @apply flex;
 }
 
 .content-scroll-container {
@@ -135,9 +135,6 @@ body {
   @apply grid grid-cols-3 gap-6;
 }
 
-* {
-  transition: margin-left 0.3s ease-in-out;
-}
 
 .scroll-container {
   @apply overflow-y-auto;
