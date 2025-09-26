@@ -15,6 +15,7 @@ export function Provider({ children }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [projectsView, setProjectsView] = useState('board');
 
   const initialProjects = [
     {
@@ -121,6 +122,8 @@ export function Provider({ children }) {
     setSearchQuery,
     projects,
     setProjects,
+    projectsView,
+    setProjectsView,
   };
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
