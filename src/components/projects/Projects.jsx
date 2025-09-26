@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import ProjectCard from './ProjectCard';
 import AddProjectModal from './AddProjectModal';
 import Calendar from './Calendar';
+import { useAppContext } from '@/app/providers/Provider';
 
 export default function Projects({
   isCollapsed,
@@ -15,7 +16,7 @@ export default function Projects({
 }) {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
-  const [currentView, setCurrentView] = useState('board');
+  const { projectsView, setProjectsView } = useAppContext();
 
   const handleProjectClick = (project) => {
     onProjectSelect(project);
@@ -178,9 +179,9 @@ export default function Projects({
           <div className="flex items-center justify-between">
             <div className="flex items-center bg-gray-100 rounded-lg p-1">
               <button
-                onClick={() => setCurrentView('board')}
+                onClick={() => setProjectsView('board')}
                 className={`flex items-center gap-2 px-3 py-2 text-xs font-normal rounded-md transition-all duration-200 ${
-                  currentView === 'board'
+                  projectsView === 'board'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}>
@@ -199,9 +200,9 @@ export default function Projects({
                 <span className="hidden sm:inline">Board</span>
               </button>
               <button
-                onClick={() => setCurrentView('calendar')}
+                onClick={() => setProjectsView('calendar')}
                 className={`flex items-center gap-2 px-3 py-2 text-xs font-normal rounded-md transition-all duration-200 ${
-                  currentView === 'calendar'
+                  projectsView === 'calendar'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}>
@@ -223,7 +224,7 @@ export default function Projects({
           </div>
         </div>
 
-        {currentView === 'board' ? renderBoardView() : renderCalendarView()}
+        {projectsView === 'board' ? renderBoardView() : renderCalendarView()}
       </div>
 
       {isProjectModalOpen && (
