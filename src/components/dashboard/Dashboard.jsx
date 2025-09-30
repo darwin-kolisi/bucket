@@ -30,7 +30,11 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
   const upcomingTasks = allTasks
     .filter((task) => task.status !== 'done')
     .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .slice(0, 5);
+    .slice(0, 5)
+    .map((task, index) => ({
+      ...task,
+      uniqueKey: `${task.projectName}-${task.id}-${index}`,
+    }));
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -275,7 +279,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
           <div className="space-y-2">
             {upcomingTasks.map((task) => (
               <div
-                key={task.id}
+                key={task.uniqueKey}
                 className="flex items-start gap-3 rounded-lg px-3 py-3 border border-gray-100 hover:bg-gray-50 transition-colors">
                 <div className="flex-shrink-0 mt-1">
                   <div
