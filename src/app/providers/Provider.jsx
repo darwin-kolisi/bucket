@@ -22,7 +22,7 @@ export function Provider({ children }) {
       id: 1,
       name: 'bucket',
       description: 'project management app',
-      dueDate: '15 Aug 2025',
+      dueDate: '22 Oct 2025',
       status: 'In Progress',
       tasks: [
         {

@@ -45,6 +45,8 @@ export default function Projects({
           }),
       status: projectData.status || 'In Progress',
       tasks: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     setProjects([...projects, newProject]);
@@ -77,6 +79,7 @@ export default function Projects({
           })
         : editingProject.dueDate,
       status: projectData.status || editingProject.status,
+      updatedAt: new Date().toISOString(),
     };
 
     setProjects(

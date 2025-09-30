@@ -16,7 +16,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
   ).length;
 
   const recentProjects = [...projects]
-    .sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate))
+    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
     .slice(0, 3);
 
   const allTasks = projects.flatMap((project) =>
