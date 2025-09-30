@@ -256,66 +256,64 @@ export default function ProjectKanban({
 
   return (
     <div className="flex-1 overflow-hidden  bg-gray-50 min-h-screen">
-      <div className="block md:hidden p-4 min-h-full">
-        <div className="block md:hidden p-4 min-h-full">
-          <div className="flex gap-4 overflow-x-auto pb-4 w-max min-w-full">
-            <KanbanColumn
-              title="To do"
-              tasks={sortTasksByDate(todoTasks)}
-              status="todo"
-              onEditTask={handleOpenEditModal}
-              onDuplicateTask={duplicateTask}
-              onDeleteTask={deleteTask}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onToggleSubtask={handleToggleSubtask}
-            />
-            <KanbanColumn
-              title="In progress"
-              tasks={sortTasksByDate(inProgressTasks)}
-              status="in-progress"
-              onEditTask={handleOpenEditModal}
-              onDuplicateTask={duplicateTask}
-              onDeleteTask={deleteTask}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onToggleSubtask={handleToggleSubtask}
-            />
-            <KanbanColumn
-              title="In Review"
-              tasks={sortTasksByDate(inReviewTasks)}
-              status="in-review"
-              onEditTask={handleOpenEditModal}
-              onDuplicateTask={duplicateTask}
-              onDeleteTask={deleteTask}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onToggleSubtask={handleToggleSubtask}
-            />
-            <KanbanColumn
-              title="Done"
-              tasks={sortTasksByDate(doneTasks)}
-              status="done"
-              onEditTask={handleOpenEditModal}
-              onDuplicateTask={duplicateTask}
-              onDeleteTask={deleteTask}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onToggleSubtask={handleToggleSubtask}
-            />
-          </div>
+      <div className="block md:hidden p-4 overflow-x-auto">
+        <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
+          <KanbanColumn
+            title="To do"
+            tasks={sortTasksByDate(todoTasks)}
+            status="todo"
+            onEditTask={handleOpenEditModal}
+            onDuplicateTask={duplicateTask}
+            onDeleteTask={deleteTask}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onToggleSubtask={handleToggleSubtask}
+          />
+          <KanbanColumn
+            title="In progress"
+            tasks={sortTasksByDate(inProgressTasks)}
+            status="in-progress"
+            onEditTask={handleOpenEditModal}
+            onDuplicateTask={duplicateTask}
+            onDeleteTask={deleteTask}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onToggleSubtask={handleToggleSubtask}
+          />
+          <KanbanColumn
+            title="In Review"
+            tasks={sortTasksByDate(inReviewTasks)}
+            status="in-review"
+            onEditTask={handleOpenEditModal}
+            onDuplicateTask={duplicateTask}
+            onDeleteTask={deleteTask}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onToggleSubtask={handleToggleSubtask}
+          />
+          <KanbanColumn
+            title="Done"
+            tasks={sortTasksByDate(doneTasks)}
+            status="done"
+            onEditTask={handleOpenEditModal}
+            onDuplicateTask={duplicateTask}
+            onDeleteTask={deleteTask}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onToggleSubtask={handleToggleSubtask}
+          />
         </div>
       </div>
 

@@ -22,10 +22,25 @@ export default function Header({
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const projectsDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const searchInputRef = useRef(null);
+
+  const timeGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 12) {
+      return 'Morning';
+    } else if (hour >= 12 && hour < 17) {
+      return 'Afternoon';
+    } else if (hour >= 17 && hour < 21) {
+      return 'Good evening';
+    } else {
+      return 'Night owl';
+    }
+  };
 
   const showProjectControls = currentPage === 'projects' && !currentProject;
 
@@ -110,6 +125,15 @@ export default function Header({
       onNavigate(itemId);
     }
     setShowMobileMenu(false);
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   };
 
   const bucketItems = [
@@ -627,19 +651,69 @@ export default function Header({
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3">
-            <h1 className="text-lg font-semibold text-gray-900 capitalize">
-              {currentPage}
-            </h1>
-            {isMobile && (
-              <div className="relative" ref={mobileMenuRef}>
-                <button
-                  onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
-                  <Bars3Icon className="h-5 w-5" />
-                </button>
-                {showMobileMenu && mobileMenuContent}
-              </div>
-            )}
+            <div>
+              <h1 className="text-sm font-semibold text-gray-600">
+                {timeGreeting()},
+              </h1>
+              <p className="font-semibold text-gray-900">Black Sabbath</p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+                  />
+                </svg>
+              </button>
+
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                {isDarkMode ? (
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                    stroke="currentColor">
+                    <path d="M8 12.25A4.25 4.25 0 0 1 12.25 8v0a4.25 4.25 0 0 1 4.25 4.25v0a4.25 4.25 0 0 1-4.25 4.25v0A4.25 4.25 0 0 1 8 12.25v0Z" />
+                    <path d="M12.25 3v1.5M21.5 12.25H20M18.791 18.791l-1.06-1.06M18.791 5.709l-1.06 1.06M12.25 20v1.5M4.5 12.25H3M6.77 6.77 5.709 5.709M6.77 17.73l-1.061 1.061" />
+                  </svg>
+                ) : (
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                    stroke="currentColor">
+                    <path d="M17.25 16.22a6.937 6.937 0 0 1-9.47-9.47 7.451 7.451 0 1 0 9.47 9.47ZM12.75 7C17 7 17 2.75 17 2.75S17 7 21.25 7C17 7 17 11.25 17 11.25S17 7 12.75 7Z" />
+                  </svg>
+                )}
+              </button>
+
+              {isMobile && (
+                <div className="relative" ref={mobileMenuRef}>
+                  <button
+                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+                    <Bars3Icon className="h-5 w-5" />
+                  </button>
+                  {showMobileMenu && mobileMenuContent}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
