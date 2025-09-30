@@ -28,6 +28,20 @@ export default function Header({
   const mobileMenuRef = useRef(null);
   const searchInputRef = useRef(null);
 
+  const timeGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 12) {
+      return 'Morning';
+    } else if (hour >= 12 && hour < 17) {
+      return 'Afternoon';
+    } else if (hour >= 17 && hour < 21) {
+      return 'Good evening';
+    } else {
+      return 'Night owl';
+    }
+  };
+
   const showProjectControls = currentPage === 'projects' && !currentProject;
 
   useEffect(() => {
@@ -637,10 +651,11 @@ export default function Header({
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <h1 className="text-m font-semibold text-gray-900">
-                Hi, Black Sabbath
+            <div>
+              <h1 className="text-sm font-semibold text-gray-600">
+                {timeGreeting()},
               </h1>
+              <p className="font-semibold text-gray-900">Black Sabbath</p>
             </div>
 
             <div className="flex items-center gap-3">
