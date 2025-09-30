@@ -255,10 +255,129 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
 
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="text-sm font-semibold text-gray-900 mb-4">
-            Project Status
+            Upcoming Deadlines
           </h2>
-          <div className="text-center py-4 text-gray-500 text-sm">
-            No data available
+          <div className="space-y-3">
+            {(() => {
+              const upcomingItems = [];
+              const today = new Date();
+              const thirtyDaysFromNow = new Date(today);
+              thirtyDaysFromNow.setDate(today.getDate() + 30);
+
+              projects.forEach((project) => {
+                const dueDate = new Date(project.dueDate);
+                if (
+                  dueDate >= today &&
+                  dueDate <= thirtyDaysFromNow &&
+                  project.status !== 'Completed'
+                ) {
+                  upcomingItems.push({
+                    type: 'project',
+                    name: project.name,
+                    dueDate: project.dueDate,
+                    priority: project.priority,
+                    project: project,
+                    date: dueDate,
+                  });
+                }
+
+                project.tasks?.forEach((task) => {
+                  if (task.dueDate && !task.completed) {
+                    const taskDueDate = new Date(task.dueDate);
+                    if (
+                      taskDueDate >= today &&
+                      taskDueDate <= thirtyDaysFromNow
+                    ) {
+                      upcomingItems.push({
+                        type: 'task',
+                        name: task.title,
+                        dueDate: task.dueDate,
+                        priority: task.priority,
+                        project: project,
+                        date: taskDueDate,
+                      });
+                    }
+                  }
+                });
+              });
+
+              upcomingItems.sort((a, b) => a.date - b.date);
+              const topItems = upcomingItems.slice(0, 5);
+
+              if (topItems.length === 0) {
+                return (
+                  <div className="text-center py-6 text-gray-500 text-xs">
+                    No upcoming deadlines in the next 30 days
+                  </div>
+                );
+              }
+
+              return topItems.map((item, index) => (
+                <div
+                  key={`${item.type}-${index}`}
+                  className="flex items-start gap-3 py-2 border-b border-gray-100 last:border-0">
+                  <div className="flex-shrink-0 mt-1">
+                    {item.type === 'project' ? (
+                      <svg
+                        className="h-4 w-4 text-blue-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6Z"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="h-4 w-4 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-gray-900 truncate font-medium">
+                      {item.name}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-gray-500">
+                        {item.project.name}
+                      </span>
+                      {item.priority && (
+                        <>
+                          <span className="text-gray-300">•</span>
+                          <span
+                            className={`text-xs px-1.5 py-0.5 rounded ${getPriorityColor(
+                              item.priority
+                            )}`}>
+                            {item.priority}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <div className="text-xs font-medium text-gray-900">
+                      {item.dueDate}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {Math.ceil((item.date - today) / (1000 * 60 * 60 * 24))}{' '}
+                      days
+                    </div>
+                  </div>
+                </div>
+              ));
+            })()}
           </div>
         </div>
       </div>
