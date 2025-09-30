@@ -19,6 +19,19 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
     .sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate))
     .slice(0, 3);
 
+  const allTasks = projects.flatMap((project) =>
+    (project.tasks || []).map((task) => ({
+      ...task,
+      projectName: project.name,
+      projectStatus: project.status,
+    }))
+  );
+
+  const upcomingTasks = allTasks
+    .filter((task) => task.status !== 'done')
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 5);
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'In Progress':
@@ -31,6 +44,19 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
         return 'bg-gray-400';
       default:
         return 'bg-gray-400';
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+        return 'text-red-600 bg-red-50';
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-50';
+      case 'low':
+        return 'text-green-600 bg-green-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
     }
   };
 
@@ -223,10 +249,74 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
           <h2 className="text-sm font-semibold text-gray-900">
             Upcoming Tasks
           </h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedTimeRange('week')}
+              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                selectedTimeRange === 'week'
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}>
+              This week
+            </button>
+            <button
+              onClick={() => setSelectedTimeRange('month')}
+              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                selectedTimeRange === 'month'
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}>
+              This month
+            </button>
+          </div>
         </div>
-        <div className="text-center py-8 text-gray-500 text-sm">
-          No upcoming tasks. You're all caught up!
-        </div>
+
+        {upcomingTasks.length > 0 ? (
+          <div className="space-y-2">
+            {upcomingTasks.map((task) => (
+              <div
+                key={task.id}
+                className="flex items-start gap-3 rounded-lg px-3 py-3 border border-gray-100 hover:bg-gray-50 transition-colors">
+                <div className="flex-shrink-0 mt-1">
+                  <div
+                    className={`w-2 h-2 rounded-full ${getStatusColor(
+                      task.projectStatus
+                    )}`}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-gray-900 text-sm truncate">
+                        {task.title}
+                      </div>
+                      <div className="text-gray-500 text-xs mt-0.5 truncate">
+                        {task.projectName}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {task.priority && (
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs font-medium ${getPriorityColor(
+                            task.priority
+                          )}`}>
+                          {task.priority}
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-400 whitespace-nowrap">
+                        {task.date}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500 text-sm">
+            No upcoming tasks. You're all caught up!
+          </div>
+        )}
       </div>
     </div>
   );
