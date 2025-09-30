@@ -24,11 +24,26 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
       ...task,
       projectName: project.name,
       projectStatus: project.status,
+      projectId: project.id,
     }))
   );
 
   const upcomingTasks = allTasks
-    .filter((task) => task.status !== 'done')
+    .filter((task) => {
+      if (task.status === 'done') return false;
+      const taskDate = new Date(task.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const timeLimit = new Date(today);
+      if (selectedTimeRange === 'week') {
+        timeLimit.setDate(today.getDate() + 7);
+      } else {
+        timeLimit.setMonth(today.getMonth() + 1);
+      }
+
+      return taskDate >= today && taskDate <= timeLimit;
+    })
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .slice(0, 5)
     .map((task, index) => ({
@@ -278,9 +293,17 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
         {upcomingTasks.length > 0 ? (
           <div className="space-y-2">
             {upcomingTasks.map((task) => (
-              <div
+              <button
                 key={task.uniqueKey}
-                className="flex items-start gap-3 rounded-lg px-3 py-3 border border-gray-100 hover:bg-gray-50 transition-colors">
+                onClick={() => {
+                  const targetProject = projects.find(
+                    (p) => p.id === task.projectId
+                  );
+                  if (targetProject) {
+                    onProjectSelect(targetProject);
+                  }
+                }}
+                className="w-full text-left flex items-start gap-3 rounded-lg px-3 py-3 border border-gray-100 hover:bg-gray-50 transition-colors">
                 <div className="flex-shrink-0 mt-1">
                   <div
                     className={`w-2 h-2 rounded-full ${getStatusColor(
@@ -313,7 +336,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
                     </div>
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         ) : (
