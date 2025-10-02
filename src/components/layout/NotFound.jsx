@@ -69,8 +69,8 @@ export default function NotFound() {
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <svg
                     className="h-4 w-4 text-blue-600"
                     fill="none"
@@ -84,18 +84,20 @@ export default function NotFound() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Project Management
-                </h3>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    Project Management
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Keep track of everything I need to get done
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-gray-500">
-                Keep track of everything I need to get done
-              </p>
             </div>
 
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <svg
                     className="h-4 w-4 text-green-600"
                     fill="none"
@@ -113,18 +115,20 @@ export default function NotFound() {
                     <polyline points="10,9 9,9 8,9" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Notes & Documentation
-                </h3>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    Notes & Documentation
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    My project docs and files, all in one spot
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-gray-500">
-                My project docs and files, all in one spot
-              </p>
             </div>
 
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <svg
                     className="h-4 w-4 text-yellow-600"
                     fill="none"
@@ -138,11 +142,13 @@ export default function NotFound() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Calendar View
-                </h3>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    Calendar View
+                  </h3>
+                  <p className="text-xs text-gray-500">See what's due when</p>
+                </div>
               </div>
-              <p className="text-xs text-gray-500">See what's due when</p>
             </div>
           </div>
         </div>
