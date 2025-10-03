@@ -28,6 +28,7 @@ export default function Header({
   const projectsDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const searchInputRef = useRef(null);
+  const mobileMenuButtonRef = useRef(null);
 
   const timeGreeting = () => {
     const hour = new Date().getHours();
@@ -64,7 +65,9 @@ export default function Header({
         setShowProjectsDropdown(false);
       }
       if (
+        mobileMenuButtonRef.current &&
         mobileMenuRef.current &&
+        !mobileMenuButtonRef.current.contains(event.target) &&
         !mobileMenuRef.current.contains(event.target)
       ) {
         setShowMobileMenu(false);
@@ -403,7 +406,8 @@ export default function Header({
               {isMobile && (
                 <div className="relative" ref={mobileMenuRef}>
                   <button
-                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    ref={mobileMenuButtonRef}
+                    onClick={() => setShowMobileMenu((prev) => !prev)}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
                     <Bars3Icon className="h-5 w-5" />
                   </button>
@@ -641,7 +645,8 @@ export default function Header({
               {isMobile && (
                 <div className="relative" ref={mobileMenuRef}>
                   <button
-                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    ref={mobileMenuButtonRef}
+                    onClick={() => setShowMobileMenu((prev) => !prev)}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
                     <Bars3Icon className="h-5 w-5" />
                   </button>
@@ -694,7 +699,8 @@ export default function Header({
               {isMobile && (
                 <div className="relative" ref={mobileMenuRef}>
                   <button
-                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    ref={mobileMenuButtonRef}
+                    onClick={() => setShowMobileMenu((prev) => !prev)}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
                     <Bars3Icon className="h-5 w-5" />
                   </button>
