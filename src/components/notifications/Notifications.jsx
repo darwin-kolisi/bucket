@@ -5,7 +5,7 @@ export default function Notifications() {
   const [notifications, setNotifications] = useState([
     {
       id: 1,
-      type: 'due_date',
+      type: 'due date',
       title: 'Project due tomorrow',
       message: '"bucket" project is due tomorrow',
       project: 'bucket',
@@ -14,18 +14,45 @@ export default function Notifications() {
     },
     {
       id: 2,
-      type: 'task_completed',
+      type: 'task completed',
       title: 'Task completed',
       message: '"Create landing page design" was marked as done',
       project: 'bucket',
       timestamp: '5 hours ago',
       read: true,
     },
+    {
+      id: 3,
+      type: 'project created',
+      title: 'New project created',
+      message: '"physics" project was created',
+      project: 'physics',
+      timestamp: '1 day ago',
+      read: true,
+    },
+    {
+      id: 4,
+      type: 'reminder',
+      title: 'Daily reminder',
+      message: 'You have 3 pending tasks across all projects',
+      project: null,
+      timestamp: '1 day ago',
+      read: true,
+    },
+    {
+      id: 5,
+      type: 'due date',
+      title: 'Overdue project',
+      message: '"employment" project is overdue',
+      project: 'employment',
+      timestamp: '2 days ago',
+      read: false,
+    },
   ]);
 
   const getNotificationIcon = (type) => {
     switch (type) {
-      case 'due_date':
+      case 'due date':
         return (
           <svg
             className="h-5 w-5 text-red-500"
@@ -40,7 +67,7 @@ export default function Notifications() {
             />
           </svg>
         );
-      case 'task_completed':
+      case 'task completed':
         return (
           <svg
             className="h-5 w-5 text-green-500"
@@ -52,6 +79,36 @@ export default function Notifications() {
               strokeLinecap="round"
               strokeLinejoin="round"
               d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+            />
+          </svg>
+        );
+      case 'project created':
+        return (
+          <svg
+            className="h-5 w-5 text-blue-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+            />
+          </svg>
+        );
+      case 'reminder':
+        return (
+          <svg
+            className="h-5 w-5 text-yellow-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
             />
           </svg>
         );
