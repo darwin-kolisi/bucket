@@ -7,9 +7,8 @@ export default function NotificationPopup() {
     {
       id: 1,
       type: 'due_date',
-      title: 'Deadline approaching',
-      message:
-        'The "bucket" prototype needs final testing before tomorrow\'s demo',
+      title: 'Project due tomorrow',
+      message: '"bucket" project is due tomorrow',
       project: 'bucket',
       timestamp: '2 hours ago',
       read: false,
@@ -18,9 +17,8 @@ export default function NotificationPopup() {
     {
       id: 2,
       type: 'task_completed',
-      title: 'Design approved',
-      message:
-        'Sarah just approved the landing page design - ready for development',
+      title: 'Task completed',
+      message: '"Create landing page design" was marked as done',
       project: 'bucket',
       timestamp: '5 hours ago',
       read: true,
@@ -28,9 +26,9 @@ export default function NotificationPopup() {
     },
     {
       id: 3,
-      type: 'project created',
-      title: 'New project setup',
-      message: 'Kickoff meeting scheduled for the physics simulation project',
+      type: 'project_created',
+      title: 'New project created',
+      message: '"physics" project was created',
       project: 'physics',
       timestamp: '1 day ago',
       read: true,
@@ -39,32 +37,11 @@ export default function NotificationPopup() {
     {
       id: 4,
       type: 'reminder',
-      title: 'Weekly check-in',
-      message: "Don't forget to update your task progress for the team sync",
+      title: 'Daily reminder',
+      message: 'You have 3 pending tasks across all projects',
       project: null,
       timestamp: '1 day ago',
       read: true,
-      priority: 'medium',
-    },
-    {
-      id: 5,
-      type: 'due_date',
-      title: 'Client review pending',
-      message: 'Marketing assets waiting for client feedback since Monday',
-      project: 'client-work',
-      timestamp: 'Just now',
-      read: false,
-      priority: 'high',
-    },
-    {
-      id: 6,
-      type: 'task_completed',
-      title: 'Bug fix deployed',
-      message:
-        'The login issue on mobile has been resolved and deployed to staging',
-      project: 'platform',
-      timestamp: '30 minutes ago',
-      read: false,
       priority: 'medium',
     },
   ]);
@@ -140,7 +117,7 @@ export default function NotificationPopup() {
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24-255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+              d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
             />
           </svg>
         );
