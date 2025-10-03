@@ -120,7 +120,20 @@ export default function Notifications() {
           </svg>
         );
       default:
-        return null;
+        return (
+          <svg
+            className="h-5 w-5 text-gray-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+            />
+          </svg>
+        );
     }
   };
 
@@ -151,13 +164,49 @@ export default function Notifications() {
     );
   };
 
+  const filteredNotifications = notifications.filter((notification) => {
+    if (filter === 'unread') return !notification.read;
+    if (filter === 'high') return notification.priority === 'high';
+    return true;
+  });
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg border border-gray-200 p-8 md:p-12 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Notifications</h2>
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg
+                className="h-8 w-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+              </svg>
+            </div>
+
+            <h2 className="text-xl font-semibold text-gray-900">
+              Notifications
+            </h2>
+
+            <div className="max-w-xl space-y-3 text-gray-600">
+              <p>
+                Stay updated with your project activities, due dates, and
+                important reminders in one centralized location.
+              </p>
+              <p>
+                Filter by priority or unread status to focus on what matters
+                most. Notifications are automatically generated based on your
+                project activities.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -241,82 +290,121 @@ export default function Notifications() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-900">
-              Notifications
-            </span>
-            {unreadCount > 0 && (
-              <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
-                {unreadCount} unread
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-900">
+                Notifications
               </span>
-            )}
+              {unreadCount > 0 && (
+                <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
+                  {unreadCount} unread
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="text-sm text-gray-900 border border-gray-200 rounded-sm px-3 py-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent ">
+                <option value="all">All</option>
+                <option value="unread">Unread</option>
+                <option value="high">High Priority</option>
+              </select>
+
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors">
+                  Mark all as read
+                </button>
+              )}
+            </div>
           </div>
 
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="text-xs text-gray-900 border border-gray-200 rounded-sm px-3 py-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent">
-            <option value="all">All</option>
-            <option value="unread">Unread</option>
-            <option value="high">High Priority</option>
-          </select>
-
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors">
-              Mark all as read
-            </button>
-          )}
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="divide-y divide-gray-200">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`p-4 hover:bg-gray-50 transition-colors ${
-                  !notification.read ? 'bg-blue-50' : ''
-                }`}>
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-medium text-gray-900">
-                          {notification.title}
-                        </h3>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full border ${getPriorityColor(
-                            notification.priority
-                          )}`}>
-                          {notification.priority}
-                        </span>
-                      </div>
+            {filteredNotifications.length > 0 ? (
+              filteredNotifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`p-4 hover:bg-gray-50 transition-colors ${
+                    !notification.read ? 'bg-blue-50' : ''
+                  }`}>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-1">
+                      {getNotificationIcon(notification.type)}
                     </div>
 
-                    <p className="text-sm text-gray-600 mb-2">
-                      {notification.message}
-                    </p>
-                    <span className="text-xs text-gray-500">
-                      {notification.timestamp}
-                    </span>
-                  </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {notification.title}
+                          </h3>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full border ${getPriorityColor(
+                              notification.priority
+                            )}`}>
+                            {notification.priority}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 flex-shrink-0">
+                          {notification.timestamp}
+                        </span>
+                      </div>
 
-                  {!notification.read && (
-                    <button
-                      onClick={() => markAsRead(notification.id)}
-                      className="flex-shrink-0 text-xs text-blue-600 hover:text-blue-800 font-medium">
-                      Mark read
-                    </button>
-                  )}
+                      <p className="text-sm text-gray-600 mb-2">
+                        {notification.message}
+                      </p>
+
+                      {notification.project && (
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"
+                            />
+                          </svg>
+                          Project: {notification.project}
+                        </div>
+                      )}
+                    </div>
+
+                    {!notification.read && (
+                      <button
+                        onClick={() => markAsRead(notification.id)}
+                        className="flex-shrink-0 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                        Mark read
+                      </button>
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="p-8 text-center text-gray-500">
+                <svg
+                  className="h-12 w-12 mx-auto text-gray-400 mb-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1"
+                  stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+                  />
+                </svg>
+                <p className="text-sm">No notifications found</p>
+                <p className="text-xs mt-1">You're all caught up!</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
