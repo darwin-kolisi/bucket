@@ -2,6 +2,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { EllipsisVerticalIcon } from '@heroicons/react/20/solid';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function Sidebar({
   activeItem = 'dashboard',
@@ -9,6 +10,8 @@ export default function Sidebar({
   isCollapsed,
   onToggleCollapse,
 }) {
+  const router = useRouter();
+
   const navigationItems = [
     {
       id: 'dashboard',
@@ -98,6 +101,11 @@ export default function Sidebar({
 
   const handleSettingsClick = () => {
     window.dispatchEvent(new CustomEvent('openSettings'));
+  };
+
+  const handleLogout = () => {
+    // better auth logout
+    router.push('/auth/signin');
   };
 
   return (
@@ -253,7 +261,9 @@ export default function Sidebar({
             </MenuItem>
             <div className="my-1 h-px bg-gray-200" />
             <MenuItem>
-              <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-red-600 text-left hover:bg-red-50">
+              <button
+                onClick={handleLogout}
+                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-red-600 text-left hover:bg-red-50">
                 <svg
                   className="h-4 w-4"
                   fill="none"

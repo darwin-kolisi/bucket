@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ArrowLeftIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import NotificationPopup from '../notifications/NotificationPopup';
+import { useRouter } from 'next/navigation';
 
 export default function Header({
   isCollapsed,
@@ -24,6 +25,8 @@ export default function Header({
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const router = useRouter();
 
   const projectsDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
@@ -145,6 +148,11 @@ export default function Header({
     { id: 'work', label: 'Work', count: 8, color: 'bg-green-500' },
     { id: 'learning', label: 'Learning', count: 5, color: 'bg-yellow-500' },
   ];
+
+  const handleLogout = () => {
+    // better auth logout
+    router.push('/auth/signin');
+  };
 
   if (isMobile && showSearch) {
     return (
@@ -342,9 +350,7 @@ export default function Header({
         Settings
       </button>
       <button
-        onClick={() => {
-          setShowMobileMenu(false);
-        }}
+        onClick={handleLogout}
         className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-red-50 text-red-600 text-left">
         <svg
           className="h-4 w-4"
