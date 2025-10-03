@@ -145,6 +145,12 @@ export default function Notifications() {
     );
   };
 
+  const markAllAsRead = () => {
+    setNotifications(
+      notifications.map((notification) => ({ ...notification, read: true }))
+    );
+  };
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
@@ -152,6 +158,87 @@ export default function Notifications() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg border border-gray-200 p-8 md:p-12 mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Notifications</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                <svg
+                  className="h-4 w-4 text-red-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm font-medium text-gray-900">
+                High Priority
+              </h3>
+            </div>
+            <p className="text-xs text-gray-500">
+              {
+                notifications.filter((n) => n.priority === 'high' && !n.read)
+                  .length
+              }{' '}
+              unread high priority notifications
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg
+                  className="h-4 w-4 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm font-medium text-gray-900">
+                Unread Notifications
+              </h3>
+            </div>
+            <p className="text-xs text-gray-500">
+              {unreadCount} notifications waiting for your attention
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg
+                  className="h-4 w-4 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm font-medium text-gray-900">
+                Total Notifications
+              </h3>
+            </div>
+            <p className="text-xs text-gray-500">
+              {notifications.length} notifications in your inbox
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center justify-between p-4">
@@ -174,6 +261,14 @@ export default function Notifications() {
             <option value="unread">Unread</option>
             <option value="high">High Priority</option>
           </select>
+
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors">
+              Mark all as read
+            </button>
+          )}
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
