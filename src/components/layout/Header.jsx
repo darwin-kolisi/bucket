@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ArrowLeftIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import NotificationPopup from '../notifications/NotificationPopup';
 
 export default function Header({
   isCollapsed,
@@ -27,6 +28,7 @@ export default function Header({
   const projectsDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const searchInputRef = useRef(null);
+  const mobileMenuButtonRef = useRef(null);
 
   const timeGreeting = () => {
     const hour = new Date().getHours();
@@ -63,7 +65,9 @@ export default function Header({
         setShowProjectsDropdown(false);
       }
       if (
+        mobileMenuButtonRef.current &&
         mobileMenuRef.current &&
+        !mobileMenuButtonRef.current.contains(event.target) &&
         !mobileMenuRef.current.contains(event.target)
       ) {
         setShowMobileMenu(false);
@@ -402,7 +406,8 @@ export default function Header({
               {isMobile && (
                 <div className="relative" ref={mobileMenuRef}>
                   <button
-                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    ref={mobileMenuButtonRef}
+                    onClick={() => setShowMobileMenu((prev) => !prev)}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
                     <Bars3Icon className="h-5 w-5" />
                   </button>
@@ -640,7 +645,8 @@ export default function Header({
               {isMobile && (
                 <div className="relative" ref={mobileMenuRef}>
                   <button
-                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    ref={mobileMenuButtonRef}
+                    onClick={() => setShowMobileMenu((prev) => !prev)}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
                     <Bars3Icon className="h-5 w-5" />
                   </button>
@@ -659,20 +665,7 @@ export default function Header({
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-                  />
-                </svg>
-              </button>
+              <NotificationPopup />
 
               <button
                 onClick={toggleDarkMode}
@@ -706,7 +699,8 @@ export default function Header({
               {isMobile && (
                 <div className="relative" ref={mobileMenuRef}>
                   <button
-                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    ref={mobileMenuButtonRef}
+                    onClick={() => setShowMobileMenu((prev) => !prev)}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
                     <Bars3Icon className="h-5 w-5" />
                   </button>

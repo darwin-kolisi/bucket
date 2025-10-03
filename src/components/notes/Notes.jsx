@@ -6,7 +6,7 @@ export default function Notes() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg border border-gray-200 p-8 md:p-12">
           <div className="flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
               <svg
                 className="h-8 w-8 text-gray-400"
                 fill="none"
