@@ -135,6 +135,14 @@ export default function Notifications() {
     }
   };
 
+  const markAsRead = (id) => {
+    setNotifications(
+      notifications.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
@@ -147,27 +155,44 @@ export default function Notifications() {
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className="p-4 hover:bg-gray-50 transition-colors">
+                className={`p-4 hover:bg-gray-50 transition-colors ${
+                  !notification.read ? 'bg-blue-50' : ''
+                }`}>
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-1">
                     {getNotificationIcon(notification.type)}
                   </div>
-                  <div className="flex items-start justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-medium text-gray-900">
-                        {notification.title}
-                      </h3>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full border ${getPriorityColor(
-                          notification.priority
-                        )}`}>
-                        {notification.priority}
-                      </span>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-gray-900">
+                          {notification.title}
+                        </h3>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full border ${getPriorityColor(
+                            notification.priority
+                          )}`}>
+                          {notification.priority}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-xs text-gray-500 flex-shrink-0">
+
+                    <p className="text-sm text-gray-600 mb-2">
+                      {notification.message}
+                    </p>
+                    <span className="text-xs text-gray-500">
                       {notification.timestamp}
                     </span>
                   </div>
+
+                  {!notification.read && (
+                    <button
+                      onClick={() => markAsRead(notification.id)}
+                      className="flex-shrink-0 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                      Mark read
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
