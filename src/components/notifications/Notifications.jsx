@@ -11,6 +11,7 @@ export default function Notifications() {
       project: 'bucket',
       timestamp: '2 hours ago',
       read: false,
+      priority: 'high',
     },
     {
       id: 2,
@@ -20,6 +21,7 @@ export default function Notifications() {
       project: 'bucket',
       timestamp: '5 hours ago',
       read: true,
+      priority: 'medium',
     },
     {
       id: 3,
@@ -29,6 +31,7 @@ export default function Notifications() {
       project: 'physics',
       timestamp: '1 day ago',
       read: true,
+      priority: 'low',
     },
     {
       id: 4,
@@ -38,6 +41,7 @@ export default function Notifications() {
       project: null,
       timestamp: '1 day ago',
       read: true,
+      priority: 'medium',
     },
     {
       id: 5,
@@ -47,6 +51,7 @@ export default function Notifications() {
       project: 'employment',
       timestamp: '2 days ago',
       read: false,
+      priority: 'high',
     },
   ]);
 
@@ -117,6 +122,19 @@ export default function Notifications() {
     }
   };
 
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
@@ -134,14 +152,19 @@ export default function Notifications() {
                   <div className="flex-shrink-0 mt-1">
                     {getNotificationIcon(notification.type)}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900 mb-1">
-                      {notification.title}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {notification.message}
-                    </p>
-                    <span className="text-xs text-gray-500 mt-1 block">
+                  <div className="flex items-start justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-gray-900">
+                        {notification.title}
+                      </h3>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full border ${getPriorityColor(
+                          notification.priority
+                        )}`}>
+                        {notification.priority}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 flex-shrink-0">
                       {notification.timestamp}
                     </span>
                   </div>
