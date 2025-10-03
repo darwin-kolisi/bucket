@@ -55,6 +55,8 @@ export default function Notifications() {
     },
   ]);
 
+  const [filter, setFilter] = useState('all');
+
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'due date':
@@ -148,6 +150,23 @@ export default function Notifications() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg border border-gray-200 p-8 md:p-12 mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Notifications</h2>
+        </div>
+
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-900">
+              Notifications
+            </span>
+          </div>
+
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="text-xs text-gray-900 border border-gray-200 rounded-sm px-3 py-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent">
+            <option value="all">All</option>
+            <option value="unread">Unread</option>
+            <option value="high">High Priority</option>
+          </select>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
