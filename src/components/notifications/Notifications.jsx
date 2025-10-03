@@ -145,6 +145,8 @@ export default function Notifications() {
     );
   };
 
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
@@ -157,6 +159,11 @@ export default function Notifications() {
             <span className="text-sm font-medium text-gray-900">
               Notifications
             </span>
+            {unreadCount > 0 && (
+              <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
+                {unreadCount} unread
+              </span>
+            )}
           </div>
 
           <select
