@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ArrowLeftIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import NotificationPopup from '../notifications/NotificationPopup';
+import { useAppContext } from '@/app/providers/Provider';
 
 export default function Header({
   isCollapsed,
@@ -23,7 +24,7 @@ export default function Header({
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { setTheme, resolvedTheme } = useAppContext();
 
   const projectsDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
@@ -131,13 +132,10 @@ export default function Header({
     setShowMobileMenu(false);
   };
 
+  const isDarkMode = resolvedTheme === 'dark';
+
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    setTheme(isDarkMode ? 'light' : 'dark');
   };
 
   const bucketItems = [

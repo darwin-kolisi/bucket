@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useAppContext } from '@/app/providers/Provider';
 
 export default function SettingsModal({ isOpen, onClose }) {
   const [activeSection, setActiveSection] = useState('general');
@@ -11,7 +12,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [selectedTimezone, setSelectedTimezone] = useState('UTC-5 (EST)');
-  const [selectedTheme, setSelectedTheme] = useState('light');
+  const { theme, setTheme } = useAppContext();
 
   const languageDropdownRef = useRef(null);
   const timezoneDropdownRef = useRef(null);
@@ -241,22 +242,22 @@ export default function SettingsModal({ isOpen, onClose }) {
         </label>
         <div className="grid grid-cols-3 gap-3">
           <button
-            onClick={() => setSelectedTheme('light')}
+            onClick={() => setTheme('light')}
             className={`p-3 border rounded-lg text-center transition-all ${
-              selectedTheme === 'light'
+              theme === 'light'
                 ? 'border-gray-900 bg-gray-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}>
-            <div className="w-full h-12 bg-white border border-gray-200 rounded mb-2 flex items-center justify-center">
-              <div className="w-4 h-4 bg-gray-200 rounded"></div>
+            <div className="w-full h-12 theme-preview-light border border-gray-200 rounded mb-2 flex items-center justify-center">
+              <div className="w-4 h-4 theme-preview-light-swatch rounded"></div>
             </div>
             <span className="text-xs font-medium text-gray-900">Light</span>
           </button>
 
           <button
-            onClick={() => setSelectedTheme('dark')}
+            onClick={() => setTheme('dark')}
             className={`p-3 border rounded-lg text-center transition-all ${
-              selectedTheme === 'dark'
+              theme === 'dark'
                 ? 'border-gray-900 bg-gray-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}>
@@ -267,9 +268,9 @@ export default function SettingsModal({ isOpen, onClose }) {
           </button>
 
           <button
-            onClick={() => setSelectedTheme('system')}
+            onClick={() => setTheme('system')}
             className={`p-3 border rounded-lg text-center transition-all ${
-              selectedTheme === 'system'
+              theme === 'system'
                 ? 'border-gray-900 bg-gray-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}>
