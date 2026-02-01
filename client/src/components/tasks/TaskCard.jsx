@@ -215,13 +215,13 @@ export default function TaskCard({
         <div
           className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
             task.priority?.toLowerCase() === 'high'
-              ? 'bg-red-100'
+              ? 'bg-red-200 text-red-900'
               : task.priority?.toLowerCase() === 'medium'
-              ? 'bg-orange-100'
-              : 'bg-gray-100'
+              ? 'bg-orange-100 text-gray-700'
+              : 'bg-gray-100 text-gray-600'
           }`}>
           {getPriorityIcon(task.priority || 'medium')}
-          <span className="text-xs font-medium text-gray-600 capitalize">
+          <span className="text-xs font-medium capitalize">
             {task.priority || 'Medium'}
           </span>
         </div>

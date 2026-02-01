@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 const Context = createContext();
 
@@ -16,6 +16,8 @@ export function Provider({ children }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [projectsView, setProjectsView] = useState('board');
+  const [theme, setTheme] = useState('system');
+  const [resolvedTheme, setResolvedTheme] = useState('light');
 
   const initialProjects = [
     {
@@ -113,6 +115,57 @@ export function Provider({ children }) {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
+  useEffect(() => {
+    const storedTheme = window.localStorage.getItem('bucket-theme');
+    if (storedTheme) {
+      setTheme(storedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const resolveTheme = (themeValue) => {
+      if (themeValue === 'system') {
+        return media.matches ? 'dark' : 'light';
+      }
+      return themeValue;
+    };
+
+    const applyTheme = (themeValue) => {
+      const effectiveTheme = resolveTheme(themeValue);
+      setResolvedTheme(effectiveTheme);
+      if (effectiveTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    applyTheme(theme);
+    window.localStorage.setItem('bucket-theme', theme);
+
+    const handleSystemChange = () => {
+      if (theme === 'system') {
+        applyTheme(theme);
+      }
+    };
+
+    if (media.addEventListener) {
+      media.addEventListener('change', handleSystemChange);
+    } else {
+      media.addListener(handleSystemChange);
+    }
+
+    return () => {
+      if (media.removeEventListener) {
+        media.removeEventListener('change', handleSystemChange);
+      } else {
+        media.removeListener(handleSystemChange);
+      }
+    };
+  }, [theme]);
+
   const value = {
     isSidebarCollapsed,
     toggleSidebar,
@@ -124,6 +177,9 @@ export function Provider({ children }) {
     setProjects,
     projectsView,
     setProjectsView,
+    theme,
+    setTheme,
+    resolvedTheme,
   };
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
