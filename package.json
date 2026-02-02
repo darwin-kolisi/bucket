@@ -1,0 +1,13 @@
+{
+  "name": "bucket",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix client install && npm --prefix server install",
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "dev:all": "concurrently -k -n client,server -c cyan,green \"npm:dev:client\" \"npm:dev:server\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}

@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:18
+    container_name: bucket-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bucket
+      POSTGRES_PASSWORD: bucket
+      POSTGRES_DB: bucket
+    ports:
+      - "5433:5432"
+    volumes:
+      - bucket_db_data:/var/lib/postgresql
+
+volumes:
+  bucket_db_data:
