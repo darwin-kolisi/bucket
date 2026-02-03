@@ -10,7 +10,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+export const prisma = new PrismaClient({ adapter });
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   trustedOrigins: [process.env.CLIENT_URL],
@@ -30,6 +30,27 @@ export const auth = betterAuth({
           return false;
         }
         return data;
+      },
+      afterCreate: async (user) => {
+        const workspaceName = user?.name
+          ? `${user.name.split(' ')[0] || 'Personal'} Workspace`
+          : 'Personal Workspace';
+        await prisma.workspace.create({
+          data: {
+            name: workspaceName,
+            ownerId: user.id,
+            members: {
+              create: {
+                userId: user.id,
+                role: 'owner',
+              },
+            },
+          },
+        });
+        await prisma.invite.deleteMany({
+          where: { email: user.email },
+        });
+        return user;
       },
     },
   },
