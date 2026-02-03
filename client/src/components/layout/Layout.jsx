@@ -2,6 +2,7 @@
 import { useAppContext } from '@/app/providers/Provider';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { authClient } from '@/lib/auth-client';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
@@ -23,6 +24,7 @@ export default function Layout({ children }) {
 
   const pathname = usePathname();
   const router = useRouter();
+  const session = authClient.useSession();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -34,6 +36,18 @@ export default function Layout({ children }) {
 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  useEffect(() => {
+    if (pathname?.startsWith('/auth')) {
+      return;
+    }
+    if (session.isPending) {
+      return;
+    }
+    if (!session.data) {
+      router.push('/auth/signin');
+    }
+  }, [pathname, router, session.data, session.isPending]);
 
   useEffect(() => {
     const handleOpenSettings = () => {
@@ -87,6 +101,10 @@ export default function Layout({ children }) {
   const handleMenuClick = () => {
     console.log('Menu clicked on mobile');
   };
+
+  if (!pathname?.startsWith('/auth') && session.isPending) {
+    return null;
+  }
 
   return (
     <div className="app-container">
