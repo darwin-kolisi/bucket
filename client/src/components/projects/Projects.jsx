@@ -17,6 +17,7 @@ export default function Projects({
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const { projectsView, setProjectsView } = useAppContext();
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
   const handleProjectClick = (project) => {
     onProjectSelect(project);
@@ -27,29 +28,30 @@ export default function Projects({
     setIsProjectModalOpen(true);
   };
 
-  const createProject = (projectData) => {
-    const newProject = {
-      id: Math.max(...projects.map((p) => p.id), 0) + 1,
-      name: projectData.projectName,
-      description: projectData.description || 'Describe your project here',
-      dueDate: projectData.dueDate
-        ? new Date(projectData.dueDate).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          })
-        : new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          }),
-      status: projectData.status || 'In Progress',
-      tasks: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setProjects([...projects, newProject]);
+  const createProject = async (projectData) => {
+    try {
+      const response = await fetch(`${apiBase}/api/projects`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: projectData.projectName,
+          description: projectData.description,
+          dueDate: projectData.dueDate || null,
+          startDate: projectData.startDate || null,
+        }),
+      });
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      if (!data?.project) {
+        return;
+      }
+      setProjects((prev) => [data.project, ...prev]);
+    } catch (error) {
+      // noop for now
+    }
   };
 
   useEffect(() => {
@@ -64,29 +66,35 @@ export default function Projects({
     };
   }, []);
 
-  const editProject = (projectData) => {
+  const editProject = async (projectData) => {
     if (!editingProject) return;
-
-    const updatedProject = {
-      ...editingProject,
-      name: projectData.projectName,
-      description: projectData.description || editingProject.description,
-      dueDate: projectData.dueDate
-        ? new Date(projectData.dueDate).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          })
-        : editingProject.dueDate,
-      status: projectData.status || editingProject.status,
-      updatedAt: new Date().toISOString(),
-    };
-
-    setProjects(
-      projects.map((project) =>
-        project.id === editingProject.id ? updatedProject : project
-      )
-    );
+    try {
+      const response = await fetch(`${apiBase}/api/projects/${editingProject.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: projectData.projectName,
+          description: projectData.description,
+          dueDate: projectData.dueDate || null,
+          startDate: projectData.startDate || null,
+        }),
+      });
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      if (!data?.project) {
+        return;
+      }
+      setProjects((prev) =>
+        prev.map((project) =>
+          project.id === editingProject.id ? data.project : project
+        )
+      );
+    } catch (error) {
+      // noop for now
+    }
   };
 
   const handleOpenEditModal = (project) => {
@@ -99,24 +107,31 @@ export default function Projects({
     setEditingProject(null);
   };
 
-  const duplicateProject = (id) => {
+  const duplicateProject = async (id) => {
     const projectToDuplicate = projects.find((project) => project.id === id);
     if (projectToDuplicate) {
-      const duplicatedProject = {
-        ...projectToDuplicate,
-        id: Math.max(...projects.map((p) => p.id)) + 1,
-        name: `${projectToDuplicate.name} (duplicate)`,
-        tasks: projectToDuplicate.tasks.map((task) => ({
-          ...task,
-          id: Math.max(...projectToDuplicate.tasks.map((t) => t.id), 0) + 1,
-        })),
-      };
-      setProjects([...projects, duplicatedProject]);
+      await createProject({
+        projectName: `${projectToDuplicate.name} (duplicate)`,
+        description: projectToDuplicate.description,
+        dueDate: projectToDuplicate.dueDate,
+        startDate: projectToDuplicate.startDate,
+      });
     }
   };
 
-  const deleteProject = (id) => {
-    setProjects(projects.filter((project) => project.id !== id));
+  const deleteProject = async (id) => {
+    try {
+      const response = await fetch(`${apiBase}/api/projects/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        return;
+      }
+      setProjects((prev) => prev.filter((project) => project.id !== id));
+    } catch (error) {
+      // noop for now
+    }
   };
 
   const filteredProjects = projects.filter((project) => {

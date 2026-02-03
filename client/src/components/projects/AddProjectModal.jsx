@@ -60,7 +60,7 @@ export default function AddProjectModal({
     }
   }, [isEditing, editingProject]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (projectName.trim()) {
@@ -72,9 +72,9 @@ export default function AddProjectModal({
       };
 
       if (isEditing) {
-        onEditProject(projectData);
+        await onEditProject(projectData);
       } else {
-        onCreateProject(projectData);
+        await onCreateProject(projectData);
       }
       onClose();
     }
