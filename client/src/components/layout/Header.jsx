@@ -132,6 +132,13 @@ export default function Header({
     setShowMobileMenu(false);
   };
 
+  const handleLogout = () => {
+    setShowMobileMenu(false);
+    if (onNavigate) {
+      onNavigate('auth/signin');
+    }
+  };
+
   const isDarkMode = resolvedTheme === 'dark';
 
   const toggleDarkMode = () => {
@@ -340,9 +347,7 @@ export default function Header({
         Settings
       </button>
       <button
-        onClick={() => {
-          setShowMobileMenu(false);
-        }}
+        onClick={handleLogout}
         className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-red-50 text-red-600 text-left">
         <svg
           className="h-4 w-4"
