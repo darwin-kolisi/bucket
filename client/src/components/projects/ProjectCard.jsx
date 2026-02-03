@@ -36,8 +36,28 @@ export default function ProjectCard({
     onDeleteProject(project.id);
   };
 
+  const formatStatus = (status) => {
+    if (!status) return 'In Progress';
+    return status
+      .toString()
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const formatDate = (value) => {
+    if (!value) return 'No due date';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'No due date';
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
+  };
+
   const getStatusIcon = (status) => {
-    switch (status.toLowerCase()) {
+    const normalized = status?.toLowerCase().replace(/_/g, ' ');
+    switch (normalized) {
       case 'in progress':
         return (
           <svg
@@ -120,7 +140,7 @@ export default function ProjectCard({
           <div className="flex items-center gap-2">
             {getStatusIcon(project.status)}
             <span className="text-sm font-medium text-gray-600">
-              {project.status}
+              {formatStatus(project.status)}
             </span>
           </div>
         </div>
@@ -261,7 +281,7 @@ export default function ProjectCard({
               />
             </svg>
             <span className="text-sm font-medium text-gray-600">
-              Due: {project.dueDate}
+              Due: {formatDate(project.dueDate)}
             </span>
           </div>
 
