@@ -10,10 +10,7 @@ export default function AddProjectModal({
   const [projectName, setProjectName] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [status, setStatus] = useState('In Progress');
   const [isMobile, setIsMobile] = useState(false);
-
-  const statusOptions = ['In Progress', 'On Track', 'At Risk', 'Completed'];
 
   useEffect(() => {
     const checkMobile = () => {
@@ -30,32 +27,14 @@ export default function AddProjectModal({
     if (isEditing && editingProject) {
       setProjectName(editingProject.name);
       setDescription(editingProject.description || '');
-      setStatus(editingProject.status || 'In Progress');
-
       if (editingProject.dueDate) {
-        const dateParts = editingProject.dueDate.split(' ');
-        const months = [
-          'Jan',
-          'Feb',
-          'Mar',
-          'Apr',
-          'May',
-          'Jun',
-          'Jul',
-          'Aug',
-          'Sep',
-          'Oct',
-          'Nov',
-          'Dec',
-        ];
-        const monthIndex = months.indexOf(dateParts[1]);
-        const year = dateParts[2];
-        const day = dateParts[0];
-        const formattedDate = `${year}-${String(monthIndex + 1).padStart(
-          2,
-          '0'
-        )}-${day.padStart(2, '0')}`;
-        setDueDate(formattedDate);
+        const parsed = new Date(editingProject.dueDate);
+        if (!Number.isNaN(parsed.getTime())) {
+          const year = parsed.getFullYear();
+          const month = String(parsed.getMonth() + 1).padStart(2, '0');
+          const day = String(parsed.getDate()).padStart(2, '0');
+          setDueDate(`${year}-${month}-${day}`);
+        }
       }
     }
   }, [isEditing, editingProject]);
@@ -68,7 +47,6 @@ export default function AddProjectModal({
         projectName: projectName.trim(),
         description: description.trim(),
         dueDate: dueDate,
-        status: status,
       };
 
       if (isEditing) {
@@ -137,18 +115,14 @@ export default function AddProjectModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                Status
+                Status (auto)
               </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900">
-                {statusOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <input
+                type="text"
+                value="Derived from tasks"
+                disabled
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500"
+              />
             </div>
           </form>
         </div>
@@ -227,18 +201,14 @@ export default function AddProjectModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-1">
-              Status
+              Status (auto)
             </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900">
-              {statusOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              value="Derived from tasks"
+              disabled
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500"
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

@@ -19,6 +19,21 @@ export default function Projects({
   const { projectsView, setProjectsView } = useAppContext();
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+  const refreshProjects = async () => {
+    try {
+      const response = await fetch(`${apiBase}/api/projects`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      setProjects(data.projects || []);
+    } catch (error) {
+      // noop for now
+    }
+  };
+
   const handleProjectClick = (project) => {
     onProjectSelect(project);
   };
@@ -48,7 +63,7 @@ export default function Projects({
       if (!data?.project) {
         return;
       }
-      setProjects((prev) => [data.project, ...prev]);
+      await refreshProjects();
     } catch (error) {
       // noop for now
     }
@@ -87,11 +102,7 @@ export default function Projects({
       if (!data?.project) {
         return;
       }
-      setProjects((prev) =>
-        prev.map((project) =>
-          project.id === editingProject.id ? data.project : project
-        )
-      );
+      await refreshProjects();
     } catch (error) {
       // noop for now
     }
@@ -128,7 +139,7 @@ export default function Projects({
       if (!response.ok) {
         return;
       }
-      setProjects((prev) => prev.filter((project) => project.id !== id));
+      await refreshProjects();
     } catch (error) {
       // noop for now
     }
