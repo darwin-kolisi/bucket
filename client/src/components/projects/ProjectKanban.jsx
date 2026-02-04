@@ -14,6 +14,7 @@ export default function ProjectKanban({
   const [draggedTask, setDraggedTask] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
   useEffect(() => {
     const checkMobile = () => {
@@ -29,6 +30,23 @@ export default function ProjectKanban({
   useEffect(() => {
     setTasks(initialTasks || []);
   }, [initialTasks]);
+
+  const refreshTasks = async () => {
+    try {
+      const response = await fetch(`${apiBase}/api/projects/${project.id}/tasks`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      const nextTasks = data.tasks || [];
+      setTasks(nextTasks);
+      onUpdateTasks(nextTasks);
+    } catch (error) {
+      // noop for now
+    }
+  };
 
   const sortTasksByDate = (tasks) => {
     return [...tasks].sort((a, b) => {
@@ -71,7 +89,7 @@ export default function ProjectKanban({
     column.classList.remove('bg-blue-50', 'border-blue-200');
   };
 
-  const handleDrop = (e, targetStatus) => {
+  const handleDrop = async (e, targetStatus) => {
     e.preventDefault();
 
     const column = e.currentTarget;
@@ -124,6 +142,17 @@ export default function ProjectKanban({
     setTasks(updatedTasks);
     onUpdateTasks(updatedTasks);
     setDraggedTask(null);
+    try {
+      await fetch(`${apiBase}/api/tasks/${draggedTask.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: targetStatus }),
+      });
+      await refreshTasks();
+    } catch (error) {
+      // noop for now
+    }
   };
 
   const calculateProgress = (subtasks) => {
@@ -132,7 +161,7 @@ export default function ProjectKanban({
     return Math.round((completed / subtasks.length) * 10);
   };
 
-  const handleToggleSubtask = (taskId, subtaskId) => {
+  const handleToggleSubtask = async (taskId, subtaskId) => {
     const updatedTasks = tasks.map((task) => {
       if (task.id === taskId) {
         const updatedSubtasks = task.subtasks.map((subtask) =>
@@ -151,6 +180,19 @@ export default function ProjectKanban({
 
     setTasks(updatedTasks);
     onUpdateTasks(updatedTasks);
+    const changedTask = updatedTasks.find((task) => task.id === taskId);
+    if (!changedTask) return;
+    try {
+      await fetch(`${apiBase}/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ subtasks: changedTask.subtasks }),
+      });
+      await refreshTasks();
+    } catch (error) {
+      // noop for now
+    }
   };
 
   useEffect(() => {
@@ -166,82 +208,97 @@ export default function ProjectKanban({
     };
   }, []);
 
-  const addTasks = (taskData) => {
-    const newTask = {
-      id: tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
-      title: taskData.taskName,
-      subtitle: taskData.description || 'No description',
-      subtasks: taskData.subtasks || [],
-      priority: taskData.priority,
-      date: taskData.dueDate
-        ? new Date(taskData.dueDate).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          })
-        : new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          }),
-      progress: 0,
-      total: 10,
-      status: 'todo',
-    };
-
-    const updatedTasks = [...tasks, newTask];
-    setTasks(updatedTasks);
-    onUpdateTasks(updatedTasks);
-  };
-
-  const editTask = (taskData) => {
-    if (!editingTask) return;
-
-    const updatedTask = {
-      ...editingTask,
-      title: taskData.taskName,
-      subtitle: taskData.description || 'No description',
-      subtasks: taskData.subtasks || [],
-      priority: taskData.priority,
-      date: taskData.dueDate
-        ? new Date(taskData.dueDate).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          })
-        : new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          }),
-    };
-
-    const updatedTasks = tasks.map((task) =>
-      task.id === editingTask.id ? updatedTask : task
-    );
-    setTasks(updatedTasks);
-    onUpdateTasks(updatedTasks);
-  };
-
-  const duplicateTask = (id) => {
-    const taskToDuplicate = tasks.find((task) => task.id === id);
-    if (taskToDuplicate) {
-      const duplicatedTask = {
-        ...taskToDuplicate,
-        id: tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1,
-        title: `${taskToDuplicate.title} (duplicate)`,
-      };
-
-      const updatedTasks = [...tasks, duplicatedTask];
-      setTasks(updatedTasks);
-      onUpdateTasks(updatedTasks);
+  const addTasks = async (taskData) => {
+    try {
+      const response = await fetch(`${apiBase}/api/projects/${project.id}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: taskData.taskName,
+          description: taskData.description,
+          dueDate: taskData.dueDate || null,
+          priority: taskData.priority,
+          subtasks: taskData.subtasks || [],
+          status: 'todo',
+        }),
+      });
+      if (!response.ok) {
+        return;
+      }
+      await refreshTasks();
+    } catch (error) {
+      // noop for now
     }
   };
 
-  const deleteTask = (id) => {
-    const updatedTasks = tasks.filter((task) => task.id !== id);
-    setTasks(updatedTasks);
-    onUpdateTasks(updatedTasks);
+  const editTask = async (taskData) => {
+    if (!editingTask) return;
+    try {
+      const response = await fetch(`${apiBase}/api/tasks/${editingTask.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: taskData.taskName,
+          description: taskData.description,
+          dueDate: taskData.dueDate || null,
+          priority: taskData.priority,
+          subtasks: taskData.subtasks || [],
+        }),
+      });
+      if (!response.ok) {
+        return;
+      }
+      await refreshTasks();
+    } catch (error) {
+      // noop for now
+    }
+  };
+
+  const duplicateTask = async (id) => {
+    const taskToDuplicate = tasks.find((task) => task.id === id);
+    if (taskToDuplicate) {
+      try {
+        const response = await fetch(`${apiBase}/api/projects/${project.id}/tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            title: `${taskToDuplicate.title} (duplicate)`,
+            description:
+              taskToDuplicate.subtitle === 'No description'
+                ? ''
+                : taskToDuplicate.subtitle,
+            dueDate: taskToDuplicate.dueDate || null,
+            priority: taskToDuplicate.priority || 'Medium',
+            subtasks: taskToDuplicate.subtasks || [],
+            status: taskToDuplicate.status || 'todo',
+          }),
+        });
+        if (!response.ok) {
+          return;
+        }
+        await refreshTasks();
+      } catch (error) {
+        // noop for now
+      }
+    }
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      const response = await fetch(`${apiBase}/api/tasks/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        return;
+      }
+      await refreshTasks();
+    } catch (error) {
+      // noop for now
+    }
   };
 
   const handleOpenEditModal = (task) => {
