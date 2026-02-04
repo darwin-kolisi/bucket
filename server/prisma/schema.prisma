@@ -82,6 +82,8 @@ model Task {
   title       String
   description String?
   status      TaskStatus @default(todo)
+  priority    String     @default("Medium")
+  subtasks    Json?
   dueDate     DateTime?
   assigneeId  String?
   order       Int?
@@ -98,6 +100,7 @@ model Task {
 enum TaskStatus {
   todo
   in_progress
+  in_review
   done
 }
 
