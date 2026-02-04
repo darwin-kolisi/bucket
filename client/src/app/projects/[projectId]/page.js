@@ -9,9 +9,7 @@ export default function ProjectDetailPage() {
   const { projects, setProjects, isSidebarCollapsed } = useAppContext();
   const router = useRouter();
 
-  const project = projects.find(
-    (p) => p.name === projectId || p.id === parseInt(projectId)
-  );
+  const project = projects.find((p) => p.id === projectId);
 
   if (!project) {
     return (

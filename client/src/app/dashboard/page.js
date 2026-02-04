@@ -9,7 +9,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const handleProjectSelect = (project) => {
-    router.push(`/projects/${project.name}`);
+    router.push(`/projects/${project.id}`);
   };
 
   const handleNavigate = (page) => {
