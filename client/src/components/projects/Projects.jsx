@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import ProjectCard from './ProjectCard';
 import AddProjectModal from './AddProjectModal';
 import Calendar from './Calendar';
@@ -21,6 +22,7 @@ export default function Projects({
   const projectsDropdownRef = useRef(null);
   const { projectsView, setProjectsView, setStatusFilter, setSearchQuery } =
     useAppContext();
+  const router = useRouter();
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   const effectiveStatusFilter =
     statusFilter === 'in-progress' ? 'on-track' : statusFilter;
@@ -314,11 +316,7 @@ export default function Projects({
               </div>
             </div>
             <button
-              onClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent('createProject', { detail: 'default' })
-                )
-              }
+              onClick={() => router.push('/projects/new')}
               className="btn-create flex items-center gap-2 px-4 h-10.5 rounded-lg text-sm font-medium transition-colors">
               <svg
                 className="h-4 w-4"
@@ -348,7 +346,7 @@ export default function Projects({
                 onClick={() =>
                   setShowProjectsDropdown((current) => !current)
                 }
-                className={`flex items-center gap-2 px-4 h-10.5 text-sm font-medium transition-colors rounded-lg border border-gray-200 ${
+                className={`flex items-center gap-2 px-3 h-10 text-xs font-medium transition-colors rounded-lg border border-gray-200 sm:px-4 sm:h-10.5 sm:text-sm ${
                   showProjectsDropdown ||
                   effectiveStatusFilter !== 'all' ||
                   sortOption !== 'newest'

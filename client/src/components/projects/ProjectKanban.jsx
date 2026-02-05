@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AddTaskModal from '../tasks/AddTaskModal';
 import KanbanColumn from '../tasks/KanbanColumn';
 
@@ -14,6 +15,7 @@ export default function ProjectKanban({
   const [draggedTask, setDraggedTask] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const router = useRouter();
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
   useEffect(() => {
@@ -313,11 +315,24 @@ export default function ProjectKanban({
 
   return (
     <div className="flex-1 overflow-hidden min-h-screen app-dots">
-      <div className="flex justify-end px-4 md:px-6 pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 md:px-6 pt-4">
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <button
+            type="button"
+            onClick={() => router.push('/projects')}
+            className="hover:text-gray-600">
+            Projects
+          </button>
+          <span>/</span>
+          <button
+            type="button"
+            onClick={() => router.push(`/projects/${project.id}`)}
+            className="hover:text-gray-600">
+            {project.name || 'Project'}
+          </button>
+        </div>
         <button
-          onClick={() =>
-            window.dispatchEvent(new CustomEvent('openTaskModal'))
-          }
+          onClick={() => router.push(`/projects/${project.id}/tasks/new`)}
           className="btn-create flex items-center gap-2 px-3 h-10.5 rounded-lg text-sm font-medium transition-colors">
           <svg
             className="h-4 w-4"
