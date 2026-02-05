@@ -170,6 +170,31 @@ export default function Projects({
   };
 
   const renderBoardView = () => {
+    if (filteredProjects.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-8">
+          <svg
+            className="w-16 h-16 text-gray-300 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
+            />
+          </svg>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects found</h3>
+          <p className="text-sm text-gray-500 text-center max-w-sm">
+            {searchQuery || statusFilter !== 'all'
+              ? 'No projects match your filters. Try adjusting your search or filter settings.'
+              : 'Get started by creating your first project.'}
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="p-4 md:p-8 min-h-[calc(100vh-160px)] pb-20">
         <div className="block md:hidden space-y-4">
@@ -185,7 +210,7 @@ export default function Projects({
           ))}
         </div>
 
-        <div className="hidden md:grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+        <div className="hidden md:grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
           {filteredProjects.map((project) => (
             <ProjectCard
               key={project.id}
@@ -206,14 +231,13 @@ export default function Projects({
       <div className="flex-1 overflow-y-auto bg-gray-50 min-h-screen">
         <div className="border-b border-gray-200 bg-white px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg p-1 gap-1">
               <button
                 onClick={() => setProjectsView('board')}
-                className={`flex items-center gap-2 px-3 py-2 text-xs font-normal rounded-md transition-all duration-200 ${
-                  projectsView === 'board'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}>
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'board'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+                  }`}>
                 <svg
                   className="h-4 w-4"
                   fill="none"
@@ -230,11 +254,10 @@ export default function Projects({
               </button>
               <button
                 onClick={() => setProjectsView('calendar')}
-                className={`flex items-center gap-2 px-3 py-2 text-xs font-normal rounded-md transition-all duration-200 ${
-                  projectsView === 'calendar'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}>
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'calendar'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+                  }`}>
                 <svg
                   className="h-4 w-4"
                   fill="none"

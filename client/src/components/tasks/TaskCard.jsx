@@ -28,12 +28,16 @@ export default function TaskCard({
     setIsMenuOpen(false);
   };
 
+  const progressPercent = task.total
+    ? Math.round((task.progress / task.total) * 100)
+    : 0;
+
   const getPriorityIcon = (priority) => {
     switch (priority?.toLowerCase()) {
       case 'high':
         return (
           <svg
-            className="h-3 w-3 text-red-500"
+            className="h-3.5 w-3.5 text-red-500"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth="2"
@@ -48,7 +52,7 @@ export default function TaskCard({
       case 'medium':
         return (
           <svg
-            className="h-3 w-3 text-yellow-500"
+            className="h-3.5 w-3.5 text-yellow-500"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth="2"
@@ -63,7 +67,7 @@ export default function TaskCard({
       case 'low':
         return (
           <svg
-            className="h-3 w-3 text-green-500"
+            className="h-3.5 w-3.5 text-green-500"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth="2"
@@ -78,7 +82,7 @@ export default function TaskCard({
       default:
         return (
           <svg
-            className="h-3 w-3 text-gray-400"
+            className="h-3.5 w-3.5 text-gray-400"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth="2"
@@ -90,12 +94,19 @@ export default function TaskCard({
   };
 
   return (
-    <div className="bg-white rounded-lg p-3 border border-gray-200 transition-shadow">
-      <div className="flex justify-between items-center mb-1">
-        <h4 className="text-sm font-medium text-gray-900 m-0">{task.title}</h4>
+    <div className="surface-card rounded-2xl p-4 transition-shadow">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h4 className="text-sm font-semibold text-gray-900">{task.title}</h4>
+          {task.subtitle && task.subtitle !== 'No description' && (
+            <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+              {task.subtitle}
+            </p>
+          )}
+        </div>
         <div className="relative" ref={menuRef}>
           <button
-            className="text-gray-400 hover:text-gray-600 text-xl cursor-pointer p-0 bg-transparent border-none transition-colors"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-lg cursor-pointer p-1 rounded-md bg-transparent border-none transition-colors flex-shrink-0"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-expanded={isMenuOpen}>
             ⋯
@@ -104,7 +115,7 @@ export default function TaskCard({
             <div className="absolute top-full right-0 mt-1 w-48 origin-top-right rounded-xl border border-gray-200 bg-white p-1 text-sm text-gray-900 shadow-lg z-50">
               <button
                 onClick={handleEdit}
-                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
+                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
                 <svg
                   className="h-4 w-4 text-gray-400"
                   fill="none"
@@ -121,7 +132,7 @@ export default function TaskCard({
               </button>
               <button
                 onClick={handleDuplicate}
-                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
+                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
                 <svg
                   className="h-4 w-4 text-gray-400"
                   fill="none"
@@ -158,33 +169,32 @@ export default function TaskCard({
           )}
         </div>
       </div>
-      <p className="text-sm text-gray-500 m-0 mb-4">{task.subtitle}</p>
+
       {task.subtasks && task.subtasks.length > 0 && (
-        <div className="mb-4">
+        <div className="mt-3 rounded-xl border border-gray-200 surface-muted p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600">Subtasks</span>
-            <span className="text-xs text-gray-400">
+            <span className="text-[11px] font-semibold text-gray-600">Subtasks</span>
+            <span className="text-[11px] text-gray-400">
               {task.subtasks.filter((st) => st.completed).length}/
               {task.subtasks.length}
             </span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {task.subtasks.map((subtask) => (
               <label
                 key={subtask.id}
-                className="flex items-center gap-2 cursor-pointer">
+                className="flex items-center gap-2 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={subtask.completed}
                   onChange={() => onToggleSubtask(task.id, subtask.id)}
-                  className="rounded border-gray-300 text-black focus:ring-black"
+                  className="rounded border-gray-300 text-gray-900 focus:ring-gray-900 focus:ring-offset-0 h-3.5 w-3.5"
                 />
                 <span
-                  className={`text-sm ${
-                    subtask.completed
-                      ? 'line-through text-gray-400'
-                      : 'text-gray-700'
-                  }`}>
+                  className={`text-xs ${subtask.completed
+                    ? 'line-through text-gray-400'
+                    : 'text-gray-700'
+                    }`}>
                   {subtask.title}
                 </span>
               </label>
@@ -192,36 +202,31 @@ export default function TaskCard({
           </div>
         </div>
       )}
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium text-gray-500">Progress</span>
-        <span className="text-sm font-semibold text-gray-900">
-          {Math.round((task.progress / task.total) * 100)}%
-        </span>
-      </div>
-      <div className="flex gap-1 mb-3 h-2 items-center">
-        {Array.from({ length: 10 }).map((_, index) => (
+
+      <div className="mt-4">
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <span>Progress</span>
+          <span className="font-semibold text-gray-700">{progressPercent}%</span>
+        </div>
+        <div className="mt-2 h-1.5 w-full rounded-full progress-track">
           <div
-            key={index}
-            className={`w-4 h-4 rounded-sm ${
-              index < Math.floor(((task.progress / task.total) * 100) / 10)
-                ? 'bg-black shadow-sm'
-                : 'bg-gray-200'
-            }`}
+            className="h-full rounded-full progress-fill transition-all duration-300"
+            style={{ width: `${progressPercent}%` }}
           />
-        ))}
+        </div>
       </div>
-      <div className="flex justify-between items-center">
-        <div className="text-sm font-medium text-gray-500">{task.date}</div>
+
+      <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+        <div className="font-medium">{task.date}</div>
         <div
-          className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
-            task.priority?.toLowerCase() === 'high'
-              ? 'bg-red-200 text-red-900'
-              : task.priority?.toLowerCase() === 'medium'
-              ? 'bg-orange-100 text-gray-700'
+          className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${task.priority?.toLowerCase() === 'high'
+            ? 'bg-red-100 text-red-700'
+            : task.priority?.toLowerCase() === 'medium'
+              ? 'bg-amber-100 text-amber-700'
               : 'bg-gray-100 text-gray-600'
-          }`}>
+            }`}>
           {getPriorityIcon(task.priority || 'medium')}
-          <span className="text-xs font-medium capitalize">
+          <span className="capitalize">
             {task.priority || 'Medium'}
           </span>
         </div>

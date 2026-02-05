@@ -81,19 +81,19 @@ export default function ProjectKanban({
     e.dataTransfer.dropEffect = 'move';
 
     const column = e.currentTarget;
-    column.classList.add('bg-blue-50', 'border-blue-200');
+    column.classList.add('kanban-drop-active');
   };
 
   const handleDragLeave = (e) => {
     const column = e.currentTarget;
-    column.classList.remove('bg-blue-50', 'border-blue-200');
+    column.classList.remove('kanban-drop-active');
   };
 
   const handleDrop = async (e, targetStatus) => {
     e.preventDefault();
 
     const column = e.currentTarget;
-    column.classList.remove('bg-blue-50', 'border-blue-200');
+    column.classList.remove('kanban-drop-active');
 
     if (!draggedTask) return;
 
@@ -312,9 +312,9 @@ export default function ProjectKanban({
   };
 
   return (
-    <div className="flex-1 overflow-hidden  bg-gray-50 min-h-screen">
+    <div className="flex-1 overflow-hidden bg-gray-50 min-h-screen">
       <div className="block md:hidden p-4 overflow-x-auto">
-        <div className="flex gap-4 pb-4" style={{ minWidth: 'max-content' }}>
+        <div className="flex gap-3 pb-4" style={{ minWidth: 'max-content' }}>
           <KanbanColumn
             title="To do"
             tasks={sortTasksByDate(todoTasks)}
