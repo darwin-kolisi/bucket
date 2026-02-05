@@ -104,9 +104,8 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-50 h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 hidden md:flex ${
-        isCollapsed ? 'w-[70px]' : 'w-[220px]'
-      }`}>
+      className={`fixed top-0 left-0 z-50 h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 hidden md:flex ${isCollapsed ? 'w-[70px]' : 'w-[220px]'
+        }`}>
       <div
         className={`relative flex h-18.5 items-center justify-between border-b border-gray-200 px-5 transition-all duration-300`}>
         <div className="flex items-center gap-3">
@@ -118,9 +117,8 @@ export default function Sidebar({
             className="flex-shrink-0 rounded-full"
           />
           <div
-            className={`overflow-hidden transition-all duration-300 ${
-              isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-            }`}>
+            className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+              }`}>
             <div className="flex flex-col">
               <h3 className="whitespace-nowrap text-lg font-bold leading-tight text-gray-900">
                 BUCKET
@@ -141,9 +139,8 @@ export default function Sidebar({
             fill="none"
             stroke="currentColor"
             strokeWidth="1.5"
-            className={`text-gray-500 transition-transform duration-300 ${
-              isCollapsed ? 'rotate-180' : ''
-            }`}>
+            className={`text-gray-500 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''
+              }`}>
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
@@ -158,11 +155,10 @@ export default function Sidebar({
           {navigationItems.map((item) => (
             <button
               key={item.id}
-              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left transition-colors ${
-                activeItem === item.id
+              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left transition-colors ${activeItem === item.id
                   ? 'bg-gray-100 text-gray-900'
                   : 'text-gray-700'
-              }`}
+                }`}
               onClick={() => handleItemClick(item.id)}>
               <span className="flex-shrink-0">{item.icon}</span>
               {!isCollapsed && <span className="text-sm">{item.label}</span>}
@@ -181,11 +177,10 @@ export default function Sidebar({
             <button
               key={item.id}
               onClick={() => handleItemClick(item.id)}
-              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left transition-colors ${
-                activeItem === item.id
+              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left transition-colors ${activeItem === item.id
                   ? 'bg-gray-100 text-gray-900'
                   : 'text-gray-700'
-              }`}>
+                }`}>
               <span
                 className={`h-2 w-2 flex-shrink-0 rounded-full ${item.color}`}
               />
@@ -209,9 +204,8 @@ export default function Sidebar({
               BS
             </div>
             <div
-              className={`flex-1 overflow-hidden transition-all duration-300 ${
-                isCollapsed ? 'w-0 opacity-0' : 'w-full opacity-100'
-              }`}>
+              className={`flex-1 overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-full opacity-100'
+                }`}>
               <div className="truncate text-sm font-medium text-gray-900">
                 Black Sabbath
               </div>
@@ -220,9 +214,8 @@ export default function Sidebar({
               </div>
             </div>
             <div
-              className={`transition-all duration-300 ${
-                isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-              }`}>
+              className={`transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                }`}>
               <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
             </div>
           </MenuButton>

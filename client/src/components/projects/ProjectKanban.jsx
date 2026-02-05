@@ -313,6 +313,28 @@ export default function ProjectKanban({
 
   return (
     <div className="flex-1 overflow-hidden min-h-screen app-dots">
+      <div className="flex justify-end px-4 md:px-6 pt-4">
+        <button
+          onClick={() =>
+            window.dispatchEvent(new CustomEvent('openTaskModal'))
+          }
+          className="btn-create flex items-center gap-2 px-3 h-10.5 rounded-lg text-sm font-medium transition-colors">
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4.5v15m7.5-7.5h-15"
+            />
+          </svg>
+          <span className="hidden sm:inline">New Task</span>
+          <span className="sm:hidden">Task</span>
+        </button>
+      </div>
       <div className="block md:hidden p-4 overflow-x-auto">
         <div className="flex gap-3 pb-4" style={{ minWidth: 'max-content' }}>
           <KanbanColumn

@@ -12,6 +12,9 @@
   --text-muted: #64748b;
   --text-faint: #94a3b8;
   --dot-color: #d9d9e1;
+  --create-btn-bg: #000000;
+  --create-btn-text: #ffffff;
+  --create-btn-border: #111111;
   color-scheme: light;
 }
 
@@ -27,6 +30,9 @@
   --text-muted: #94a3b8;
   --text-faint: #64748b;
   --dot-color: rgba(255, 255, 255, 0.08);
+  --create-btn-bg: #171717;
+  --create-btn-text: #f8fafc;
+  --create-btn-border: #232323;
   color-scheme: dark;
 }
 
@@ -115,6 +121,15 @@ body {
     @apply min-h-[44px];
   }
 
+  .view-toggle {
+    height: 42px;
+  }
+
+  .view-toggle button {
+    min-height: 0 !important;
+    height: 32px;
+  }
+
   .modal-container {
     @apply w-full max-w-none mx-2;
   }
@@ -200,6 +215,18 @@ body {
 
 .surface-muted {
   background: var(--surface-2);
+}
+
+.btn-create {
+  background-color: var(--create-btn-bg);
+  color: var(--create-btn-text);
+  border: 1px solid var(--create-btn-border);
+  transition: background-color 150ms ease, color 150ms ease,
+    border-color 150ms ease, opacity 150ms ease;
+}
+
+.btn-create:hover {
+  opacity: 0.9;
 }
 
 .kanban-drop {
