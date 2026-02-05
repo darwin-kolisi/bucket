@@ -50,13 +50,13 @@ export default function ProjectCard({
     }).format(date);
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = (status, className = 'h-3.5 w-3.5 text-current') => {
     const normalized = status?.toLowerCase().replace(/_/g, ' ');
     switch (normalized) {
       case 'in progress':
         return (
           <svg
-            className="h-4 w-4 text-gray-500"
+            className={className}
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth="1.5"
@@ -71,7 +71,7 @@ export default function ProjectCard({
       case 'on track':
         return (
           <svg
-            className="h-4 w-4 text-green-500"
+            className={className}
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth="1.5"
@@ -86,7 +86,7 @@ export default function ProjectCard({
       case 'at risk':
         return (
           <svg
-            className="h-4 w-4 text-red-500"
+            className={className}
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth="1.5"
@@ -101,7 +101,7 @@ export default function ProjectCard({
       case 'completed':
         return (
           <svg
-            className="h-4 w-4 text-gray-500"
+            className={className}
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth="1.5"
@@ -115,6 +115,22 @@ export default function ProjectCard({
         );
       default:
         return null;
+    }
+  };
+
+  const getStatusPillClasses = (status) => {
+    const normalized = status?.toLowerCase().replace(/_/g, ' ');
+    switch (normalized) {
+      case 'on track':
+        return 'bg-green-100 text-green-700';
+      case 'at risk':
+        return 'bg-red-100 text-red-700';
+      case 'completed':
+        return 'bg-gray-100 text-gray-700';
+      case 'in progress':
+        return 'bg-amber-100 text-amber-700';
+      default:
+        return 'bg-gray-100 text-gray-600';
     }
   };
 
@@ -255,9 +271,12 @@ export default function ProjectCard({
               {formatDate(project.dueDate)}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div
+            className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${getStatusPillClasses(
+              project.status
+            )}`}>
             {getStatusIcon(project.status)}
-            <span className="text-xs font-medium text-gray-500">
+            <span className="whitespace-nowrap">
               {formatStatus(project.status)}
             </span>
           </div>
