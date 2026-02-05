@@ -316,24 +316,15 @@ export default function ProjectKanban({
   return (
     <div className="flex-1 overflow-hidden min-h-screen app-dots">
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 md:px-6 pt-4">
-        <div className="flex items-center gap-2 text-sm text-gray-400">
-          <button
-            type="button"
-            onClick={() => router.push('/projects')}
-            className="hover:text-gray-600">
-            Projects
-          </button>
-          <span>/</span>
-          <button
-            type="button"
-            onClick={() => router.push(`/projects/${project.id}`)}
-            className="hover:text-gray-600">
-            {project.name || 'Project'}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => router.push('/projects')}
+          className="px-4 h-9.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition-colors">
+          Back
+        </button>
         <button
           onClick={() => router.push(`/projects/${project.id}/tasks/new`)}
-          className="btn-create flex items-center gap-2 px-3 h-10.5 rounded-lg text-sm font-medium transition-colors">
+          className="btn-create flex items-center gap-2 px-3 h-9.5 rounded-lg text-sm font-medium transition-colors">
           <svg
             className="h-4 w-4"
             fill="none"

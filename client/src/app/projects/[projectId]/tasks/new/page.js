@@ -94,22 +94,13 @@ export default function NewTaskPage() {
     <Layout>
       <div className="flex-1 min-h-screen px-5 md:px-8 pt-6 pb-10">
         <div className="w-full max-w-3xl mx-auto">
-          <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+          <div className="mb-4">
             <button
               type="button"
-              onClick={() => router.push('/projects')}
-              className="hover:text-gray-600">
-              Projects
+              onClick={handleCancel}
+              className="px-4 h-10.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition-colors">
+              Back
             </button>
-            <span>/</span>
-            <button
-              type="button"
-              onClick={() => router.push(projectId ? `/projects/${projectId}` : '/projects')}
-              className="hover:text-gray-600">
-              {project?.name || 'Project'}
-            </button>
-            <span>/</span>
-            <span className="text-gray-500">Add Task</span>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -317,7 +317,7 @@ export default function Projects({
             </div>
             <button
               onClick={() => router.push('/projects/new')}
-              className="btn-create flex items-center gap-2 px-4 h-10.5 rounded-lg text-sm font-medium transition-colors">
+              className="btn-create flex items-center gap-2 px-4 h-9.5 rounded-lg text-sm font-medium transition-colors">
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -339,14 +339,14 @@ export default function Projects({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search projects"
-              className="w-[230px] md:w-[300px] h-10.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black bg-white"
+              className="w-[230px] md:w-[300px] h-9.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black bg-white"
             />
             <div className="relative" ref={projectsDropdownRef}>
               <button
                 onClick={() =>
                   setShowProjectsDropdown((current) => !current)
                 }
-                className={`flex items-center gap-2 px-3 h-10 text-xs font-medium transition-colors rounded-lg border border-gray-200 sm:px-4 sm:h-10.5 sm:text-sm ${
+                className={`flex items-center gap-2 px-3 h-9.5 text-xs font-medium transition-colors rounded-lg border border-gray-200 sm:px-4 sm:h-9.5 sm:text-sm ${
                   showProjectsDropdown ||
                   effectiveStatusFilter !== 'all' ||
                   sortOption !== 'newest'
