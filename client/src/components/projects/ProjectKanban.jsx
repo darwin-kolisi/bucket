@@ -312,7 +312,7 @@ export default function ProjectKanban({
   };
 
   return (
-    <div className="flex-1 overflow-hidden bg-gray-50 min-h-screen">
+    <div className="flex-1 overflow-hidden min-h-screen app-dots">
       <div className="block md:hidden p-4 overflow-x-auto">
         <div className="flex gap-3 pb-4" style={{ minWidth: 'max-content' }}>
           <KanbanColumn

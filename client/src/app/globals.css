@@ -11,6 +11,7 @@
   --text-secondary: #334155;
   --text-muted: #64748b;
   --text-faint: #94a3b8;
+  --dot-color: #d9d9e1;
   color-scheme: light;
 }
 
@@ -25,6 +26,7 @@
   --text-secondary: #e2e8f0;
   --text-muted: #94a3b8;
   --text-faint: #64748b;
+  --dot-color: rgba(255, 255, 255, 0.08);
   color-scheme: dark;
 }
 
@@ -53,6 +55,12 @@ body {
   min-height: 100vh;
   background: var(--app-bg);
   @apply min-h-screen;
+}
+
+.app-dots {
+  background-color: var(--app-bg);
+  background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 .main-content-wrapper {

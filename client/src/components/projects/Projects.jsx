@@ -160,7 +160,7 @@ export default function Projects({
 
   const renderCalendarView = () => {
     return (
-      <div className="p-4 md:p-8 min-h-[calc(100vh-160px)] pb-20 bg-gray-50">
+      <div className="p-4 md:p-8 min-h-[calc(100vh-160px)] pb-20">
         <Calendar
           projects={filteredProjects}
           onProjectSelect={onProjectSelect}
@@ -228,7 +228,7 @@ export default function Projects({
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto bg-gray-50 min-h-screen">
+      <div className="flex-1 overflow-y-auto min-h-screen">
         <div className="border-b border-gray-200 bg-white px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg p-1 gap-1">

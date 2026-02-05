@@ -212,7 +212,7 @@ export default function ProjectCard({
         </div>
       </div>
 
-      <p className="text-sm text-gray-600 m-0 mb-5 leading-relaxed flex-grow line-clamp-2">
+      <p className="text-sm text-gray-500 m-0 mb-6 leading-relaxed flex-grow line-clamp-3">
         {project.description || 'No description'}
       </p>
 

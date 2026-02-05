@@ -35,7 +35,7 @@ export default function KanbanColumn({
               draggable
               onDragStart={(e) => onDragStart(e, task)}
               onDragEnd={onDragEnd}
-              className="cursor-grab active:cursor-grabbing transition-transform duration-150 hover:scale-[1.01]">
+              className="cursor-grab active:cursor-grabbing">
               <TaskCard
                 task={task}
                 onEditTask={() => onEditTask(task)}
