@@ -65,7 +65,7 @@ export default function AddTaskModal({
     }
   }, [isEditing, editingTask]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (taskName.trim()) {
@@ -78,9 +78,9 @@ export default function AddTaskModal({
       };
 
       if (isEditing) {
-        onEditTask(taskData);
+        await onEditTask(taskData);
       } else {
-        onCreateTask(taskData);
+        await onCreateTask(taskData);
       }
       onClose();
     }

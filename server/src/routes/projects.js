@@ -35,6 +35,98 @@ const ensureWorkspace = async (user) => {
   });
 };
 
+const toDbTaskStatus = (status) => {
+  if (!status) return undefined;
+  const normalized = status.toString().toLowerCase().replace(/-/g, '_');
+  if (normalized === 'todo') return 'todo';
+  if (normalized === 'in_progress') return 'in_progress';
+  if (normalized === 'in_review') return 'in_review';
+  if (normalized === 'done') return 'done';
+  return undefined;
+};
+
+const toUiTaskStatus = (status) => status?.replace(/_/g, '-') || 'todo';
+
+const parseSubtasks = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  return [];
+};
+
+const parseDateInput = (value) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed;
+  }
+
+  const [dayStr, monthStr, yearStr] = value.toString().split(' ');
+  if (!dayStr || !monthStr || !yearStr) {
+    return null;
+  }
+
+  const monthIndex = new Date(`${monthStr} 1, 2000`).getMonth();
+  if (Number.isNaN(monthIndex)) {
+    return null;
+  }
+  const day = Number.parseInt(dayStr, 10);
+  const year = Number.parseInt(yearStr, 10);
+  if (!Number.isInteger(day) || !Number.isInteger(year)) {
+    return null;
+  }
+
+  return new Date(year, monthIndex, day);
+};
+
+const formatDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+};
+
+const getProgressByStatus = (status, total = 10) => {
+  switch (status) {
+    case 'todo':
+      return 0;
+    case 'in_progress':
+      return Math.round(total * 0.5);
+    case 'in_review':
+      return Math.round(total * 0.8);
+    case 'done':
+      return total;
+    default:
+      return 0;
+  }
+};
+
+const toUiTask = (task) => {
+  const subtasks = parseSubtasks(task.subtasks);
+  const total = 10;
+  const progress = subtasks.length
+    ? Math.round(
+        (subtasks.filter((subtask) => subtask?.completed).length /
+          subtasks.length) *
+          total
+      )
+    : getProgressByStatus(task.status, total);
+
+  return {
+    ...task,
+    status: toUiTaskStatus(task.status),
+    subtitle: task.description || 'No description',
+    date: formatDate(task.dueDate),
+    priority: task.priority || 'Medium',
+    subtasks,
+    progress,
+    total,
+  };
+};
+
 const computeProjectStatus = (project) => {
   const tasks = project.tasks || [];
   const now = new Date();
@@ -43,20 +135,26 @@ const computeProjectStatus = (project) => {
     return 'in_progress';
   }
 
-  const hasOverdueTask = tasks.some(
-    (task) => task.dueDate && task.status !== 'done' && task.dueDate < now
-  );
+  const hasOverdueTask = tasks.some((task) => {
+    const status = toDbTaskStatus(task.status) || task.status;
+    return task.dueDate && status !== 'done' && task.dueDate < now;
+  });
   if (hasOverdueTask) {
     return 'at_risk';
   }
 
-  const allDone = tasks.every((task) => task.status === 'done');
+  const allDone = tasks.every(
+    (task) => (toDbTaskStatus(task.status) || task.status) === 'done'
+  );
   if (allDone) {
     return 'completed';
   }
 
-  const anyDone = tasks.some((task) => task.status === 'done');
-  return anyDone ? 'on_track' : 'in_progress';
+  const anyProgress = tasks.some((task) => {
+    const status = toDbTaskStatus(task.status) || task.status;
+    return status === 'in_progress' || status === 'in_review' || status === 'done';
+  });
+  return anyProgress ? 'on_track' : 'in_progress';
 };
 
 router.get('/projects', requireAuth, async (req, res) => {
@@ -83,12 +181,14 @@ router.get('/projects', requireAuth, async (req, res) => {
   });
 
   const payload = projects.map((project) => {
-    const totalTasks = project.tasks.length;
+    const uiTasks = project.tasks.map(toUiTask);
+    const totalTasks = uiTasks.length;
     const completedTasks = project.tasks.filter(
-      (task) => task.status === 'done'
+      (task) => (toDbTaskStatus(task.status) || task.status) === 'done'
     ).length;
     return {
       ...project,
+      tasks: uiTasks,
       status: computeProjectStatus(project),
       totalTasks,
       completedTasks,
@@ -111,8 +211,8 @@ router.post('/projects', requireAuth, async (req, res) => {
     data: {
       name: name.trim(),
       description: description?.trim() || null,
-      dueDate: dueDate ? new Date(dueDate) : null,
-      startDate: startDate ? new Date(startDate) : null,
+      dueDate: parseDateInput(dueDate),
+      startDate: parseDateInput(startDate),
       workspaceId: workspace,
       createdById: req.user.id,
     },
@@ -121,6 +221,7 @@ router.post('/projects', requireAuth, async (req, res) => {
   res.status(201).json({
     project: {
       ...project,
+      tasks: [],
       status: computeProjectStatus({ ...project, tasks: [] }),
       totalTasks: 0,
       completedTasks: 0,
@@ -140,11 +241,12 @@ router.get('/projects/:id', requireAuth, async (req, res) => {
   }
   const totalTasks = project.tasks.length;
   const completedTasks = project.tasks.filter(
-    (task) => task.status === 'done'
+    (task) => (toDbTaskStatus(task.status) || task.status) === 'done'
   ).length;
   res.json({
     project: {
       ...project,
+      tasks: project.tasks.map(toUiTask),
       status: computeProjectStatus(project),
       totalTasks,
       completedTasks,
@@ -159,8 +261,9 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
     data: {
       name: name?.trim(),
       description: description?.trim(),
-      dueDate: dueDate ? new Date(dueDate) : undefined,
-      startDate: startDate ? new Date(startDate) : undefined,
+      dueDate: dueDate === null ? null : dueDate ? parseDateInput(dueDate) : undefined,
+      startDate:
+        startDate === null ? null : startDate ? parseDateInput(startDate) : undefined,
     },
   });
   res.json({
@@ -182,7 +285,7 @@ router.delete('/projects/:id', requireAuth, async (req, res) => {
 });
 
 router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
-  const { title, description, dueDate, assigneeId, status, order } =
+  const { title, description, dueDate, assigneeId, status, order, priority, subtasks } =
     req.body || {};
 
   if (!title?.trim()) {
@@ -194,31 +297,54 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
       projectId: req.params.id,
       title: title.trim(),
       description: description?.trim() || null,
-      dueDate: dueDate ? new Date(dueDate) : null,
+      dueDate: parseDateInput(dueDate),
       assigneeId: assigneeId || null,
-      status: status || 'todo',
+      status: toDbTaskStatus(status) || 'todo',
       order: Number.isInteger(order) ? order : null,
+      priority: priority || 'Medium',
+      subtasks: Array.isArray(subtasks) ? subtasks : [],
     },
   });
 
-  res.status(201).json({ task });
+  res.status(201).json({ task: toUiTask(task) });
 });
 
 router.patch('/tasks/:id', requireAuth, async (req, res) => {
-  const { title, description, dueDate, assigneeId, status, order } =
+  const { title, description, dueDate, assigneeId, status, order, priority, subtasks } =
     req.body || {};
   const task = await prisma.task.update({
     where: { id: req.params.id },
     data: {
       title: title?.trim(),
       description: description?.trim(),
-      dueDate: dueDate ? new Date(dueDate) : undefined,
+      dueDate: dueDate === null ? null : dueDate ? parseDateInput(dueDate) : undefined,
       assigneeId: assigneeId === null ? null : assigneeId,
-      status,
+      status: toDbTaskStatus(status),
       order,
+      priority,
+      subtasks: Array.isArray(subtasks) ? subtasks : undefined,
     },
   });
-  res.json({ task });
+  res.json({ task: toUiTask(task) });
+});
+
+router.delete('/tasks/:id', requireAuth, async (req, res) => {
+  await prisma.task.update({
+    where: { id: req.params.id },
+    data: { deletedAt: new Date() },
+  });
+  res.status(204).send();
+});
+
+router.get('/projects/:id/tasks', requireAuth, async (req, res) => {
+  const tasks = await prisma.task.findMany({
+    where: {
+      projectId: req.params.id,
+      deletedAt: null,
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+  res.json({ tasks: tasks.map(toUiTask) });
 });
 
 router.get('/workspaces', requireAuth, async (req, res) => {

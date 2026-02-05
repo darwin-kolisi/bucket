@@ -73,7 +73,7 @@ export default function Layout({ children }) {
     pathname.includes('/projects/') && pathname.split('/').length > 2;
   const projectId = isProjectView ? pathname.split('/')[2] : null;
   const currentProject = projectId
-    ? projects.find((p) => p.name === projectId || p.id === parseInt(projectId))
+    ? projects.find((p) => p.id === projectId)
     : null;
 
   const handleItemSelect = (itemId) => {
@@ -87,7 +87,7 @@ export default function Layout({ children }) {
   };
 
   const handleProjectSelect = (project) => {
-    router.push(`/projects/${project.name}`);
+    router.push(`/projects/${project.id}`);
   };
 
   const handleBackToProjects = () => {
@@ -135,9 +135,8 @@ export default function Layout({ children }) {
           />
         )}
         <main
-          className={`flex-1 overflow-y-auto transition-all duration-300 ease-in-out ${
-            isMobile ? 'ml-0' : isSidebarCollapsed ? 'ml-[70px]' : 'ml-[220px]'
-          }`}>
+          className={`flex-1 overflow-y-auto transition-all duration-300 ease-in-out ${isMobile ? 'ml-0' : isSidebarCollapsed ? 'ml-[70px]' : 'ml-[220px]'
+            }`}>
           {children}
         </main>
       </div>
