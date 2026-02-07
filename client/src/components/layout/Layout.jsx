@@ -82,6 +82,7 @@ export default function Layout({ children }) {
   const currentProject = projectId
     ? projects.find((p) => p.id === projectId)
     : null;
+  const contentClassName = isProjectView ? 'w-full' : 'content-shell';
 
   const handleItemSelect = (itemId) => {
     if (itemId === 'dashboard') {
@@ -172,9 +173,14 @@ export default function Layout({ children }) {
           />
         )}
         <main
-          className={`flex-1 overflow-y-auto pt-[var(--chrome-height)] transition-all duration-300 ease-in-out ${isMobile ? 'ml-0' : isSidebarCollapsed ? 'ml-[70px]' : 'ml-[220px]'
-            }`}>
-          {children}
+          className={`flex-1 overflow-y-auto pt-[var(--chrome-height)] transition-all duration-300 ease-in-out ${
+            isMobile
+              ? 'ml-0'
+              : isSidebarCollapsed
+                ? 'ml-[70px]'
+                : 'ml-[220px]'
+          }`}>
+          <div className={contentClassName}>{children}</div>
         </main>
       </div>
       <Footer isCollapsed={isSidebarCollapsed} isMobile={isMobile} />

@@ -272,12 +272,12 @@ export default function Projects({
         <div className="px-5 md:px-8 pt-6 pb-2">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="view-toggle flex items-center surface-muted border border-gray-200 rounded-lg p-1 gap-1 h-10.5">
+              <div className="view-toggle flex items-center rounded-lg border border-gray-200 bg-gray-100 p-1 gap-1 h-10.5">
                 <button
                   onClick={() => setProjectsView('board')}
                   className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'board'
-                      ? 'bg-white text-gray-900'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                     }`}>
                   <svg
                     className="h-4 w-4"
@@ -296,8 +296,8 @@ export default function Projects({
                 <button
                   onClick={() => setProjectsView('calendar')}
                   className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'calendar'
-                      ? 'bg-white text-gray-900'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                     }`}>
                   <svg
                     className="h-4 w-4"
