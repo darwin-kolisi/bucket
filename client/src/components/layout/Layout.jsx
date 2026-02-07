@@ -21,6 +21,7 @@ export default function Layout({ children }) {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -36,6 +37,12 @@ export default function Layout({ children }) {
 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     if (pathname?.startsWith('/auth')) {
@@ -84,6 +91,9 @@ export default function Layout({ children }) {
     } else {
       router.push(`/${itemId}`);
     }
+    if (isMobile) {
+      setIsMobileMenuOpen(false);
+    }
   };
 
   const handleProjectSelect = (project) => {
@@ -99,7 +109,7 @@ export default function Layout({ children }) {
   };
 
   const handleMenuClick = () => {
-    console.log('Menu clicked on mobile');
+    setIsMobileMenuOpen((prev) => !prev);
   };
 
   if (!pathname?.startsWith('/auth') && session.isPending) {
@@ -127,9 +137,32 @@ export default function Layout({ children }) {
         onToggleSidebar={toggleSidebar}
         onNavigate={handleItemSelect}
         isMobile={isMobile}
+        isMobileMenuOpen={isMobileMenuOpen}
         onMenuClick={handleMenuClick}
       />
       <div className="main-content-wrapper">
+        {isMobile && (
+          <>
+            <div
+              aria-hidden="true"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`fixed inset-0 z-[55] bg-black/30 transition-opacity duration-200 ${
+                isMobileMenuOpen
+                  ? 'opacity-100'
+                  : 'pointer-events-none opacity-0'
+              }`}
+            />
+            <Sidebar
+              activeItem={currentPage}
+              onItemSelect={handleItemSelect}
+              isCollapsed={false}
+              onToggleCollapse={toggleSidebar}
+              isMobile
+              isOpen={isMobileMenuOpen}
+              onClose={() => setIsMobileMenuOpen(false)}
+            />
+          </>
+        )}
         {!isMobile && (
           <Sidebar
             activeItem={currentPage}

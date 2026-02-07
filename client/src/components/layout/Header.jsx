@@ -19,7 +19,7 @@ const getInitials = (name, email) => {
   return 'U';
 };
 
-export default function Header() {
+export default function Header({ isMobileMenuOpen, onMenuClick }) {
   const router = useRouter();
   const session = authClient.useSession();
   const user = session?.data?.user;
@@ -39,8 +39,42 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 h-[var(--chrome-height)] bg-white">
-      <div className="flex h-full items-center justify-end px-5 md:px-8">
-        <Menu as="div" className="relative">
+      <div className="flex h-full items-center gap-3 px-5 md:px-8">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          aria-label="Toggle menu"
+          aria-expanded={!!isMobileMenuOpen}
+          aria-controls="mobile-sidebar"
+          className="inline-flex h-9 w-9 items-center justify-center text-gray-700 transition hover:text-gray-900 md:hidden">
+          {isMobileMenuOpen ? (
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round">
+              <path d="M18 6L6 18" />
+              <path d="M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round">
+              <path d="M3 6h18" />
+              <path d="M3 12h18" />
+              <path d="M3 18h18" />
+            </svg>
+          )}
+        </button>
+        <Menu as="div" className="relative ml-auto">
           <MenuButton className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-[#000] text-xs font-semibold text-white transition hover:opacity-90 dark:bg-white dark:text-gray-900">
             {initials}
           </MenuButton>
