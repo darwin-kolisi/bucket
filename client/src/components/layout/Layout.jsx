@@ -108,6 +108,10 @@ export default function Layout({ children }) {
 
   return (
     <div className="app-container">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed top-0 left-0 right-0 z-[45] h-[var(--chrome-height)] border-b border-gray-200"
+      />
       <Header
         isCollapsed={isSidebarCollapsed}
         currentPage={currentPage}
@@ -135,7 +139,7 @@ export default function Layout({ children }) {
           />
         )}
         <main
-          className={`flex-1 overflow-y-auto transition-all duration-300 ease-in-out ${isMobile ? 'ml-0' : isSidebarCollapsed ? 'ml-[70px]' : 'ml-[220px]'
+          className={`flex-1 overflow-y-auto pt-[var(--chrome-height)] transition-all duration-300 ease-in-out ${isMobile ? 'ml-0' : isSidebarCollapsed ? 'ml-[70px]' : 'ml-[220px]'
             }`}>
           {children}
         </main>

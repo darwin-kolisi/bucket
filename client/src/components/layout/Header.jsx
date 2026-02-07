@@ -38,10 +38,10 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-[var(--app-bg)]">
-      <div className="h-14 flex items-center justify-end px-5 md:px-8">
+    <header className="fixed top-0 left-0 right-0 z-40 h-[var(--chrome-height)] bg-white">
+      <div className="flex h-full items-center justify-end px-5 md:px-8">
         <Menu as="div" className="relative">
-          <MenuButton className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-black text-xs font-semibold text-white transition hover:opacity-90">
+          <MenuButton className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-[#000] text-xs font-semibold text-white transition hover:opacity-90 dark:bg-white dark:text-gray-900">
             {initials}
           </MenuButton>
           <MenuItems

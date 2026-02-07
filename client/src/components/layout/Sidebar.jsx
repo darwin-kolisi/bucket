@@ -96,10 +96,10 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-50 h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 hidden md:flex ${isCollapsed ? 'w-[70px]' : 'w-[220px]'
+      className={`fixed top-0 left-0 z-40 h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 hidden md:flex ${isCollapsed ? 'w-[70px]' : 'w-[220px]'
         }`}>
       <div
-        className={`relative flex h-18.5 items-center justify-between border-b border-gray-200 px-5 transition-all duration-300`}>
+        className="relative flex h-[var(--chrome-height)] items-center justify-between px-5 transition-all duration-300">
         <div className="flex items-center gap-3">
           <Image
             src="/cat.gif"
