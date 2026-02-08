@@ -61,15 +61,29 @@ const Calendar = ({ projects = [], onProjectSelect }) => {
     setCurrentDate(newDate);
   };
 
+  const parseDate = (value) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed;
+  };
+
+  const formatDate = (value) => {
+    const date = parseDate(value);
+    if (!date) return 'No due date';
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
+  };
+
   const projectsByDate = useMemo(() => {
     const dateMap = new Map();
 
     projects.forEach((project) => {
-      if (project.dueDate) {
-        const [day, monthStr, year] = project.dueDate.split(' ');
-        const monthIndex = new Date(`${monthStr} 1, 2000`).getMonth();
-        const projectDate = new Date(parseInt(year), monthIndex, parseInt(day));
-
+      const projectDate = parseDate(project.dueDate);
+      if (projectDate) {
         if (
           projectDate.getMonth() === currentMonth &&
           projectDate.getFullYear() === currentYear
@@ -265,7 +279,8 @@ const Calendar = ({ projects = [], onProjectSelect }) => {
                       {project.description}
                     </div>
                     <div className="text-gray-400 text-xs mt-1 text-left">
-                      Due: {project.dueDate} • {project.totalTasks || 0} tasks
+                      Due: {formatDate(project.dueDate)} •{' '}
+                      {project.totalTasks || 0} tasks
                     </div>
                   </div>
                 </button>
