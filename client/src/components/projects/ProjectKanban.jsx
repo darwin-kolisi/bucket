@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AddTaskModal from '../tasks/AddTaskModal';
 import KanbanColumn from '../tasks/KanbanColumn';
+import { PlusIcon } from '@/components/icons/Icons';
 
 export default function ProjectKanban({
   project,
@@ -325,18 +326,7 @@ export default function ProjectKanban({
         <button
           onClick={() => router.push(`/projects/${project.id}/tasks/new`)}
           className="btn-create flex items-center gap-2 px-3 h-9.5 rounded-lg text-sm font-medium transition-colors">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4.5v15m7.5-7.5h-15"
-            />
-          </svg>
+          <PlusIcon className="h-4 w-4" />
           <span className="hidden sm:inline">New Task</span>
           <span className="sm:hidden">Task</span>
         </button>
