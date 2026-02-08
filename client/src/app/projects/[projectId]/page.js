@@ -40,6 +40,16 @@ export default function ProjectDetailPage() {
   const normalizeTaskStatus = (status) =>
     status?.toString().toLowerCase().replace(/_/g, '-') || 'todo';
 
+  const getTaskCompletionUnits = (task) => {
+    const subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];
+    if (subtasks.length === 0) {
+      const status = normalizeTaskStatus(task.status);
+      return { total: 1, completed: status === 'done' ? 1 : 0 };
+    }
+    const completed = subtasks.filter((subtask) => subtask?.completed).length;
+    return { total: subtasks.length, completed };
+  };
+
   const computeProjectStatus = (tasks) => {
     if (!tasks.length) {
       return 'in_progress';
@@ -81,15 +91,20 @@ export default function ProjectDetailPage() {
     setProjects((prev) =>
       prev.map((p) => {
         if (p.id !== project.id) return p;
-        const totalTasks = updatedTasks.length;
-        const completedTasks = updatedTasks.filter(
-          (task) => normalizeTaskStatus(task.status) === 'done'
-        ).length;
+        const totals = updatedTasks.reduce(
+          (acc, task) => {
+            const units = getTaskCompletionUnits(task);
+            acc.total += units.total;
+            acc.completed += units.completed;
+            return acc;
+          },
+          { total: 0, completed: 0 }
+        );
         return {
           ...p,
           tasks: updatedTasks,
-          totalTasks,
-          completedTasks,
+          totalTasks: totals.total,
+          completedTasks: totals.completed,
           status: computeProjectStatus(updatedTasks),
         };
       })

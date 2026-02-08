@@ -49,8 +49,52 @@ const toUiTaskStatus = (status) => status?.replace(/_/g, '-') || 'todo';
 
 const parseSubtasks = (value) => {
   if (!value) return [];
-  if (Array.isArray(value)) return value;
-  return [];
+  if (!Array.isArray(value)) return [];
+  return value.map((subtask) => ({
+    ...subtask,
+    completed: Boolean(subtask?.completed),
+  }));
+};
+
+const resolveTaskStatusAndSubtasks = (subtasksValue, statusValue) => {
+  const subtasks = parseSubtasks(subtasksValue);
+  const hasSubtasks = subtasks.length > 0;
+  const normalizedStatus = toDbTaskStatus(statusValue) || statusValue || 'todo';
+
+  if (!hasSubtasks) {
+    return { status: normalizedStatus, subtasks };
+  }
+
+  const allCompleted = subtasks.every((subtask) => subtask.completed);
+
+  if (normalizedStatus === 'done' && !allCompleted) {
+    return {
+      status: 'done',
+      subtasks: subtasks.map((subtask) => ({
+        ...subtask,
+        completed: true,
+      })),
+    };
+  }
+
+  if (allCompleted) {
+    return { status: 'done', subtasks };
+  }
+
+  return { status: normalizedStatus, subtasks };
+};
+
+const getTaskCompletionUnits = (task) => {
+  const resolved = resolveTaskStatusAndSubtasks(task.subtasks, task.status);
+  const subtasks = resolved.subtasks;
+  if (subtasks.length === 0) {
+    return {
+      total: 1,
+      completed: resolved.status === 'done' ? 1 : 0,
+    };
+  }
+  const completed = subtasks.filter((subtask) => subtask.completed).length;
+  return { total: subtasks.length, completed };
 };
 
 const parseDateInput = (value) => {
@@ -105,7 +149,8 @@ const getProgressByStatus = (status, total = 10) => {
 };
 
 const toUiTask = (task) => {
-  const subtasks = parseSubtasks(task.subtasks);
+  const resolved = resolveTaskStatusAndSubtasks(task.subtasks, task.status);
+  const subtasks = resolved.subtasks;
   const total = 10;
   const progress = subtasks.length
     ? Math.round(
@@ -113,11 +158,11 @@ const toUiTask = (task) => {
           subtasks.length) *
           total
       )
-    : getProgressByStatus(task.status, total);
+    : getProgressByStatus(resolved.status, total);
 
   return {
     ...task,
-    status: toUiTaskStatus(task.status),
+    status: toUiTaskStatus(resolved.status),
     subtitle: task.description || 'No description',
     date: formatDate(task.dueDate),
     priority: task.priority || 'Medium',
@@ -136,7 +181,8 @@ const computeProjectStatus = (project) => {
   }
 
   const hasOverdueTask = tasks.some((task) => {
-    const status = toDbTaskStatus(task.status) || task.status;
+    const status =
+      resolveTaskStatusAndSubtasks(task.subtasks, task.status).status;
     return task.dueDate && status !== 'done' && task.dueDate < now;
   });
   if (hasOverdueTask) {
@@ -144,14 +190,16 @@ const computeProjectStatus = (project) => {
   }
 
   const allDone = tasks.every(
-    (task) => (toDbTaskStatus(task.status) || task.status) === 'done'
+    (task) =>
+      resolveTaskStatusAndSubtasks(task.subtasks, task.status).status === 'done'
   );
   if (allDone) {
     return 'completed';
   }
 
   const anyProgress = tasks.some((task) => {
-    const status = toDbTaskStatus(task.status) || task.status;
+    const status =
+      resolveTaskStatusAndSubtasks(task.subtasks, task.status).status;
     return status === 'in_progress' || status === 'in_review' || status === 'done';
   });
   return anyProgress ? 'on_track' : 'in_progress';
@@ -182,16 +230,21 @@ router.get('/projects', requireAuth, async (req, res) => {
 
   const payload = projects.map((project) => {
     const uiTasks = project.tasks.map(toUiTask);
-    const totalTasks = uiTasks.length;
-    const completedTasks = project.tasks.filter(
-      (task) => (toDbTaskStatus(task.status) || task.status) === 'done'
-    ).length;
+    const totals = project.tasks.reduce(
+      (acc, task) => {
+        const units = getTaskCompletionUnits(task);
+        acc.total += units.total;
+        acc.completed += units.completed;
+        return acc;
+      },
+      { total: 0, completed: 0 }
+    );
     return {
       ...project,
       tasks: uiTasks,
       status: computeProjectStatus(project),
-      totalTasks,
-      completedTasks,
+      totalTasks: totals.total,
+      completedTasks: totals.completed,
     };
   });
 
@@ -239,17 +292,22 @@ router.get('/projects/:id', requireAuth, async (req, res) => {
   if (!project) {
     return res.status(404).json({ error: 'Project not found' });
   }
-  const totalTasks = project.tasks.length;
-  const completedTasks = project.tasks.filter(
-    (task) => (toDbTaskStatus(task.status) || task.status) === 'done'
-  ).length;
+  const totals = project.tasks.reduce(
+    (acc, task) => {
+      const units = getTaskCompletionUnits(task);
+      acc.total += units.total;
+      acc.completed += units.completed;
+      return acc;
+    },
+    { total: 0, completed: 0 }
+  );
   res.json({
     project: {
       ...project,
       tasks: project.tasks.map(toUiTask),
       status: computeProjectStatus(project),
-      totalTasks,
-      completedTasks,
+      totalTasks: totals.total,
+      completedTasks: totals.completed,
     },
   });
 });
@@ -292,6 +350,8 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Task title is required' });
   }
 
+  const resolved = resolveTaskStatusAndSubtasks(subtasks, status);
+
   const task = await prisma.task.create({
     data: {
       projectId: req.params.id,
@@ -299,10 +359,10 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
       description: description?.trim() || null,
       dueDate: parseDateInput(dueDate),
       assigneeId: assigneeId || null,
-      status: toDbTaskStatus(status) || 'todo',
+      status: resolved.status,
       order: Number.isInteger(order) ? order : null,
       priority: priority || 'Medium',
-      subtasks: Array.isArray(subtasks) ? subtasks : [],
+      subtasks: resolved.subtasks,
     },
   });
 
@@ -312,6 +372,17 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
 router.patch('/tasks/:id', requireAuth, async (req, res) => {
   const { title, description, dueDate, assigneeId, status, order, priority, subtasks } =
     req.body || {};
+  const existing = await prisma.task.findFirst({
+    where: { id: req.params.id, deletedAt: null },
+  });
+  if (!existing) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
+  const incomingSubtasks = subtasks !== undefined ? subtasks : existing.subtasks;
+  const incomingStatus = status !== undefined ? status : existing.status;
+  const resolved = resolveTaskStatusAndSubtasks(incomingSubtasks, incomingStatus);
+
   const task = await prisma.task.update({
     where: { id: req.params.id },
     data: {
@@ -319,10 +390,10 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
       description: description?.trim(),
       dueDate: dueDate === null ? null : dueDate ? parseDateInput(dueDate) : undefined,
       assigneeId: assigneeId === null ? null : assigneeId,
-      status: toDbTaskStatus(status),
+      status: resolved.status,
       order,
       priority,
-      subtasks: Array.isArray(subtasks) ? subtasks : undefined,
+      subtasks: resolved.subtasks,
     },
   });
   res.json({ task: toUiTask(task) });

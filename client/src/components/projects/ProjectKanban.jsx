@@ -102,26 +102,49 @@ export default function ProjectKanban({
       }
     };
 
-    const updatedTasks = tasks.map((task) => {
-      if (task.id !== draggedTask.id) return task;
-      if (!task.subtasks || task.subtasks.length === 0) {
+    const nextTask = (() => {
+      if (!draggedTask.subtasks || draggedTask.subtasks.length === 0) {
         return {
-          ...task,
+          ...draggedTask,
           status: targetStatus,
-          progress: getProgressByStatus(targetStatus, task.total),
+          progress: getProgressByStatus(targetStatus, draggedTask.total),
         };
       }
-      return { ...task, status: targetStatus };
-    });
+
+      let nextSubtasks = draggedTask.subtasks;
+      if (targetStatus === 'done') {
+        nextSubtasks = draggedTask.subtasks.map((subtask) => ({
+          ...subtask,
+          completed: true,
+        }));
+      }
+      const allCompleted = nextSubtasks.every((subtask) => subtask.completed);
+      const nextStatus = allCompleted ? 'done' : targetStatus;
+
+      return {
+        ...draggedTask,
+        status: nextStatus,
+        subtasks: nextSubtasks,
+        progress: calculateProgress(nextSubtasks),
+      };
+    })();
+
+    const updatedTasks = tasks.map((task) =>
+      task.id === draggedTask.id ? nextTask : task
+    );
 
     setTasks(updatedTasks);
     onUpdateTasks(updatedTasks);
     try {
+      const payload = { status: nextTask.status };
+      if (nextTask.subtasks && targetStatus === 'done') {
+        payload.subtasks = nextTask.subtasks;
+      }
       await fetch(`${apiBase}/api/tasks/${draggedTask.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ status: targetStatus }),
+        body: JSON.stringify(payload),
       });
       await refreshTasks();
     } catch (error) {
@@ -143,9 +166,16 @@ export default function ProjectKanban({
             ? { ...subtask, completed: !subtask.completed }
             : subtask
         );
+        const allCompleted = updatedSubtasks.every((subtask) => subtask.completed);
+        const nextStatus = allCompleted
+          ? 'done'
+          : task.status === 'done'
+            ? 'in-progress'
+            : task.status;
         return {
           ...task,
           subtasks: updatedSubtasks,
+          status: nextStatus,
           progress: calculateProgress(updatedSubtasks),
         };
       }
@@ -161,7 +191,10 @@ export default function ProjectKanban({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ subtasks: changedTask.subtasks }),
+        body: JSON.stringify({
+          subtasks: changedTask.subtasks,
+          status: changedTask.status,
+        }),
       });
       await refreshTasks();
     } catch (error) {
