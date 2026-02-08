@@ -19,24 +19,57 @@ export default function Projects({
   isCollapsed,
   onProjectSelect,
   selectedProject,
-  projects,
-  setProjects,
   statusFilter,
   searchQuery,
 }) {
+  const [visibleProjects, setVisibleProjects] = useState([]);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
   const [sortOption, setSortOption] = useState('newest');
   const projectsDropdownRef = useRef(null);
-  const { projectsView, setProjectsView, setStatusFilter, setSearchQuery } =
-    useAppContext();
+  const {
+    projectsView,
+    setProjectsView,
+    setStatusFilter,
+    setSearchQuery,
+    setProjects,
+  } = useAppContext();
   const router = useRouter();
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   const effectiveStatusFilter =
     statusFilter === 'in-progress' ? 'on-track' : statusFilter;
 
   const refreshProjects = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery?.trim()) {
+        params.set('q', searchQuery.trim());
+      }
+      if (effectiveStatusFilter && effectiveStatusFilter !== 'all') {
+        params.set('status', effectiveStatusFilter);
+      }
+      if (sortOption) {
+        params.set('sort', sortOption);
+      }
+      const query = params.toString();
+      const response = await fetch(
+        `${apiBase}/api/projects${query ? `?${query}` : ''}`,
+        {
+          credentials: 'include',
+        }
+      );
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      setVisibleProjects(data.projects || []);
+    } catch (error) {
+      // noop for now
+    }
+  };
+
+  const refreshProjectsCache = async () => {
     try {
       const response = await fetch(`${apiBase}/api/projects`, {
         credentials: 'include',
@@ -80,6 +113,7 @@ export default function Projects({
       if (!data?.project) {
         return;
       }
+      await refreshProjectsCache();
       await refreshProjects();
     } catch (error) {
       // noop for now
@@ -133,6 +167,7 @@ export default function Projects({
       if (!data?.project) {
         return;
       }
+      await refreshProjectsCache();
       await refreshProjects();
     } catch (error) {
       // noop for now
@@ -150,7 +185,7 @@ export default function Projects({
   };
 
   const duplicateProject = async (id) => {
-    const projectToDuplicate = projects.find((project) => project.id === id);
+    const projectToDuplicate = visibleProjects.find((project) => project.id === id);
     if (projectToDuplicate) {
       await createProject({
         projectName: `${projectToDuplicate.name} (duplicate)`,
@@ -170,42 +205,18 @@ export default function Projects({
       if (!response.ok) {
         return;
       }
+      await refreshProjectsCache();
       await refreshProjects();
     } catch (error) {
       // noop for now
     }
   };
 
-  const filteredProjects = projects.filter((project) => {
-    const normalizedStatus = project.status.toLowerCase().replace(' ', '-');
-    const matchesStatus =
-      effectiveStatusFilter === 'all' ||
-      (effectiveStatusFilter === 'on-track' &&
-        (normalizedStatus === 'on-track' ||
-          normalizedStatus === 'in-progress')) ||
-      normalizedStatus === effectiveStatusFilter;
+  useEffect(() => {
+    refreshProjects();
+  }, [effectiveStatusFilter, searchQuery, sortOption]);
 
-    const matchesSearch =
-      !searchQuery.trim() ||
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesStatus && matchesSearch;
-  });
-
-  const sortedProjects = [...filteredProjects].sort((a, b) => {
-    const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-    const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-    if (sortOption === 'oldest') {
-      return dateA - dateB;
-    }
-    if (sortOption === 'due-soon') {
-      const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
-      const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
-      return dueA - dueB;
-    }
-    return dateB - dateA;
-  });
+  const projectsToRender = visibleProjects;
 
   const formatDate = (value) => {
     if (!value) return 'No due date';
@@ -250,16 +261,13 @@ export default function Projects({
   const renderCalendarView = () => {
     return (
       <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
-        <Calendar
-          projects={filteredProjects}
-          onProjectSelect={onProjectSelect}
-        />
+        <Calendar projects={projectsToRender} onProjectSelect={onProjectSelect} />
       </div>
     );
   };
 
   const renderListView = () => {
-    if (filteredProjects.length === 0) {
+    if (projectsToRender.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-8">
           <ListIcon className="w-16 h-16 text-gray-300 mb-4" />
@@ -297,7 +305,7 @@ export default function Projects({
             <span aria-hidden="true" />
           </div>
           <div className="divide-y divide-gray-100">
-            {sortedProjects.map((project) => {
+            {projectsToRender.map((project) => {
               const completionPercentage =
                 project.totalTasks > 0
                   ? Math.round(
@@ -361,7 +369,7 @@ export default function Projects({
 
         {/* Mobile list */}
         <div className="sm:hidden rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden divide-y divide-gray-100">
-          {sortedProjects.map((project) => {
+          {projectsToRender.map((project) => {
             const completionPercentage =
               project.totalTasks > 0
                 ? Math.round(
@@ -407,7 +415,7 @@ export default function Projects({
   };
 
   const renderBoardView = () => {
-    if (filteredProjects.length === 0) {
+    if (projectsToRender.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-8">
           <BoardIcon className="w-16 h-16 text-gray-300 mb-4" />
@@ -424,7 +432,7 @@ export default function Projects({
     return (
       <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
         <div className="block md:hidden space-y-4">
-          {sortedProjects.map((project) => (
+          {projectsToRender.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
@@ -437,7 +445,7 @@ export default function Projects({
         </div>
 
         <div className="hidden md:grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
-          {sortedProjects.map((project) => (
+          {projectsToRender.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}

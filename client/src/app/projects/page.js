@@ -9,8 +9,6 @@ export default function ProjectsPage() {
     isSidebarCollapsed,
     statusFilter,
     searchQuery,
-    projects,
-    setProjects,
   } = useAppContext();
 
   const router = useRouter();
@@ -25,8 +23,6 @@ export default function ProjectsPage() {
         isCollapsed={isSidebarCollapsed}
         onProjectSelect={handleProjectSelect}
         selectedProject={null}
-        projects={projects}
-        setProjects={setProjects}
         statusFilter={statusFilter}
         searchQuery={searchQuery}
       />

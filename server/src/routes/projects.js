@@ -133,6 +133,15 @@ const formatDate = (value) => {
   }).format(date);
 };
 
+const normalizeStatusFilter = (value) => {
+  if (!value) return '';
+  return value
+    .toString()
+    .toLowerCase()
+    .replace(/_/g, '-')
+    .replace(/\s+/g, '-');
+};
+
 const getProgressByStatus = (status, total = 10) => {
   switch (status) {
     case 'todo':
@@ -207,6 +216,9 @@ const computeProjectStatus = (project) => {
 
 router.get('/projects', requireAuth, async (req, res) => {
   const workspaceId = req.query.workspaceId?.toString();
+  const searchQuery = req.query.q?.toString().trim().toLowerCase() || '';
+  const statusFilter = normalizeStatusFilter(req.query.status);
+  const sortOption = req.query.sort?.toString() || 'newest';
   const workspace =
     workspaceId || (await getDefaultWorkspace(req.user.id))?.id;
 
@@ -248,7 +260,49 @@ router.get('/projects', requireAuth, async (req, res) => {
     };
   });
 
-  res.json({ projects: payload });
+  let filtered = payload;
+
+  if (searchQuery) {
+    filtered = filtered.filter((project) => {
+      const nameMatch = project.name?.toLowerCase().includes(searchQuery);
+      const descriptionMatch = project.description
+        ?.toLowerCase()
+        .includes(searchQuery);
+      return nameMatch || descriptionMatch;
+    });
+  }
+
+  if (statusFilter && statusFilter !== 'all') {
+    filtered = filtered.filter((project) => {
+      const normalizedStatus = normalizeStatusFilter(project.status);
+      if (statusFilter === 'on-track') {
+        return normalizedStatus === 'on-track' || normalizedStatus === 'in-progress';
+      }
+      return normalizedStatus === statusFilter;
+    });
+  }
+
+  if (sortOption === 'oldest') {
+    filtered = [...filtered].sort((a, b) => {
+      const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      return dateA - dateB;
+    });
+  } else if (sortOption === 'due-soon') {
+    filtered = [...filtered].sort((a, b) => {
+      const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+      const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+      return dueA - dueB;
+    });
+  } else {
+    filtered = [...filtered].sort((a, b) => {
+      const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      return dateB - dateA;
+    });
+  }
+
+  res.json({ projects: filtered });
 });
 
 router.post('/projects', requireAuth, async (req, res) => {
