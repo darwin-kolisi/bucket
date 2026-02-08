@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useErrorToast } from '@/components/ui/ErrorToastProvider';
+import DatePicker from '@/components/ui/DatePicker';
 
 export default function AddTaskModal({
   onClose,
@@ -6,6 +8,7 @@ export default function AddTaskModal({
   onEditTask,
   editingTask,
   isEditing,
+  projectDueDate,
 }) {
   const [taskName, setTaskName] = useState('');
   const [description, setDescription] = useState('');
@@ -14,8 +17,27 @@ export default function AddTaskModal({
   const [newSubtask, setNewSubtask] = useState('');
   const [priority, setPriority] = useState('Medium');
   const [isMobile, setIsMobile] = useState(false);
+  const [error, setError] = useState('');
+  const { pushError } = useErrorToast();
 
   const priorityOptions = ['Low', 'Medium', 'High'];
+  const projectDueMax =
+    projectDueDate && projectDueDate.trim().length > 0 ? projectDueDate : undefined;
+
+  const isAfterProjectDue = (value) => {
+    if (!projectDueMax || !value) return false;
+    return value > projectDueMax;
+  };
+
+  const handleDueDateChange = (value) => {
+    setDueDate(value);
+    if (error) setError('');
+  };
+
+  const handleDueDateInvalid = () => {
+    setError('Task due date cannot be after the project due date.');
+    pushError('Task due date cannot be after the project due date.');
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -69,6 +91,12 @@ export default function AddTaskModal({
     e.preventDefault();
 
     if (taskName.trim()) {
+      if (isAfterProjectDue(dueDate)) {
+        setError('Task due date cannot be after the project due date.');
+        pushError('Task due date cannot be after the project due date.');
+        return;
+      }
+
       const taskData = {
         taskName: taskName.trim(),
         description: description.trim(),
@@ -82,6 +110,7 @@ export default function AddTaskModal({
       } else {
         await onCreateTask(taskData);
       }
+      setError('');
       onClose();
     }
   };
@@ -120,11 +149,12 @@ export default function AddTaskModal({
               <label className="block text-sm font-medium text-gray-900 mb-2">
                 Due Date
               </label>
-              <input
-                type="date"
+              <DatePicker
                 value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
+                onChange={handleDueDateChange}
+                max={projectDueMax}
+                placeholder="Select date"
+                onInvalid={handleDueDateInvalid}
               />
             </div>
 
@@ -213,6 +243,10 @@ export default function AddTaskModal({
                 </button>
               </div>
             </div>
+
+            {error && (
+              <p className="text-sm text-red-600">{error}</p>
+            )}
           </form>
         </div>
 
@@ -267,11 +301,12 @@ export default function AddTaskModal({
             <label className="block text-sm font-medium text-gray-900 mb-1">
               Due Date
             </label>
-            <input
-              type="date"
+            <DatePicker
               value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900"
+              onChange={handleDueDateChange}
+              max={projectDueMax}
+              placeholder="Select date"
+              onInvalid={handleDueDateInvalid}
             />
           </div>
 
@@ -360,6 +395,10 @@ export default function AddTaskModal({
               </button>
             </div>
           </div>
+
+          {error && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <button

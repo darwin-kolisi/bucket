@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Layout from '@/components/layout/Layout';
+import { useErrorToast } from '@/components/ui/ErrorToastProvider';
+import DatePicker from '@/components/ui/DatePicker';
 import { useAppContext } from '@/app/providers/Provider';
 
 export default function NewTaskPage() {
@@ -20,6 +22,7 @@ export default function NewTaskPage() {
   const [newSubtask, setNewSubtask] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const { pushError } = useErrorToast();
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   const project = projects.find((item) => item.id === projectId);
@@ -53,6 +56,11 @@ export default function NewTaskPage() {
       setError('Task name is required.');
       return;
     }
+    if (isAfterProjectDue(dueDate)) {
+      setError('Task due date cannot be after the project due date.');
+      pushError('Task due date cannot be after the project due date.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -71,7 +79,8 @@ export default function NewTaskPage() {
       });
 
       if (!response.ok) {
-        setError('Failed to create task.');
+        const payload = await response.json().catch(() => null);
+        setError(payload?.error || 'Failed to create task.');
         return;
       }
 
@@ -107,6 +116,30 @@ export default function NewTaskPage() {
   const summaryDueDate = formatDate(dueDate);
   const summaryProject = project?.name || 'Project';
   const summarySubtasks = subtasks.length;
+  const projectDueMax = project?.dueDate
+    ? (() => {
+        const parsed = new Date(project.dueDate);
+        if (Number.isNaN(parsed.getTime())) return '';
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        const day = String(parsed.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      })()
+    : '';
+
+  const isAfterProjectDue = (value) => {
+    if (!projectDueMax || !value) return false;
+    return value > projectDueMax;
+  };
+
+  const handleDueDateChange = (value) => {
+    setDueDate(value);
+    if (error) setError('');
+  };
+
+  const handleDueDateInvalid = () => {
+    pushError('Task due date cannot be after the project due date.');
+  };
 
   return (
     <Layout>
@@ -179,11 +212,12 @@ export default function NewTaskPage() {
                       <label className="block text-sm font-medium text-gray-900 mb-1">
                         Due Date
                       </label>
-                      <input
-                        type="date"
+                      <DatePicker
                         value={dueDate}
-                        onChange={(e) => setDueDate(e.target.value)}
-                        className="w-full h-10.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900 bg-white"
+                        onChange={handleDueDateChange}
+                        max={projectDueMax || undefined}
+                        placeholder="Select date"
+                        onInvalid={handleDueDateInvalid}
                       />
                     </div>
                   </div>

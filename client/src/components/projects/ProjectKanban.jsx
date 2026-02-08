@@ -25,6 +25,15 @@ export default function ProjectKanban({
   const [activeTaskId, setActiveTaskId] = useState(null);
   const router = useRouter();
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  const projectDueMax = (() => {
+    if (!project?.dueDate) return undefined;
+    const parsed = new Date(project.dueDate);
+    if (Number.isNaN(parsed.getTime())) return undefined;
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  })();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -442,6 +451,7 @@ export default function ProjectKanban({
           onEditTask={editTask}
           editingTask={editingTask}
           isEditing={!!editingTask}
+          projectDueDate={projectDueMax}
         />
       )}
     </div>

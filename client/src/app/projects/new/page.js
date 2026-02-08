@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/layout/Layout';
 import { useAppContext } from '@/app/providers/Provider';
+import DatePicker from '@/components/ui/DatePicker';
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -156,11 +157,10 @@ export default function NewProjectPage() {
                       <label className="block text-sm font-medium text-gray-900 mb-1">
                         Due Date
                       </label>
-                      <input
-                        type="date"
+                      <DatePicker
                         value={dueDate}
-                        onChange={(e) => setDueDate(e.target.value)}
-                        className="w-full h-10.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900 bg-white"
+                        onChange={setDueDate}
+                        placeholder="DD / MM / YYYY"
                       />
                     </div>
                   </div>

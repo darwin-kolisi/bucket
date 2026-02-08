@@ -1,5 +1,6 @@
 import { Geist } from 'next/font/google';
 import { Provider } from './providers/Provider';
+import { ErrorToastProvider } from '@/components/ui/ErrorToastProvider';
 import './globals.css';
 
 const geistSans = Geist({
@@ -11,7 +12,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} font-sans antialiased`}>
-        <Provider>{children}</Provider>
+        <Provider>
+          <ErrorToastProvider>{children}</ErrorToastProvider>
+        </Provider>
       </body>
     </html>
   );

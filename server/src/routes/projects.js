@@ -350,6 +350,20 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Task title is required' });
   }
 
+  const project = await prisma.project.findFirst({
+    where: { id: req.params.id, deletedAt: null },
+  });
+  if (!project) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+
+  const parsedDueDate = dueDate ? parseDateInput(dueDate) : null;
+  if (parsedDueDate && project.dueDate && parsedDueDate > project.dueDate) {
+    return res.status(400).json({
+      error: 'Task due date cannot be after the project due date.',
+    });
+  }
+
   const resolved = resolveTaskStatusAndSubtasks(subtasks, status);
 
   const task = await prisma.task.create({
@@ -377,6 +391,26 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
   });
   if (!existing) {
     return res.status(404).json({ error: 'Task not found' });
+  }
+
+  const project = await prisma.project.findFirst({
+    where: { id: existing.projectId, deletedAt: null },
+  });
+  if (!project) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+
+  const nextDueDate =
+    dueDate === null
+      ? null
+      : dueDate !== undefined
+        ? parseDateInput(dueDate)
+        : existing.dueDate;
+
+  if (nextDueDate && project.dueDate && nextDueDate > project.dueDate) {
+    return res.status(400).json({
+      error: 'Task due date cannot be after the project due date.',
+    });
   }
 
   const incomingSubtasks = subtasks !== undefined ? subtasks : existing.subtasks;
