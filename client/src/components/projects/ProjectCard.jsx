@@ -143,9 +143,9 @@ export default function ProjectCard({
     <div
       className="surface-card rounded-2xl p-5 flex flex-col cursor-pointer transition-all duration-150"
       onClick={handleCardClick}>
-      <div className="flex justify-between items-start mb-3 gap-3">
+      <div className="flex justify-between items-start mb-1 gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-1">
+          <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-1">
             {project.name}
           </h3>
         </div>
@@ -228,7 +228,7 @@ export default function ProjectCard({
         </div>
       </div>
 
-      <p className="text-sm text-gray-500 m-0 mb-6 leading-relaxed flex-grow line-clamp-3">
+      <p className="text-sm text-gray-500 m-0 mb-1 leading-relaxed flex-grow line-clamp-3">
         {project.description || 'No description'}
       </p>
 

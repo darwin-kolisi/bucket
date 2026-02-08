@@ -15,7 +15,7 @@ export function Provider({ children }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [projectsView, setProjectsView] = useState('board');
+  const [projectsView, setProjectsView] = useState('list');
   const [theme, setTheme] = useState('system');
   const [resolvedTheme, setResolvedTheme] = useState('light');
 
