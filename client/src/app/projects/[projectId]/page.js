@@ -37,11 +37,62 @@ export default function ProjectDetailPage() {
     router.push('/projects');
   };
 
+  const normalizeTaskStatus = (status) =>
+    status?.toString().toLowerCase().replace(/_/g, '-') || 'todo';
+
+  const computeProjectStatus = (tasks) => {
+    if (!tasks.length) {
+      return 'in_progress';
+    }
+
+    const now = new Date();
+    const hasOverdueTask = tasks.some((task) => {
+      const normalizedStatus = normalizeTaskStatus(task.status);
+      if (!task.dueDate || normalizedStatus === 'done') return false;
+      const dueDate = new Date(task.dueDate);
+      if (Number.isNaN(dueDate.getTime())) return false;
+      return dueDate < now;
+    });
+
+    if (hasOverdueTask) {
+      return 'at_risk';
+    }
+
+    const allDone = tasks.every(
+      (task) => normalizeTaskStatus(task.status) === 'done'
+    );
+    if (allDone) {
+      return 'completed';
+    }
+
+    const anyProgress = tasks.some((task) => {
+      const normalizedStatus = normalizeTaskStatus(task.status);
+      return (
+        normalizedStatus === 'in-progress' ||
+        normalizedStatus === 'in-review' ||
+        normalizedStatus === 'done'
+      );
+    });
+
+    return anyProgress ? 'on_track' : 'in_progress';
+  };
+
   const updateProjectTasks = (updatedTasks) => {
-    setProjects(
-      projects.map((p) =>
-        p.id === project.id ? { ...p, tasks: updatedTasks } : p
-      )
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== project.id) return p;
+        const totalTasks = updatedTasks.length;
+        const completedTasks = updatedTasks.filter(
+          (task) => normalizeTaskStatus(task.status) === 'done'
+        ).length;
+        return {
+          ...p,
+          tasks: updatedTasks,
+          totalTasks,
+          completedTasks,
+          status: computeProjectStatus(updatedTasks),
+        };
+      })
     );
   };
 
