@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { useRouter } from 'next/navigation';
 import AddTaskModal from '../tasks/AddTaskModal';
 import KanbanColumn from '../tasks/KanbanColumn';
+import TaskCard from '../tasks/TaskCard';
 import { PlusIcon } from '@/components/icons/Icons';
 
 export default function ProjectKanban({
@@ -13,22 +21,14 @@ export default function ProjectKanban({
 }) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [tasks, setTasks] = useState(initialTasks || []);
-  const [draggedTask, setDraggedTask] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [activeTaskId, setActiveTaskId] = useState(null);
   const router = useRouter();
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  );
 
   useEffect(() => {
     setTasks(initialTasks || []);
@@ -64,41 +64,28 @@ export default function ProjectKanban({
   const inReviewTasks = tasks.filter((t) => t.status === 'in-review');
   const doneTasks = tasks.filter((t) => t.status === 'done');
 
-  const handleDragStart = (e, task) => {
-    setDraggedTask(task);
-    e.dataTransfer.setData('text/plain', task.id.toString());
-    e.dataTransfer.effectAllowed = 'move';
+  const activeTask = activeTaskId
+    ? tasks.find((task) => task.id === activeTaskId)
+    : null;
 
-    setTimeout(() => {
-      e.target.classList.add('opacity-50');
-    }, 0);
+  const handleDragStart = (event) => {
+    setActiveTaskId(event.active.id);
   };
 
-  const handleDragEnd = (e) => {
-    e.target.classList.remove('opacity-50');
-    setDraggedTask(null);
+  const handleDragCancel = () => {
+    setActiveTaskId(null);
   };
 
-  const handleDragOver = (e, status) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    setActiveTaskId(null);
 
-    const column = e.currentTarget;
-    column.classList.add('kanban-drop-active');
-  };
+    if (!over) return;
+    const targetStatus = typeof over.id === 'string' ? over.id : null;
+    if (!targetStatus) return;
 
-  const handleDragLeave = (e) => {
-    const column = e.currentTarget;
-    column.classList.remove('kanban-drop-active');
-  };
-
-  const handleDrop = async (e, targetStatus) => {
-    e.preventDefault();
-
-    const column = e.currentTarget;
-    column.classList.remove('kanban-drop-active');
-
-    if (!draggedTask) return;
+    const draggedTask = tasks.find((task) => task.id === active.id);
+    if (!draggedTask || draggedTask.status === targetStatus) return;
 
     const getProgressByStatus = (status, total) => {
       switch (status) {
@@ -106,6 +93,8 @@ export default function ProjectKanban({
           return 0;
         case 'in-progress':
           return Math.round(total * 0.5);
+        case 'in-review':
+          return Math.round(total * 0.8);
         case 'done':
           return total;
         default:
@@ -114,37 +103,19 @@ export default function ProjectKanban({
     };
 
     const updatedTasks = tasks.map((task) => {
-      if (task.id === draggedTask.id) {
-        if (!task.subtasks || task.subtasks.length === 0) {
-          const getProgressByStatus = (status, total) => {
-            switch (status) {
-              case 'todo':
-                return 0;
-              case 'in-progress':
-                return Math.round(total * 0.5);
-              case 'in-review':
-                return Math.round(total * 0.8);
-              case 'done':
-                return total;
-              default:
-                return 0;
-            }
-          };
-          return {
-            ...task,
-            status: targetStatus,
-            progress: getProgressByStatus(targetStatus, task.total),
-          };
-        } else {
-          return { ...task, status: targetStatus };
-        }
+      if (task.id !== draggedTask.id) return task;
+      if (!task.subtasks || task.subtasks.length === 0) {
+        return {
+          ...task,
+          status: targetStatus,
+          progress: getProgressByStatus(targetStatus, task.total),
+        };
       }
-      return task;
+      return { ...task, status: targetStatus };
     });
 
     setTasks(updatedTasks);
     onUpdateTasks(updatedTasks);
-    setDraggedTask(null);
     try {
       await fetch(`${apiBase}/api/tasks/${draggedTask.id}`, {
         method: 'PATCH',
@@ -331,8 +302,53 @@ export default function ProjectKanban({
           <span className="sm:hidden">Task</span>
         </button>
       </div>
-      <div className="block md:hidden p-4 overflow-x-auto">
-        <div className="flex gap-3 pb-4" style={{ minWidth: 'max-content' }}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragCancel={handleDragCancel}
+        onDragEnd={handleDragEnd}>
+        <div className="block md:hidden p-4 overflow-x-auto kanban-scroll">
+          <div className="flex gap-3 pb-4" style={{ minWidth: 'max-content' }}>
+            <KanbanColumn
+              title="To do"
+              tasks={sortTasksByDate(todoTasks)}
+              status="todo"
+              onEditTask={handleOpenEditModal}
+              onDuplicateTask={duplicateTask}
+              onDeleteTask={deleteTask}
+              onToggleSubtask={handleToggleSubtask}
+            />
+            <KanbanColumn
+              title="In progress"
+              tasks={sortTasksByDate(inProgressTasks)}
+              status="in-progress"
+              onEditTask={handleOpenEditModal}
+              onDuplicateTask={duplicateTask}
+              onDeleteTask={deleteTask}
+              onToggleSubtask={handleToggleSubtask}
+            />
+            <KanbanColumn
+              title="In Review"
+              tasks={sortTasksByDate(inReviewTasks)}
+              status="in-review"
+              onEditTask={handleOpenEditModal}
+              onDuplicateTask={duplicateTask}
+              onDeleteTask={deleteTask}
+              onToggleSubtask={handleToggleSubtask}
+            />
+            <KanbanColumn
+              title="Done"
+              tasks={sortTasksByDate(doneTasks)}
+              status="done"
+              onEditTask={handleOpenEditModal}
+              onDuplicateTask={duplicateTask}
+              onDeleteTask={deleteTask}
+              onToggleSubtask={handleToggleSubtask}
+            />
+          </div>
+        </div>
+
+        <div className="hidden md:flex gap-4 p-6 overflow-x-auto min-h-full kanban-scroll">
           <KanbanColumn
             title="To do"
             tasks={sortTasksByDate(todoTasks)}
@@ -340,11 +356,6 @@ export default function ProjectKanban({
             onEditTask={handleOpenEditModal}
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
             onToggleSubtask={handleToggleSubtask}
           />
           <KanbanColumn
@@ -354,11 +365,6 @@ export default function ProjectKanban({
             onEditTask={handleOpenEditModal}
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
             onToggleSubtask={handleToggleSubtask}
           />
           <KanbanColumn
@@ -368,88 +374,33 @@ export default function ProjectKanban({
             onEditTask={handleOpenEditModal}
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
             onToggleSubtask={handleToggleSubtask}
           />
           <KanbanColumn
-            title="Done"
+            title="Completed"
             tasks={sortTasksByDate(doneTasks)}
             status="done"
             onEditTask={handleOpenEditModal}
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
             onToggleSubtask={handleToggleSubtask}
           />
         </div>
-      </div>
 
-      <div className="hidden md:flex gap-4 p-6 overflow-x-auto min-h-full">
-        <KanbanColumn
-          title="To do"
-          tasks={sortTasksByDate(todoTasks)}
-          status="todo"
-          onEditTask={handleOpenEditModal}
-          onDuplicateTask={duplicateTask}
-          onDeleteTask={deleteTask}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onToggleSubtask={handleToggleSubtask}
-        />
-        <KanbanColumn
-          title="In progress"
-          tasks={sortTasksByDate(inProgressTasks)}
-          status="in-progress"
-          onEditTask={handleOpenEditModal}
-          onDuplicateTask={duplicateTask}
-          onDeleteTask={deleteTask}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onToggleSubtask={handleToggleSubtask}
-        />
-        <KanbanColumn
-          title="In Review"
-          tasks={sortTasksByDate(inReviewTasks)}
-          status="in-review"
-          onEditTask={handleOpenEditModal}
-          onDuplicateTask={duplicateTask}
-          onDeleteTask={deleteTask}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onToggleSubtask={handleToggleSubtask}
-        />
-        <KanbanColumn
-          title="Completed"
-          tasks={sortTasksByDate(doneTasks)}
-          status="done"
-          onEditTask={handleOpenEditModal}
-          onDuplicateTask={duplicateTask}
-          onDeleteTask={deleteTask}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onToggleSubtask={handleToggleSubtask}
-        />
-      </div>
+        <DragOverlay>
+          {activeTask ? (
+            <div className="pointer-events-none w-[280px]">
+              <TaskCard
+                task={activeTask}
+                onEditTask={() => {}}
+                onDuplicateTask={() => {}}
+                onDeleteTask={() => {}}
+                onToggleSubtask={() => {}}
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {isTaskModalOpen && (
         <AddTaskModal

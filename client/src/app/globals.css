@@ -77,6 +77,24 @@ body {
   @apply flex;
 }
 
+.main-content-wrapper main {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.main-content-wrapper main::-webkit-scrollbar {
+  width: 6px;
+}
+
+.main-content-wrapper main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-content-wrapper main::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: 999px;
+}
+
 .content-scroll-container {
   flex: 1;
   display: flex;
@@ -188,6 +206,16 @@ body {
 
 .kanban-desktop {
   @apply grid grid-cols-3 gap-6;
+}
+
+.kanban-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.kanban-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .scroll-container {
