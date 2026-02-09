@@ -21,7 +21,6 @@ export default function ProjectKanban({
 }) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [tasks, setTasks] = useState(initialTasks || []);
-  const [editingTask, setEditingTask] = useState(null);
   const [activeTaskId, setActiveTaskId] = useState(null);
   const router = useRouter();
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -213,7 +212,6 @@ export default function ProjectKanban({
 
   useEffect(() => {
     const handleOpenModal = () => {
-      setEditingTask(null);
       setIsTaskModalOpen(true);
     };
 
@@ -237,30 +235,6 @@ export default function ProjectKanban({
           priority: taskData.priority,
           subtasks: taskData.subtasks || [],
           status: 'todo',
-        }),
-      });
-      if (!response.ok) {
-        return;
-      }
-      await refreshTasks();
-    } catch (error) {
-      // noop for now
-    }
-  };
-
-  const editTask = async (taskData) => {
-    if (!editingTask) return;
-    try {
-      const response = await fetch(`${apiBase}/api/tasks/${editingTask.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          title: taskData.taskName,
-          description: taskData.description,
-          dueDate: taskData.dueDate || null,
-          priority: taskData.priority,
-          subtasks: taskData.subtasks || [],
         }),
       });
       if (!response.ok) {
@@ -317,14 +291,12 @@ export default function ProjectKanban({
     }
   };
 
-  const handleOpenEditModal = (task) => {
-    setEditingTask(task);
-    setIsTaskModalOpen(true);
+  const handleEditTask = (task) => {
+    router.push(`/projects/${project.id}/tasks/${task.id}/edit`);
   };
 
   const handleCloseTaskModal = () => {
     setIsTaskModalOpen(false);
-    setEditingTask(null);
   };
 
   return (
@@ -355,7 +327,7 @@ export default function ProjectKanban({
               title="To do"
               tasks={sortTasksByDate(todoTasks)}
               status="todo"
-              onEditTask={handleOpenEditModal}
+              onEditTask={handleEditTask}
               onDuplicateTask={duplicateTask}
               onDeleteTask={deleteTask}
               onToggleSubtask={handleToggleSubtask}
@@ -364,7 +336,7 @@ export default function ProjectKanban({
               title="In progress"
               tasks={sortTasksByDate(inProgressTasks)}
               status="in-progress"
-              onEditTask={handleOpenEditModal}
+              onEditTask={handleEditTask}
               onDuplicateTask={duplicateTask}
               onDeleteTask={deleteTask}
               onToggleSubtask={handleToggleSubtask}
@@ -373,7 +345,7 @@ export default function ProjectKanban({
               title="In Review"
               tasks={sortTasksByDate(inReviewTasks)}
               status="in-review"
-              onEditTask={handleOpenEditModal}
+              onEditTask={handleEditTask}
               onDuplicateTask={duplicateTask}
               onDeleteTask={deleteTask}
               onToggleSubtask={handleToggleSubtask}
@@ -382,7 +354,7 @@ export default function ProjectKanban({
               title="Done"
               tasks={sortTasksByDate(doneTasks)}
               status="done"
-              onEditTask={handleOpenEditModal}
+              onEditTask={handleEditTask}
               onDuplicateTask={duplicateTask}
               onDeleteTask={deleteTask}
               onToggleSubtask={handleToggleSubtask}
@@ -395,7 +367,7 @@ export default function ProjectKanban({
             title="To do"
             tasks={sortTasksByDate(todoTasks)}
             status="todo"
-            onEditTask={handleOpenEditModal}
+            onEditTask={handleEditTask}
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
             onToggleSubtask={handleToggleSubtask}
@@ -404,7 +376,7 @@ export default function ProjectKanban({
             title="In progress"
             tasks={sortTasksByDate(inProgressTasks)}
             status="in-progress"
-            onEditTask={handleOpenEditModal}
+            onEditTask={handleEditTask}
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
             onToggleSubtask={handleToggleSubtask}
@@ -413,7 +385,7 @@ export default function ProjectKanban({
             title="In Review"
             tasks={sortTasksByDate(inReviewTasks)}
             status="in-review"
-            onEditTask={handleOpenEditModal}
+            onEditTask={handleEditTask}
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
             onToggleSubtask={handleToggleSubtask}
@@ -422,7 +394,7 @@ export default function ProjectKanban({
             title="Completed"
             tasks={sortTasksByDate(doneTasks)}
             status="done"
-            onEditTask={handleOpenEditModal}
+            onEditTask={handleEditTask}
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
             onToggleSubtask={handleToggleSubtask}
@@ -448,9 +420,9 @@ export default function ProjectKanban({
         <AddTaskModal
           onClose={handleCloseTaskModal}
           onCreateTask={addTasks}
-          onEditTask={editTask}
-          editingTask={editingTask}
-          isEditing={!!editingTask}
+          onEditTask={() => {}}
+          editingTask={null}
+          isEditing={false}
           projectDueDate={projectDueMax}
         />
       )}

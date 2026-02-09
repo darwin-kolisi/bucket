@@ -24,7 +24,6 @@ export default function Projects({
 }) {
   const [visibleProjects, setVisibleProjects] = useState([]);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState(null);
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
   const [sortOption, setSortOption] = useState('newest');
   const projectsDropdownRef = useRef(null);
@@ -88,8 +87,11 @@ export default function Projects({
     onProjectSelect(project);
   };
 
+  const handleEditProject = (project) => {
+    router.push(`/projects/${project.id}/edit`);
+  };
+
   const openCreateProjectModal = () => {
-    setEditingProject(null);
     setIsProjectModalOpen(true);
   };
 
@@ -146,42 +148,8 @@ export default function Projects({
     };
   }, []);
 
-  const editProject = async (projectData) => {
-    if (!editingProject) return;
-    try {
-      const response = await fetch(`${apiBase}/api/projects/${editingProject.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          name: projectData.projectName,
-          description: projectData.description,
-          dueDate: projectData.dueDate || null,
-          startDate: projectData.startDate || null,
-        }),
-      });
-      if (!response.ok) {
-        return;
-      }
-      const data = await response.json();
-      if (!data?.project) {
-        return;
-      }
-      await refreshProjectsCache();
-      await refreshProjects();
-    } catch (error) {
-      // noop for now
-    }
-  };
-
-  const handleOpenEditModal = (project) => {
-    setEditingProject(project);
-    setIsProjectModalOpen(true);
-  };
-
   const handleCloseProjectModal = () => {
     setIsProjectModalOpen(false);
-    setEditingProject(null);
   };
 
   const duplicateProject = async (id) => {
@@ -357,7 +325,7 @@ export default function Projects({
                   </div>
                   <ProjectActionsMenu
                     className="justify-self-end"
-                    onEdit={() => handleOpenEditModal(project)}
+                    onEdit={() => handleEditProject(project)}
                     onDuplicate={() => duplicateProject(project.id)}
                     onDelete={() => deleteProject(project.id)}
                   />
@@ -402,7 +370,7 @@ export default function Projects({
                 </div>
                 <ProjectActionsMenu
                   className="flex-shrink-0"
-                  onEdit={() => handleOpenEditModal(project)}
+                  onEdit={() => handleEditProject(project)}
                   onDuplicate={() => duplicateProject(project.id)}
                   onDelete={() => deleteProject(project.id)}
                 />
@@ -436,7 +404,7 @@ export default function Projects({
             <ProjectCard
               key={project.id}
               project={project}
-              onEditProject={handleOpenEditModal}
+              onEditProject={handleEditProject}
               onDuplicateProject={duplicateProject}
               onDeleteProject={deleteProject}
               onProjectClick={handleProjectClick}
@@ -449,7 +417,7 @@ export default function Projects({
             <ProjectCard
               key={project.id}
               project={project}
-              onEditProject={handleOpenEditModal}
+              onEditProject={handleEditProject}
               onDuplicateProject={duplicateProject}
               onDeleteProject={deleteProject}
               onProjectClick={handleProjectClick}
@@ -538,9 +506,9 @@ export default function Projects({
         <AddProjectModal
           onClose={handleCloseProjectModal}
           onCreateProject={createProject}
-          onEditProject={editProject}
-          editingProject={editingProject}
-          isEditing={!!editingProject}
+          onEditProject={() => {}}
+          editingProject={null}
+          isEditing={false}
         />
       )}
     </>
