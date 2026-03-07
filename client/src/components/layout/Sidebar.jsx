@@ -87,12 +87,6 @@ export default function Sidebar({
     },
   ];
 
-  const bucketItems = [
-    { id: 'personal', label: 'Personal', count: 12, color: 'bg-blue-500' },
-    { id: 'work', label: 'Work', count: 8, color: 'bg-green-500' },
-    { id: 'learning', label: 'Learning', count: 5, color: 'bg-yellow-500' },
-  ];
-
   const handleItemClick = (itemId) => {
     if (onItemSelect) {
       onItemSelect(itemId);
@@ -194,36 +188,6 @@ export default function Sidebar({
                       {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
                     </span>
                   )}
-                </>
-              )}
-            </button>
-          ))}
-        </div>
-
-        <div className="my-4 h-px bg-gray-200" />
-
-        <div className="mb-2 px-3 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
-          {showFull && 'Buckets'}
-        </div>
-
-        <div className="space-y-1">
-          {bucketItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleItemClick(item.id)}
-              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left transition-colors ${activeItem === item.id
-                ? 'bg-gray-100 text-gray-900'
-                : 'text-gray-700'
-                }`}>
-              <span
-                className={`h-2 w-2 flex-shrink-0 rounded-full ${item.color}`}
-              />
-              {showFull && (
-                <>
-                  <span className="flex-1 text-sm">{item.label}</span>
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                    {item.count}
-                  </span>
                 </>
               )}
             </button>
