@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import { useAppContext } from '@/app/providers/Provider';
 
 export default function Sidebar({
   activeItem = 'dashboard',
@@ -10,6 +11,7 @@ export default function Sidebar({
   isOpen = false,
   onClose,
 }) {
+  const { unreadNotificationsCount } = useAppContext();
   const navigationItems = [
     {
       id: 'dashboard',
@@ -184,7 +186,16 @@ export default function Sidebar({
                 }`}
               onClick={() => handleItemClick(item.id)}>
               <span className="flex-shrink-0">{item.icon}</span>
-              {showFull && <span className="text-sm">{item.label}</span>}
+              {showFull && (
+                <>
+                  <span className="text-sm flex-1">{item.label}</span>
+                  {item.id === 'notifications' && unreadNotificationsCount > 0 && (
+                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                      {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+                    </span>
+                  )}
+                </>
+              )}
             </button>
           ))}
         </div>

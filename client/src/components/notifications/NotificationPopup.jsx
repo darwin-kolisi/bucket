@@ -1,52 +1,144 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAppContext } from '@/app/providers/Provider';
+
+const formatRelativeTime = (value) => {
+  if (!value) return 'Just now';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Just now';
+
+  const seconds = Math.max(1, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (seconds < 60) return 'Just now';
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+  }).format(date);
+};
+
+const getPriorityClass = (priority) => {
+  switch (priority) {
+    case 'high':
+      return 'bg-red-100 text-red-800';
+    case 'low':
+      return 'bg-blue-100 text-blue-800';
+    default:
+      return 'bg-yellow-100 text-yellow-800';
+  }
+};
+
+const getNotificationIcon = (type) => {
+  const normalized = type?.toString().toLowerCase() || '';
+
+  if (normalized.includes('overdue') || normalized.includes('due')) {
+    return (
+      <svg
+        className="h-4 w-4 text-red-500"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+        />
+      </svg>
+    );
+  }
+
+  if (normalized.includes('completed')) {
+    return (
+      <svg
+        className="h-4 w-4 text-green-500"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+        />
+      </svg>
+    );
+  }
+
+  if (normalized.includes('note')) {
+    return (
+      <svg
+        className="h-4 w-4 text-blue-500"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+        />
+        <polyline points="14,2 14,8 20,8" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes('project')) {
+    return (
+      <svg
+        className="h-4 w-4 text-indigo-500"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      className="h-4 w-4 text-gray-500"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+      />
+    </svg>
+  );
+};
 
 export default function NotificationPopup() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'due_date',
-      title: 'Project due tomorrow',
-      message: '"bucket" project is due tomorrow',
-      project: 'bucket',
-      timestamp: '2 hours ago',
-      read: false,
-      priority: 'high',
-    },
-    {
-      id: 2,
-      type: 'task_completed',
-      title: 'Task completed',
-      message: '"Create landing page design" was marked as done',
-      project: 'bucket',
-      timestamp: '5 hours ago',
-      read: true,
-      priority: 'medium',
-    },
-    {
-      id: 3,
-      type: 'project_created',
-      title: 'New project created',
-      message: '"physics" project was created',
-      project: 'physics',
-      timestamp: '1 day ago',
-      read: true,
-      priority: 'low',
-    },
-    {
-      id: 4,
-      type: 'reminder',
-      title: 'Daily reminder',
-      message: 'You have 3 pending tasks across all projects',
-      project: null,
-      timestamp: '1 day ago',
-      read: true,
-      priority: 'medium',
-    },
-  ]);
-
   const popupRef = useRef(null);
+  const {
+    notifications,
+    unreadNotificationsCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    isNotificationsRealtimeConnected,
+  } = useAppContext();
+
+  const visibleNotifications = notifications.slice(0, 8);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,120 +151,32 @@ export default function NotificationPopup() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'due_date':
-        return (
-          <svg
-            className="h-4 w-4 text-red-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-            />
-          </svg>
-        );
-      case 'task_completed':
-        return (
-          <svg
-            className="h-4 w-4 text-green-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
-        );
-      case 'project_created':
-        return (
-          <svg
-            className="h-4 w-4 text-blue-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
-        );
-      case 'reminder':
-        return (
-          <svg
-            className="h-4 w-4 text-yellow-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-            />
-          </svg>
-        );
-      default:
-        return (
-          <svg
-            className="h-4 w-4 text-gray-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-            />
-          </svg>
-        );
+  const openNotificationTarget = (notification) => {
+    if (notification?.type?.toString().startsWith('note_')) {
+      const params = new URLSearchParams();
+      if (notification?.project?.id) {
+        params.set('projectId', notification.project.id);
+      }
+      if (notification?.task?.id) {
+        params.set('taskId', notification.task.id);
+      }
+      const query = params.toString();
+      router.push(query ? `/notes?${query}` : '/notes');
+      return;
     }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+    if (notification?.project?.id) {
+      router.push(`/projects/${notification.project.id}`);
+      return;
     }
+    router.push('/notifications');
   };
-
-  const markAsRead = (id) => {
-    setNotifications(
-      notifications.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(
-      notifications.map((notification) => ({ ...notification, read: true }))
-    );
-  };
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="relative" ref={popupRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        aria-label="Notifications">
         <svg
           className="h-5 w-5"
           fill="none"
@@ -185,17 +189,27 @@ export default function NotificationPopup() {
             d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
           />
         </svg>
+        {unreadNotificationsCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 inline-flex min-w-4 h-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+            {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+          </span>
+        )}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-1 w-[calc(80vw-2rem)] sm:w-80 origin-top-right rounded-xl border border-gray-200 bg-white p-2 text-sm text-gray-900 shadow-lg z-50">
+        <div className="absolute top-full right-0 mt-1 w-[calc(80vw-2rem)] sm:w-[22rem] origin-top-right rounded-xl border border-gray-200 bg-white p-2 text-sm text-gray-900 shadow-lg z-50">
           <div className="flex items-center justify-between mb-2 px-3 py-2">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
               Notifications
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  isNotificationsRealtimeConnected ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              />
             </div>
-            {unreadCount > 0 && (
+            {unreadNotificationsCount > 0 && (
               <button
-                onClick={markAllAsRead}
+                onClick={markAllNotificationsAsRead}
                 className="text-xs text-blue-600 hover:text-blue-800 font-medium">
                 Mark all read
               </button>
@@ -203,11 +217,19 @@ export default function NotificationPopup() {
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {notifications.length > 0 ? (
-              notifications.map((notification) => (
-                <div
+            {visibleNotifications.length > 0 ? (
+              visibleNotifications.map((notification) => (
+                <button
                   key={notification.id}
-                  className={`group flex items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left transition-colors ${
+                  type="button"
+                  onClick={() => {
+                    if (!notification.read) {
+                      markNotificationAsRead(notification.id);
+                    }
+                    setIsOpen(false);
+                    openNotificationTarget(notification);
+                  }}
+                  className={`group flex w-full items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left transition-colors ${
                     !notification.read ? 'bg-blue-50' : ''
                   }`}>
                   <div className="flex-shrink-0 mt-1">
@@ -221,7 +243,7 @@ export default function NotificationPopup() {
                           {notification.title}
                         </h3>
                         <span
-                          className={`text-xs px-1.5 py-0.5 rounded-full ${getPriorityColor(
+                          className={`text-xs px-1.5 py-0.5 rounded-full ${getPriorityClass(
                             notification.priority
                           )}`}>
                           {notification.priority}
@@ -235,18 +257,16 @@ export default function NotificationPopup() {
 
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">
-                        {notification.timestamp}
+                        {formatRelativeTime(notification.createdAt)}
                       </span>
                       {!notification.read && (
-                        <button
-                          onClick={() => markAsRead(notification.id)}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                          Mark read
-                        </button>
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                          New
+                        </span>
                       )}
                     </div>
                   </div>
-                </div>
+                </button>
               ))
             ) : (
               <div className="px-3 py-4 text-center text-gray-500">
@@ -272,9 +292,7 @@ export default function NotificationPopup() {
             <button
               onClick={() => {
                 setIsOpen(false);
-                window.dispatchEvent(
-                  new CustomEvent('navigateToNotifications')
-                );
+                router.push('/notifications');
               }}
               className="w-full text-center text-xs text-gray-500 hover:text-gray-700 py-2 font-medium">
               View all notifications

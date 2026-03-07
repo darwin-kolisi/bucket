@@ -3,6 +3,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
+import NotificationPopup from '@/components/notifications/NotificationPopup';
 
 const getInitials = (name, email) => {
   if (name) {
@@ -70,7 +71,10 @@ export default function Header({ isMobileMenuOpen, onMenuClick }) {
             </svg>
           )}
         </button>
-        <Menu as="div" className="relative ml-auto">
+        <div className="ml-auto">
+          <NotificationPopup />
+        </div>
+        <Menu as="div" className="relative ml-1">
           <MenuButton className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-[#000] text-xs font-semibold text-white transition hover:opacity-90 dark:bg-white dark:text-gray-900">
             {initials}
           </MenuButton>
