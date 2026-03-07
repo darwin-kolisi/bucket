@@ -4,6 +4,7 @@ import { toNodeHandler } from 'better-auth/node';
 import { auth } from './lib/auth.js';
 import projectsRouter from './routes/projects.js';
 import accountRouter from './routes/account.js';
+import notificationsRouter from './routes/notifications.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -30,6 +31,7 @@ app.use(
 app.all('/api/auth/*splat', toNodeHandler(auth));
 app.use('/api', accountRouter);
 app.use('/api', projectsRouter);
+app.use('/api', notificationsRouter);
 
 app.get('/', (req, res) => {
   res.type('text').send('Bucket server is running');
