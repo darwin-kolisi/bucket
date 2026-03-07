@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useAppContext } from '@/app/providers/Provider';
 import { useErrorToast } from '@/components/ui/ErrorToastProvider';
 import AppSelect from '@/components/ui/AppSelect';
 
@@ -46,6 +47,7 @@ export default function Notes() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { pushError } = useErrorToast();
+  const { selectedWorkspaceId } = useAppContext();
 
   const urlProjectId = searchParams.get('projectId') || '';
   const urlTaskId = searchParams.get('taskId') || '';
@@ -180,7 +182,13 @@ export default function Notes() {
   const fetchProjects = useCallback(async () => {
     setIsLoadingProjects(true);
     try {
-      const response = await fetch(`${apiBase}/api/projects`, {
+      const params = new URLSearchParams();
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
+      }
+      const query = params.toString();
+
+      const response = await fetch(`${apiBase}/api/projects${query ? `?${query}` : ''}`, {
         credentials: 'include',
       });
 
@@ -197,7 +205,7 @@ export default function Notes() {
       setIsLoadingProjects(false);
       setHasLoadedProjects(true);
     }
-  }, [apiBase]);
+  }, [apiBase, selectedWorkspaceId]);
 
   const fetchNotes = useCallback(async () => {
     setIsLoadingNotes(true);

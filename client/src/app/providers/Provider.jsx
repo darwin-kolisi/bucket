@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 const Context = createContext();
+const WORKSPACE_STORAGE_KEY = 'bucket-workspace-id';
 
 const sortNotificationsByDateDesc = (items) =>
   [...items].sort((left, right) => {
@@ -43,6 +44,9 @@ export function Provider({ children }) {
   const [resolvedTheme, setResolvedTheme] = useState('light');
 
   const [projects, setProjects] = useState([]);
+  const [workspaces, setWorkspaces] = useState([]);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
+  const [isWorkspacesLoading, setIsWorkspacesLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [isNotificationsLoading, setIsNotificationsLoading] = useState(true);
   const [isNotificationsRealtimeConnected, setIsNotificationsRealtimeConnected] =
@@ -60,24 +64,131 @@ export function Provider({ children }) {
   }, []);
 
   useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        const response = await fetch(`${apiBase}/api/projects`, {
-          credentials: 'include',
-        });
-        if (!response.ok) {
-          setProjects([]);
-          return;
-        }
-        const data = await response.json();
-        setProjects(data.projects || []);
-      } catch (error) {
-        setProjects([]);
-      }
-    };
+    const storedWorkspaceId = window.localStorage.getItem(WORKSPACE_STORAGE_KEY);
+    if (storedWorkspaceId) {
+      setSelectedWorkspaceId(storedWorkspaceId);
+    }
+  }, []);
 
-    loadProjects();
+  const refreshWorkspaces = useCallback(async () => {
+    setIsWorkspacesLoading(true);
+    try {
+      const response = await fetch(`${apiBase}/api/workspaces`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        setWorkspaces([]);
+        setSelectedWorkspaceId('');
+        return;
+      }
+
+      const data = await response.json();
+      const nextWorkspaces = Array.isArray(data?.workspaces) ? data.workspaces : [];
+      setWorkspaces(nextWorkspaces);
+
+      setSelectedWorkspaceId((current) => {
+        if (current && nextWorkspaces.some((workspace) => workspace.id === current)) {
+          return current;
+        }
+
+        const storedWorkspaceId =
+          typeof window !== 'undefined'
+            ? window.localStorage.getItem(WORKSPACE_STORAGE_KEY)
+            : '';
+
+        if (
+          storedWorkspaceId &&
+          nextWorkspaces.some((workspace) => workspace.id === storedWorkspaceId)
+        ) {
+          return storedWorkspaceId;
+        }
+
+        return nextWorkspaces[0]?.id || '';
+      });
+    } catch (error) {
+      setWorkspaces([]);
+      setSelectedWorkspaceId('');
+    } finally {
+      setIsWorkspacesLoading(false);
+    }
   }, [apiBase]);
+
+  useEffect(() => {
+    refreshWorkspaces();
+  }, [refreshWorkspaces]);
+
+  useEffect(() => {
+    if (!selectedWorkspaceId) {
+      window.localStorage.removeItem(WORKSPACE_STORAGE_KEY);
+      return;
+    }
+    window.localStorage.setItem(WORKSPACE_STORAGE_KEY, selectedWorkspaceId);
+  }, [selectedWorkspaceId]);
+
+  const refreshProjects = useCallback(async () => {
+    if (isWorkspacesLoading) return;
+
+    try {
+      const params = new URLSearchParams();
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
+      }
+
+      const query = params.toString();
+      const response = await fetch(
+        `${apiBase}/api/projects${query ? `?${query}` : ''}`,
+        {
+          credentials: 'include',
+        }
+      );
+      if (!response.ok) {
+        setProjects([]);
+        return;
+      }
+      const data = await response.json();
+      setProjects(data.projects || []);
+    } catch (error) {
+      setProjects([]);
+    }
+  }, [apiBase, isWorkspacesLoading, selectedWorkspaceId]);
+
+  useEffect(() => {
+    refreshProjects();
+  }, [refreshProjects]);
+
+  const createWorkspace = useCallback(
+    async (name) => {
+      const trimmedName = name?.toString().trim();
+      if (!trimmedName) return null;
+
+      const response = await fetch(`${apiBase}/api/workspaces`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name: trimmedName }),
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      const workspace = data?.workspace || null;
+      if (!workspace) {
+        return null;
+      }
+
+      setWorkspaces((prev) => {
+        if (prev.some((existingWorkspace) => existingWorkspace.id === workspace.id)) {
+          return prev;
+        }
+        return [...prev, workspace];
+      });
+      setSelectedWorkspaceId(workspace.id);
+      return workspace;
+    },
+    [apiBase]
+  );
 
   const refreshNotifications = useCallback(
     async ({ silent = false } = {}) => {
@@ -312,6 +423,13 @@ export function Provider({ children }) {
     setSearchQuery,
     projects,
     setProjects,
+    refreshProjects,
+    workspaces,
+    isWorkspacesLoading,
+    selectedWorkspaceId,
+    setSelectedWorkspaceId,
+    refreshWorkspaces,
+    createWorkspace,
     projectsView,
     setProjectsView,
     theme,

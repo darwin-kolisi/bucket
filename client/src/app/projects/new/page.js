@@ -8,7 +8,7 @@ import DatePicker from '@/components/ui/DatePicker';
 
 export default function NewProjectPage() {
   const router = useRouter();
-  const { setProjects } = useAppContext();
+  const { setProjects, selectedWorkspaceId } = useAppContext();
   const [projectName, setProjectName] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -19,9 +19,18 @@ export default function NewProjectPage() {
 
   const refreshProjects = async () => {
     try {
-      const response = await fetch(`${apiBase}/api/projects`, {
-        credentials: 'include',
-      });
+      const params = new URLSearchParams();
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
+      }
+      const query = params.toString();
+
+      const response = await fetch(
+        `${apiBase}/api/projects${query ? `?${query}` : ''}`,
+        {
+          credentials: 'include',
+        }
+      );
       if (!response.ok) return;
       const data = await response.json();
       setProjects(data.projects || []);
@@ -48,6 +57,7 @@ export default function NewProjectPage() {
           name: projectName.trim(),
           description: description.trim(),
           dueDate: dueDate || null,
+          workspaceId: selectedWorkspaceId || null,
         }),
       });
 

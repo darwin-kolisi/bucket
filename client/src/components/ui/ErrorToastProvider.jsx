@@ -50,20 +50,20 @@ export function ErrorToastProvider({ children }) {
   return (
     <ErrorToastContext.Provider value={{ pushError }}>
       {children}
-      <div className="pointer-events-none fixed bottom-6 right-6 z-[100] flex flex-col gap-2">
+      <div className="pointer-events-none fixed right-4 top-[calc(var(--chrome-height)+0.75rem)] z-[100] flex flex-col gap-2 md:right-6">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className="pointer-events-auto w-[320px] max-w-[calc(100vw-2rem)] surface-card rounded-2xl border border-gray-200 bg-white shadow-lg px-4 py-3">
+            className="pointer-events-auto w-[320px] max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-700 bg-gray-900 shadow-lg px-4 py-3">
             <div className="flex items-start gap-3">
-              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-red-500" />
-              <p className="text-sm text-gray-900 flex-1">
+              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-red-400" />
+              <p className="text-sm text-gray-100 flex-1">
                 {toast.message}
               </p>
               <button
                 type="button"
                 onClick={() => removeToast(toast.id)}
-                className="text-gray-400 hover:text-gray-600 text-lg leading-none">
+                className="text-gray-400 hover:text-gray-200 text-lg leading-none">
                 ×
               </button>
             </div>
