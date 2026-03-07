@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Layout from '@/components/layout/Layout';
 import { useAppContext } from '@/app/providers/Provider';
 import { useErrorToast } from '@/components/ui/ErrorToastProvider';
+import AppSelect from '@/components/ui/AppSelect';
 import { authClient } from '@/lib/auth-client';
 import { deleteAccount, fetchAccount } from '@/lib/account-api';
 
@@ -33,6 +34,14 @@ export default function SettingsPage() {
   const [account, setAccount] = useState(null);
 
   const canDelete = deleteConfirmation.trim() === 'DELETE' && !isDeleting;
+  const languageSelectOptions = languageOptions.map((option) => ({
+    label: option,
+    value: option,
+  }));
+  const timezoneSelectOptions = timezoneOptions.map((option) => ({
+    label: option,
+    value: option,
+  }));
 
   const profileEmail = useMemo(
     () => account?.email || 'Not available',
@@ -200,64 +209,22 @@ export default function SettingsPage() {
                 <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500">
                   Language
                 </span>
-                <div className="relative">
-                  <select
-                    value={language}
-                    onChange={(event) => setLanguage(event.target.value)}
-                    className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-3 py-2.5 pr-10 text-sm text-gray-900 transition focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400">
-                    {languageOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <svg
-                      className="h-4 w-4 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                      />
-                    </svg>
-                  </div>
-                </div>
+                <AppSelect
+                  value={language}
+                  onChange={setLanguage}
+                  options={languageSelectOptions}
+                />
               </label>
 
               <label className="block">
                 <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500">
                   Timezone
                 </span>
-                <div className="relative">
-                  <select
-                    value={timezone}
-                    onChange={(event) => setTimezone(event.target.value)}
-                    className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-3 py-2.5 pr-10 text-sm text-gray-900 transition focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400">
-                    {timezoneOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <svg
-                      className="h-4 w-4 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                      />
-                    </svg>
-                  </div>
-                </div>
+                <AppSelect
+                  value={timezone}
+                  onChange={setTimezone}
+                  options={timezoneSelectOptions}
+                />
               </label>
             </div>
           </div>
