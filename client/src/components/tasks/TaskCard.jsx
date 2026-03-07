@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useClickOutside } from '@react-hooks-hub/use-click-outside';
+import { useRouter } from 'next/navigation';
 
 export default function TaskCard({
   task,
@@ -10,6 +11,7 @@ export default function TaskCard({
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const router = useRouter();
 
   useClickOutside([menuRef], () => setIsMenuOpen(false));
 
@@ -25,6 +27,12 @@ export default function TaskCard({
 
   const handleDelete = () => {
     onDeleteTask(task.id);
+    setIsMenuOpen(false);
+  };
+
+  const handleOpenNotes = () => {
+    if (!task.projectId) return;
+    router.push(`/notes?projectId=${task.projectId}&taskId=${task.id}`);
     setIsMenuOpen(false);
   };
 
@@ -146,6 +154,26 @@ export default function TaskCard({
                   />
                 </svg>
                 Duplicate
+              </button>
+              <button
+                onClick={handleOpenNotes}
+                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+                <svg
+                  className="h-4 w-4 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                  />
+                  <polyline points="14,2 14,8 20,8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+                Notes
               </button>
               <div className="my-1 h-px bg-gray-200" />
               <button

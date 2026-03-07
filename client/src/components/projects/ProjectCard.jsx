@@ -11,6 +11,7 @@ export default function ProjectCard({
   project,
   onEditProject,
   onDuplicateProject,
+  onOpenProjectNotes,
   onDeleteProject,
   onProjectClick,
 }) {
@@ -26,6 +27,10 @@ export default function ProjectCard({
 
   const handleDuplicate = () => {
     onDuplicateProject(project.id);
+  };
+
+  const handleOpenNotes = () => {
+    onOpenProjectNotes(project.id);
   };
 
   const handleDelete = () => {
@@ -104,6 +109,7 @@ export default function ProjectCard({
           buttonClassName="bg-none border-none cursor-pointer leading-none"
           onEdit={handleEdit}
           onDuplicate={handleDuplicate}
+          onOpenNotes={handleOpenNotes}
           onDelete={handleDelete}
         />
       </div>

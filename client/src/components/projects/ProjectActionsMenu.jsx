@@ -9,6 +9,7 @@ import {
 export default function ProjectActionsMenu({
   onEdit,
   onDuplicate,
+  onOpenNotes,
   onDelete,
   className = '',
   buttonClassName = '',
@@ -46,6 +47,28 @@ export default function ProjectActionsMenu({
               className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
               <DuplicateIcon className="h-4 w-4 text-gray-400" />
               Duplicate
+            </button>
+          </MenuItem>
+          <MenuItem>
+            <button
+              onClick={(event) => handleAction(event, onOpenNotes)}
+              className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+              <svg
+                className="h-4 w-4 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                />
+                <polyline points="14,2 14,8 20,8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+              Notes
             </button>
           </MenuItem>
           <div className="my-1 h-px bg-gray-200" />

@@ -91,6 +91,10 @@ export default function Projects({
     router.push(`/projects/${project.id}/edit`);
   };
 
+  const openProjectNotes = (projectId) => {
+    router.push(`/notes?projectId=${projectId}`);
+  };
+
   const openCreateProjectModal = () => {
     setIsProjectModalOpen(true);
   };
@@ -327,6 +331,7 @@ export default function Projects({
                     className="justify-self-end"
                     onEdit={() => handleEditProject(project)}
                     onDuplicate={() => duplicateProject(project.id)}
+                    onOpenNotes={() => openProjectNotes(project.id)}
                     onDelete={() => deleteProject(project.id)}
                   />
                 </div>
@@ -372,6 +377,7 @@ export default function Projects({
                   className="flex-shrink-0"
                   onEdit={() => handleEditProject(project)}
                   onDuplicate={() => duplicateProject(project.id)}
+                  onOpenNotes={() => openProjectNotes(project.id)}
                   onDelete={() => deleteProject(project.id)}
                 />
               </div>
@@ -406,6 +412,7 @@ export default function Projects({
               project={project}
               onEditProject={handleEditProject}
               onDuplicateProject={duplicateProject}
+              onOpenProjectNotes={openProjectNotes}
               onDeleteProject={deleteProject}
               onProjectClick={handleProjectClick}
             />
@@ -419,6 +426,7 @@ export default function Projects({
               project={project}
               onEditProject={handleEditProject}
               onDuplicateProject={duplicateProject}
+              onOpenProjectNotes={openProjectNotes}
               onDeleteProject={deleteProject}
               onProjectClick={handleProjectClick}
             />

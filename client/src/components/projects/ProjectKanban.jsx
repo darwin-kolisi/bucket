@@ -308,13 +308,36 @@ export default function ProjectKanban({
           className="px-4 h-9.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition-colors">
           Back
         </button>
-        <button
-          onClick={() => router.push(`/projects/${project.id}/tasks/new`)}
-          className="btn-create flex items-center gap-2 px-3 h-9.5 rounded-lg text-sm font-medium transition-colors">
-          <PlusIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">New Task</span>
-          <span className="sm:hidden">Task</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.push(`/notes?projectId=${project.id}`)}
+            className="px-3 h-9.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors inline-flex items-center gap-2">
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.7"
+              stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+              />
+              <polyline points="14,2 14,8 20,8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+            Notes
+          </button>
+          <button
+            onClick={() => router.push(`/projects/${project.id}/tasks/new`)}
+            className="btn-create flex items-center gap-2 px-3 h-9.5 rounded-lg text-sm font-medium transition-colors">
+            <PlusIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">New Task</span>
+            <span className="sm:hidden">Task</span>
+          </button>
+        </div>
       </div>
       <DndContext
         sensors={sensors}
