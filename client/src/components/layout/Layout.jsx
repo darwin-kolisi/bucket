@@ -173,7 +173,7 @@ export default function Layout({ children }) {
           />
         )}
         <main
-          className={`flex-1 overflow-y-auto pt-[var(--chrome-height)] transition-all duration-300 ease-in-out ${
+          className={`flex-1 overflow-y-auto pt-[var(--chrome-height)] pb-[var(--footer-height-mobile)] md:pb-[var(--footer-height)] transition-all duration-300 ease-in-out ${
             isMobile
               ? 'ml-0'
               : isSidebarCollapsed

@@ -1,20 +1,8 @@
 'use client';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
 
-export default function Footer({ isCollapsed }) {
-  const [isMobile, setIsMobile] = useState(false);
+export default function Footer({ isCollapsed, isMobile }) {
   const currentYear = new Date().getFullYear();
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const handleLinkClick = (url) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -22,8 +10,8 @@ export default function Footer({ isCollapsed }) {
 
   return (
     <footer
-      className={`mt-auto border-t border-gray-200 bg-white transition-all duration-300 ease-in-out ${
-        isMobile ? 'ml-0' : isCollapsed ? 'ml-[70px]' : 'ml-[220px]'
+      className={`fixed bottom-0 right-0 z-40 border-t border-gray-200 bg-white transition-all duration-300 ease-in-out ${
+        isMobile ? 'left-0' : isCollapsed ? 'left-[70px]' : 'left-[220px]'
       }`}>
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 lg:py-3">
         <div className="flex flex-col gap-4 items-center text-center sm:flex-row sm:justify-between sm:text-left">
