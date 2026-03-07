@@ -276,7 +276,7 @@ export default function Notifications() {
               <article
                 key={notification.id}
                 className={`grid gap-3 p-4 transition-colors md:grid-cols-[auto_minmax(0,1fr)_auto] ${
-                  !notification.read ? 'bg-blue-50/60' : 'bg-white'
+                  !notification.read ? 'bg-gray-100/70' : 'bg-white'
                 } hover:bg-gray-50`}>
                 <div
                   className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg ${getTypeIconWrapStyles(
@@ -297,7 +297,7 @@ export default function Notifications() {
                       {notification.priority}
                     </span>
                     {!notification.read && (
-                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                      <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700">
                         Unread
                       </span>
                     )}
