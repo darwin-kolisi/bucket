@@ -6,11 +6,22 @@ import projectsRouter from './routes/projects.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
+const configuredOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedOrigins =
+  configuredOrigins.length > 0 ? configuredOrigins : ['http://localhost:3000'];
 
 app.use(express.json());
 app.use(
   cors({
-    origin: 'http://localhost:3000',
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
     credentials: true,
   })
 );
@@ -23,5 +34,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server listening on http://localhost:${port}`);
+  console.log(`Server listening on port ${port}`);
 });

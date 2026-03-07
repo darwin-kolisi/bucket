@@ -8,6 +8,11 @@ import { useSearchParams } from 'next/navigation';
 
 export default function SignUpPage() {
   const searchParams = useSearchParams();
+  const appOrigin =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
   const { status, error } = useMemo(() => {
     return {
       status: searchParams.get('status'),
@@ -66,11 +71,9 @@ export default function SignUpPage() {
                     authClient.signIn.social({
                       provider: 'google',
                       requestSignUp: true,
-                      callbackURL:
-                        'http://localhost:3000/auth/signup?status=exists',
-                      newUserCallbackURL: 'http://localhost:3000/dashboard',
-                      errorCallbackURL:
-                        'http://localhost:3000/auth/signup?status=exists',
+                      callbackURL: `${appOrigin}/auth/signup?status=exists`,
+                      newUserCallbackURL: `${appOrigin}/dashboard`,
+                      errorCallbackURL: `${appOrigin}/auth/signup?status=exists`,
                     })
                   }
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-normal text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-md transition-colors">

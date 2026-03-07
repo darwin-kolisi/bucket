@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useAppContext } from '@/app/providers/Provider';
+import { BoardIcon } from '@/components/icons/Icons';
 
 export default function Dashboard({ onProjectSelect, onNavigate }) {
   const { projects } = useAppContext();
@@ -80,9 +81,13 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
   };
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen pb-20">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+    <div className="flex-1 overflow-y-auto min-h-screen">
+      <div className="px-5 md:px-8 pt-6 pb-2">
+        <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
+      </div>
+      <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-6">
+        <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <svg
@@ -107,7 +112,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <svg
@@ -132,7 +137,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <svg
@@ -157,7 +162,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <svg
@@ -184,7 +189,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
+        <div className="lg:col-span-2 surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-gray-900">
               Recent Projects
@@ -197,12 +202,12 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
           </div>
 
           {recentProjects.length > 0 ? (
-            <div className="space-y-3">
+            <div className="divide-y divide-gray-100">
               {recentProjects.map((project) => (
                 <button
                   key={project.id}
                   onClick={() => onProjectSelect && onProjectSelect(project)}
-                  className="w-full group flex items-start gap-3 rounded-lg px-3 py-3 hover:bg-gray-50 text-left border border-gray-100 transition-colors">
+                  className="w-full group flex items-start gap-3 rounded-lg px-3 py-3 hover:bg-gray-50 text-left transition-colors">
                   <div className="flex-shrink-0 mt-1.5">
                     <div
                       className={`w-2 h-2 rounded-full ${getStatusColor(
@@ -247,13 +252,17 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500 text-sm">
-              No projects yet. Create your first project to get started.
+            <div className="flex flex-col items-center justify-center py-12">
+              <BoardIcon className="w-16 h-16 text-gray-300 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects yet</h3>
+              <p className="text-sm text-gray-500 text-center max-w-sm">
+                Create your first project to get started.
+              </p>
             </div>
           )}
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
           <h2 className="text-sm font-semibold text-gray-900 mb-4">
             Upcoming Deadlines
           </h2>
@@ -315,7 +324,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
               return topItems.map((item, index) => (
                 <div
                   key={`${item.type}-${index}`}
-                  className="flex items-start gap-3 py-2 border-b border-gray-100 last:border-0">
+                  className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
                   <div className="flex-shrink-0 mt-1">
                     {item.type === 'project' ? (
                       <svg
@@ -382,27 +391,27 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
         </div>
       </div>
 
-      <div className="mt-6 bg-white rounded-xl border border-gray-200 p-5">
+      <div className="mt-6 surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-900">
             Upcoming Tasks
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-lg border border-gray-200 bg-gray-100 p-1 gap-1">
             <button
               onClick={() => setSelectedTimeRange('week')}
-              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
                 selectedTimeRange === 'week'
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
               }`}>
               This week
             </button>
             <button
               onClick={() => setSelectedTimeRange('month')}
-              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
                 selectedTimeRange === 'month'
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
               }`}>
               This month
             </button>
@@ -410,7 +419,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
         </div>
 
         {upcomingTasks.length > 0 ? (
-          <div className="space-y-2">
+          <div className="divide-y divide-gray-100">
             {upcomingTasks.map((task) => (
               <button
                 key={task.uniqueKey}
@@ -422,7 +431,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
                     onProjectSelect(targetProject);
                   }
                 }}
-                className="w-full text-left flex items-start gap-3 rounded-lg px-3 py-3 border border-gray-100 hover:bg-gray-50 transition-colors">
+                className="w-full text-left flex items-start gap-3 rounded-lg px-3 py-3 hover:bg-gray-50 transition-colors">
                 <div className="flex-shrink-0 mt-1">
                   <div
                     className={`w-2 h-2 rounded-full ${getStatusColor(
@@ -459,10 +468,17 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500 text-sm">
-            No upcoming tasks. You're all caught up!
+          <div className="flex flex-col items-center justify-center py-12">
+            <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">All caught up!</h3>
+            <p className="text-sm text-gray-500 text-center max-w-sm">
+              No upcoming tasks. Enjoy the clear schedule.
+            </p>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
