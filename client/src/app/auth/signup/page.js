@@ -3,10 +3,10 @@ import Link from 'next/link';
 import AuthLayout from '@/components/layout/AuthLayout';
 import { GoogleIcon } from '@/components/icons/Icons';
 import { authClient } from '@/lib/auth-client';
-import { useMemo } from 'react';
+import { Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function SignUpPage() {
+function SignUpContent() {
   const searchParams = useSearchParams();
   const appOrigin =
     typeof window !== 'undefined'
@@ -93,5 +93,13 @@ export default function SignUpPage() {
         </div>
       </main>
     </AuthLayout>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignUpContent />
+    </Suspense>
   );
 }

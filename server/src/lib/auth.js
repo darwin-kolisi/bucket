@@ -15,11 +15,22 @@ const trustedOrigins = (process.env.CLIENT_URL || '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+const authBaseURL = process.env.BETTER_AUTH_URL || 'http://localhost:4000';
+const useSecureCrossSiteCookies = authBaseURL.startsWith('https://');
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:4000',
+  baseURL: authBaseURL,
   trustedOrigins:
     trustedOrigins.length > 0 ? trustedOrigins : ['http://localhost:3000'],
+  advanced: useSecureCrossSiteCookies
+    ? {
+        useSecureCookies: true,
+        defaultCookieAttributes: {
+          sameSite: 'none',
+          secure: true,
+        },
+      }
+    : undefined,
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),

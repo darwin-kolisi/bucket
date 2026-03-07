@@ -35,6 +35,49 @@ const ensureWorkspace = async (user) => {
   });
 };
 
+const hasWorkspaceAccess = async (workspaceId, userId) => {
+  if (!workspaceId || !userId) return false;
+  const membership = await prisma.workspaceMember.findFirst({
+    where: { workspaceId, userId },
+    select: { id: true },
+  });
+  return Boolean(membership);
+};
+
+const projectScopeWhere = (projectId, userId) => ({
+  id: projectId,
+  deletedAt: null,
+  workspace: {
+    members: {
+      some: { userId },
+    },
+  },
+});
+
+const taskScopeWhere = (taskId, userId) => ({
+  id: taskId,
+  deletedAt: null,
+  project: {
+    workspace: {
+      members: {
+        some: { userId },
+      },
+    },
+  },
+});
+
+const getAccessibleProject = async (projectId, userId, query = {}) =>
+  prisma.project.findFirst({
+    where: projectScopeWhere(projectId, userId),
+    ...query,
+  });
+
+const getAccessibleTask = async (taskId, userId, query = {}) =>
+  prisma.task.findFirst({
+    where: taskScopeWhere(taskId, userId),
+    ...query,
+  });
+
 const toDbTaskStatus = (status) => {
   if (!status) return undefined;
   const normalized = status.toString().toLowerCase().replace(/-/g, '_');
@@ -219,11 +262,17 @@ router.get('/projects', requireAuth, async (req, res) => {
   const searchQuery = req.query.q?.toString().trim().toLowerCase() || '';
   const statusFilter = normalizeStatusFilter(req.query.status);
   const sortOption = req.query.sort?.toString() || 'newest';
-  const workspace =
-    workspaceId || (await getDefaultWorkspace(req.user.id))?.id;
+  const workspace = workspaceId || (await getDefaultWorkspace(req.user.id))?.id;
 
   if (!workspace) {
     return res.status(200).json({ projects: [] });
+  }
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
   }
 
   const projects = await prisma.project.findMany({
@@ -311,8 +360,14 @@ router.post('/projects', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Project name is required' });
   }
 
-  const workspace =
-    workspaceId || (await ensureWorkspace(req.user))?.id;
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
+
+  const workspace = workspaceId || (await ensureWorkspace(req.user))?.id;
 
   const project = await prisma.project.create({
     data: {
@@ -337,8 +392,7 @@ router.post('/projects', requireAuth, async (req, res) => {
 });
 
 router.get('/projects/:id', requireAuth, async (req, res) => {
-  const project = await prisma.project.findFirst({
-    where: { id: req.params.id, deletedAt: null },
+  const project = await getAccessibleProject(req.params.id, req.user.id, {
     include: {
       tasks: { where: { deletedAt: null } },
     },
@@ -368,6 +422,13 @@ router.get('/projects/:id', requireAuth, async (req, res) => {
 
 router.patch('/projects/:id', requireAuth, async (req, res) => {
   const { name, description, dueDate, startDate } = req.body || {};
+  const existingProject = await getAccessibleProject(req.params.id, req.user.id, {
+    select: { id: true },
+  });
+  if (!existingProject) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+
   const project = await prisma.project.update({
     where: { id: req.params.id },
     data: {
@@ -389,6 +450,13 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
 });
 
 router.delete('/projects/:id', requireAuth, async (req, res) => {
+  const existingProject = await getAccessibleProject(req.params.id, req.user.id, {
+    select: { id: true },
+  });
+  if (!existingProject) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+
   await prisma.project.update({
     where: { id: req.params.id },
     data: { deletedAt: new Date() },
@@ -404,9 +472,7 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Task title is required' });
   }
 
-  const project = await prisma.project.findFirst({
-    where: { id: req.params.id, deletedAt: null },
-  });
+  const project = await getAccessibleProject(req.params.id, req.user.id);
   if (!project) {
     return res.status(404).json({ error: 'Project not found' });
   }
@@ -440,16 +506,12 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
 router.patch('/tasks/:id', requireAuth, async (req, res) => {
   const { title, description, dueDate, assigneeId, status, order, priority, subtasks } =
     req.body || {};
-  const existing = await prisma.task.findFirst({
-    where: { id: req.params.id, deletedAt: null },
-  });
+  const existing = await getAccessibleTask(req.params.id, req.user.id);
   if (!existing) {
     return res.status(404).json({ error: 'Task not found' });
   }
 
-  const project = await prisma.project.findFirst({
-    where: { id: existing.projectId, deletedAt: null },
-  });
+  const project = await getAccessibleProject(existing.projectId, req.user.id);
   if (!project) {
     return res.status(404).json({ error: 'Project not found' });
   }
@@ -488,6 +550,13 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
 });
 
 router.delete('/tasks/:id', requireAuth, async (req, res) => {
+  const existing = await getAccessibleTask(req.params.id, req.user.id, {
+    select: { id: true },
+  });
+  if (!existing) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
   await prisma.task.update({
     where: { id: req.params.id },
     data: { deletedAt: new Date() },
@@ -496,6 +565,13 @@ router.delete('/tasks/:id', requireAuth, async (req, res) => {
 });
 
 router.get('/projects/:id/tasks', requireAuth, async (req, res) => {
+  const project = await getAccessibleProject(req.params.id, req.user.id, {
+    select: { id: true },
+  });
+  if (!project) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+
   const tasks = await prisma.task.findMany({
     where: {
       projectId: req.params.id,
