@@ -66,6 +66,18 @@ const taskScopeWhere = (taskId, userId) => ({
   },
 });
 
+const noteScopeWhere = (noteId, userId) => ({
+  id: noteId,
+  deletedAt: null,
+  project: {
+    workspace: {
+      members: {
+        some: { userId },
+      },
+    },
+  },
+});
+
 const getAccessibleProject = async (projectId, userId, query = {}) =>
   prisma.project.findFirst({
     where: projectScopeWhere(projectId, userId),
@@ -75,6 +87,12 @@ const getAccessibleProject = async (projectId, userId, query = {}) =>
 const getAccessibleTask = async (taskId, userId, query = {}) =>
   prisma.task.findFirst({
     where: taskScopeWhere(taskId, userId),
+    ...query,
+  });
+
+const getAccessibleNote = async (noteId, userId, query = {}) =>
+  prisma.note.findFirst({
+    where: noteScopeWhere(noteId, userId),
     ...query,
   });
 
@@ -185,6 +203,12 @@ const normalizeStatusFilter = (value) => {
     .replace(/\s+/g, '-');
 };
 
+const toOptionalTrimmedString = (value) => {
+  if (value === undefined || value === null) return null;
+  const trimmed = value.toString().trim();
+  return trimmed || null;
+};
+
 const getProgressByStatus = (status, total = 10) => {
   switch (status) {
     case 'todo':
@@ -223,6 +247,24 @@ const toUiTask = (task) => {
     total,
   };
 };
+
+const noteInclude = {
+  project: { select: { id: true, name: true } },
+  task: { select: { id: true, title: true, status: true } },
+  createdBy: {
+    select: { id: true, name: true, email: true, image: true },
+  },
+};
+
+const toUiNote = (note) => ({
+  ...note,
+  task: note.task
+    ? {
+        ...note.task,
+        status: toUiTaskStatus(note.task.status),
+      }
+    : null,
+});
 
 const computeProjectStatus = (project) => {
   const tasks = project.tasks || [];
@@ -580,6 +622,189 @@ router.get('/projects/:id/tasks', requireAuth, async (req, res) => {
     orderBy: { createdAt: 'asc' },
   });
   res.json({ tasks: tasks.map(toUiTask) });
+});
+
+router.get('/notes', requireAuth, async (req, res) => {
+  const projectId = toOptionalTrimmedString(req.query.projectId);
+  const taskId = toOptionalTrimmedString(req.query.taskId);
+  const searchQuery = toOptionalTrimmedString(req.query.q);
+
+  if (projectId) {
+    const project = await getAccessibleProject(projectId, req.user.id, {
+      select: { id: true },
+    });
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+  }
+
+  if (taskId) {
+    const task = await getAccessibleTask(taskId, req.user.id, {
+      select: { id: true, projectId: true },
+    });
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    if (projectId && task.projectId !== projectId) {
+      return res.status(400).json({
+        error: 'Task does not belong to the selected project.',
+      });
+    }
+  }
+
+  const notes = await prisma.note.findMany({
+    where: {
+      deletedAt: null,
+      ...(projectId ? { projectId } : {}),
+      ...(taskId ? { taskId } : {}),
+      project: {
+        workspace: {
+          members: {
+            some: { userId: req.user.id },
+          },
+        },
+      },
+      ...(searchQuery
+        ? {
+            OR: [
+              { title: { contains: searchQuery, mode: 'insensitive' } },
+              { content: { contains: searchQuery, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    },
+    include: noteInclude,
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  res.json({ notes: notes.map(toUiNote) });
+});
+
+router.post('/notes', requireAuth, async (req, res) => {
+  const projectId = toOptionalTrimmedString(req.body?.projectId);
+  const taskId = toOptionalTrimmedString(req.body?.taskId);
+  const title = toOptionalTrimmedString(req.body?.title);
+  const content = toOptionalTrimmedString(req.body?.content);
+
+  if (!projectId) {
+    return res.status(400).json({ error: 'Project is required.' });
+  }
+  if (!content) {
+    return res.status(400).json({ error: 'Note content is required.' });
+  }
+
+  const project = await getAccessibleProject(projectId, req.user.id, {
+    select: { id: true },
+  });
+  if (!project) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+
+  let resolvedTaskId = null;
+  if (taskId) {
+    const task = await getAccessibleTask(taskId, req.user.id, {
+      select: { id: true, projectId: true },
+    });
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    if (task.projectId !== projectId) {
+      return res.status(400).json({
+        error: 'Task does not belong to the selected project.',
+      });
+    }
+    resolvedTaskId = task.id;
+  }
+
+  const note = await prisma.note.create({
+    data: {
+      projectId,
+      taskId: resolvedTaskId,
+      title,
+      content,
+      createdById: req.user.id,
+    },
+    include: noteInclude,
+  });
+
+  res.status(201).json({ note: toUiNote(note) });
+});
+
+router.patch('/notes/:id', requireAuth, async (req, res) => {
+  const existingNote = await getAccessibleNote(req.params.id, req.user.id, {
+    select: { id: true, projectId: true, taskId: true },
+  });
+  if (!existingNote) {
+    return res.status(404).json({ error: 'Note not found' });
+  }
+
+  const nextTitle =
+    req.body?.title !== undefined ? toOptionalTrimmedString(req.body?.title) : undefined;
+  const nextContent =
+    req.body?.content !== undefined
+      ? toOptionalTrimmedString(req.body?.content)
+      : undefined;
+  const incomingTaskIdProvided = req.body?.taskId !== undefined;
+  const incomingTaskId = incomingTaskIdProvided
+    ? toOptionalTrimmedString(req.body?.taskId)
+    : undefined;
+
+  if (req.body?.content !== undefined && !nextContent) {
+    return res.status(400).json({ error: 'Note content is required.' });
+  }
+
+  let nextTaskId = existingNote.taskId;
+  if (incomingTaskIdProvided) {
+    if (!incomingTaskId) {
+      nextTaskId = null;
+    } else {
+      const task = await getAccessibleTask(incomingTaskId, req.user.id, {
+        select: { id: true, projectId: true },
+      });
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      if (task.projectId !== existingNote.projectId) {
+        return res.status(400).json({
+          error: 'Task does not belong to the selected project.',
+        });
+      }
+      nextTaskId = task.id;
+    }
+  }
+
+  const data = {
+    ...(nextTitle !== undefined ? { title: nextTitle } : {}),
+    ...(nextContent !== undefined ? { content: nextContent } : {}),
+    ...(incomingTaskIdProvided ? { taskId: nextTaskId } : {}),
+  };
+
+  if (Object.keys(data).length === 0) {
+    return res.status(400).json({ error: 'No valid updates provided.' });
+  }
+
+  const note = await prisma.note.update({
+    where: { id: req.params.id },
+    data,
+    include: noteInclude,
+  });
+
+  res.json({ note: toUiNote(note) });
+});
+
+router.delete('/notes/:id', requireAuth, async (req, res) => {
+  const existing = await getAccessibleNote(req.params.id, req.user.id, {
+    select: { id: true },
+  });
+  if (!existing) {
+    return res.status(404).json({ error: 'Note not found' });
+  }
+
+  await prisma.note.update({
+    where: { id: req.params.id },
+    data: { deletedAt: new Date() },
+  });
+  res.status(204).send();
 });
 
 router.get('/workspaces', requireAuth, async (req, res) => {
