@@ -6,7 +6,6 @@ import { authClient } from '@/lib/auth-client';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
-import Settings from './Settings';
 
 export default function Layout({ children }) {
   const {
@@ -20,7 +19,6 @@ export default function Layout({ children }) {
   } = useAppContext();
 
   const [isMobile, setIsMobile] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const pathname = usePathname();
@@ -56,16 +54,6 @@ export default function Layout({ children }) {
       router.replace('/auth');
     }
   }, [isAuthRoute, router, session.data, session.isPending]);
-
-  useEffect(() => {
-    const handleOpenSettings = () => {
-      setIsSettingsOpen(true);
-    };
-    window.addEventListener('openSettings', handleOpenSettings);
-    return () => {
-      window.removeEventListener('openSettings', handleOpenSettings);
-    };
-  }, []);
 
   const getCurrentPage = () => {
     if (pathname === '/') return 'dashboard';
@@ -185,10 +173,6 @@ export default function Layout({ children }) {
         </main>
       </div>
       <Footer isCollapsed={isSidebarCollapsed} isMobile={isMobile} />
-      <Settings
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
     </div>
   );
 }
