@@ -18,6 +18,34 @@ const formatDateTime = (value) => {
   }).format(parsed);
 };
 
+const formatRelativeTime = (value) => {
+  if (!value) return 'Just now';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'Just now';
+
+  const seconds = Math.max(1, Math.floor((Date.now() - parsed.getTime()) / 1000));
+  if (seconds < 60) return 'Just now';
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+
+  return formatDateTime(value);
+};
+
+const formatTypeLabel = (value) => {
+  if (!value) return 'Update';
+  return value
+    .toString()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 const getPriorityStyles = (priority) => {
   switch (priority) {
     case 'high':
@@ -27,6 +55,23 @@ const getPriorityStyles = (priority) => {
     default:
       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
   }
+};
+
+const getTypeIconWrapStyles = (type) => {
+  const normalized = type?.toString().toLowerCase() || '';
+  if (normalized.includes('overdue') || normalized.includes('due')) {
+    return 'bg-red-100 text-red-600';
+  }
+  if (normalized.includes('completed')) {
+    return 'bg-green-100 text-green-600';
+  }
+  if (normalized.includes('project')) {
+    return 'bg-indigo-100 text-indigo-600';
+  }
+  if (normalized.includes('note')) {
+    return 'bg-blue-100 text-blue-600';
+  }
+  return 'bg-gray-100 text-gray-600';
 };
 
 const getTypeIcon = (type) => {
@@ -120,14 +165,12 @@ const getTypeIcon = (type) => {
 export default function Notifications() {
   const router = useRouter();
   const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const {
     notifications,
-    unreadNotificationsCount,
     markNotificationAsRead,
-    markAllNotificationsAsRead,
     deleteNotification,
     isNotificationsLoading,
-    isNotificationsRealtimeConnected,
   } = useAppContext();
 
   const filterOptions = [
@@ -137,23 +180,42 @@ export default function Notifications() {
   ];
 
   const filteredNotifications = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
     if (filter === 'unread') {
-      return notifications.filter((notification) => !notification.read);
+      return notifications.filter((notification) => {
+        if (notification.read) return false;
+        if (!normalizedQuery) return true;
+        return (
+          notification.title?.toLowerCase().includes(normalizedQuery) ||
+          notification.message?.toLowerCase().includes(normalizedQuery) ||
+          notification.project?.name?.toLowerCase().includes(normalizedQuery) ||
+          notification.task?.title?.toLowerCase().includes(normalizedQuery)
+        );
+      });
     }
     if (filter === 'high') {
-      return notifications.filter((notification) => notification.priority === 'high');
+      return notifications.filter((notification) => {
+        if (notification.priority !== 'high') return false;
+        if (!normalizedQuery) return true;
+        return (
+          notification.title?.toLowerCase().includes(normalizedQuery) ||
+          notification.message?.toLowerCase().includes(normalizedQuery) ||
+          notification.project?.name?.toLowerCase().includes(normalizedQuery) ||
+          notification.task?.title?.toLowerCase().includes(normalizedQuery)
+        );
+      });
     }
-    return notifications;
-  }, [filter, notifications]);
-
-  const highPriorityUnread = useMemo(
-    () =>
-      notifications.filter(
-        (notification) =>
-          notification.priority === 'high' && !notification.read
-      ).length,
-    [notifications]
-  );
+    return notifications.filter((notification) => {
+      if (!normalizedQuery) return true;
+      return (
+        notification.title?.toLowerCase().includes(normalizedQuery) ||
+        notification.message?.toLowerCase().includes(normalizedQuery) ||
+        notification.project?.name?.toLowerCase().includes(normalizedQuery) ||
+        notification.task?.title?.toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [filter, notifications, searchQuery]);
 
   const openSource = (notification) => {
     if (notification?.type?.toString().startsWith('note_')) {
@@ -174,148 +236,132 @@ export default function Notifications() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500">
-              Realtime
-            </p>
-            <div className="mt-2 flex items-center gap-2">
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${
-                  isNotificationsRealtimeConnected ? 'bg-green-500' : 'bg-gray-300'
-                }`}
-              />
-              <p className="text-sm font-medium text-gray-900">
-                {isNotificationsRealtimeConnected ? 'Connected' : 'Reconnecting'}
+    <div className="mx-auto max-w-[1400px] p-6">
+      <section className="surface-card overflow-hidden rounded-2xl border border-gray-200 bg-white">
+        <div className="border-b border-gray-200 p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Activity Feed</h2>
+              <p className="mt-0.5 text-xs text-gray-500">
+                {filteredNotifications.length} matching items
               </p>
             </div>
-          </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500">Unread</p>
-            <p className="mt-2 text-sm font-medium text-gray-900">
-              {unreadNotificationsCount} notifications waiting for attention
-            </p>
-          </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500">
-              High Priority
-            </p>
-            <p className="mt-2 text-sm font-medium text-gray-900">
-              {highPriorityUnread} unread high-priority items
-            </p>
-          </div>
-        </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-900">Notifications</span>
-              {unreadNotificationsCount > 0 && (
-                <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
-                  {unreadNotificationsCount} unread
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="min-w-[150px]">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search title, message, project..."
+                className="h-10 w-full min-w-[240px] rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+              />
+              <div className="w-full min-w-[170px] sm:w-auto">
                 <AppSelect
-                value={filter}
+                  value={filter}
                   onChange={setFilter}
                   options={filterOptions}
                 />
               </div>
-
-              {unreadNotificationsCount > 0 && (
-                <button
-                  onClick={markAllNotificationsAsRead}
-                  className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors">
-                  Mark all as read
-                </button>
-              )}
             </div>
           </div>
+        </div>
 
-          <div className="divide-y divide-gray-200">
-            {isNotificationsLoading && (
-              <div className="p-6 text-sm text-gray-500">Loading notifications...</div>
-            )}
+        <div className="divide-y divide-gray-200">
+          {isNotificationsLoading && (
+            <div className="p-6 text-sm text-gray-500">Loading notifications...</div>
+          )}
 
-            {!isNotificationsLoading && filteredNotifications.length > 0 ? (
-              filteredNotifications.map((notification) => (
+          {!isNotificationsLoading && filteredNotifications.length > 0 ? (
+            filteredNotifications.map((notification) => (
+              <article
+                key={notification.id}
+                className={`grid gap-3 p-4 transition-colors md:grid-cols-[auto_minmax(0,1fr)_auto] ${
+                  !notification.read ? 'bg-blue-50/60' : 'bg-white'
+                } hover:bg-gray-50`}>
                 <div
-                  key={notification.id}
-                  className={`p-4 hover:bg-gray-50 transition-colors ${
-                    !notification.read ? 'bg-blue-50' : ''
-                  }`}>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {getTypeIcon(notification.type)}
+                  className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg ${getTypeIconWrapStyles(
+                    notification.type
+                  )}`}>
+                  {getTypeIcon(notification.type)}
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      {notification.title}
+                    </h3>
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${getPriorityStyles(
+                        notification.priority
+                      )}`}>
+                      {notification.priority}
+                    </span>
+                    {!notification.read && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                        Unread
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {notification.project?.name && (
+                      <button
+                        type="button"
+                        onClick={() => openSource(notification)}
+                        className="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700 hover:bg-gray-200">
+                        {notification.project.name}
+                      </button>
+                    )}
+                    {notification.task?.title && (
+                      <span className="rounded bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                        {notification.task.title}
+                      </span>
+                    )}
+                    <span className="rounded bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-500">
+                      {formatTypeLabel(notification.type)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 md:flex-col md:items-end md:justify-between">
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-gray-600">
+                      {formatRelativeTime(notification.createdAt)}
                     </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-1 gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <h3 className="text-sm font-medium text-gray-900 truncate">
-                            {notification.title}
-                          </h3>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded-full border ${getPriorityStyles(
-                              notification.priority
-                            )}`}>
-                            {notification.priority}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500 flex-shrink-0">
-                          {formatDateTime(notification.createdAt)}
-                        </span>
-                      </div>
-
-                      <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        {notification.project?.name && (
-                          <button
-                            type="button"
-                            onClick={() => openSource(notification)}
-                            className="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700 hover:bg-gray-200">
-                            {notification.project.name}
-                          </button>
-                        )}
-                        {notification.task?.title && (
-                          <span className="rounded bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
-                            {notification.task.title}
-                          </span>
-                        )}
-                      </div>
+                    <div className="text-[11px] text-gray-500">
+                      {formatDateTime(notification.createdAt)}
                     </div>
+                  </div>
 
+                  <div className="flex items-center gap-2">
                     {!notification.read && (
                       <button
                         onClick={() => markNotificationAsRead(notification.id)}
-                        className="flex-shrink-0 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                        className="rounded-lg border border-blue-200 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">
                         Mark read
                       </button>
                     )}
                     <button
                       onClick={() => deleteNotification(notification.id)}
-                      className="flex-shrink-0 text-xs text-red-600 hover:text-red-800 font-medium">
+                      className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50">
                       Delete
                     </button>
                   </div>
                 </div>
-              ))
-            ) : null}
+              </article>
+            ))
+          ) : null}
 
-            {!isNotificationsLoading && filteredNotifications.length === 0 && (
-              <div className="p-8 text-center text-gray-500">
+          {!isNotificationsLoading && filteredNotifications.length === 0 && (
+            <div className="p-10 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
                 <svg
-                  className="h-12 w-12 mx-auto text-gray-400 mb-3"
+                  className="h-6 w-6 text-gray-400"
                   fill="none"
                   viewBox="0 0 24 24"
-                  strokeWidth="1"
+                  strokeWidth="1.5"
                   stroke="currentColor">
                   <path
                     strokeLinecap="round"
@@ -323,13 +369,15 @@ export default function Notifications() {
                     d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
                   />
                 </svg>
-                <p className="text-sm">No notifications found</p>
-                <p className="text-xs mt-1">You're all caught up!</p>
               </div>
-            )}
-          </div>
+              <p className="mt-3 text-sm font-medium text-gray-700">No notifications found</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Try changing your filter or search query.
+              </p>
+            </div>
+          )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
