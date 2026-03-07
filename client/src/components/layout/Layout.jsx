@@ -26,6 +26,7 @@ export default function Layout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const session = authClient.useSession();
+  const isAuthRoute = pathname?.startsWith('/auth');
 
   useEffect(() => {
     const checkMobile = () => {
@@ -45,16 +46,16 @@ export default function Layout({ children }) {
   }, [isMobile]);
 
   useEffect(() => {
-    if (pathname?.startsWith('/auth')) {
+    if (isAuthRoute) {
       return;
     }
     if (session.isPending) {
       return;
     }
     if (!session.data) {
-      router.push('/auth/signin');
+      router.replace('/auth');
     }
-  }, [pathname, router, session.data, session.isPending]);
+  }, [isAuthRoute, router, session.data, session.isPending]);
 
   useEffect(() => {
     const handleOpenSettings = () => {
@@ -113,7 +114,7 @@ export default function Layout({ children }) {
     setIsMobileMenuOpen((prev) => !prev);
   };
 
-  if (!pathname?.startsWith('/auth') && session.isPending) {
+  if (!isAuthRoute && (session.isPending || !session.data)) {
     return null;
   }
 
