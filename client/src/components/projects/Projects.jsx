@@ -33,6 +33,7 @@ export default function Projects({
     setStatusFilter,
     setSearchQuery,
     setProjects,
+    selectedWorkspaceId,
   } = useAppContext();
   const router = useRouter();
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -50,6 +51,9 @@ export default function Projects({
       }
       if (sortOption) {
         params.set('sort', sortOption);
+      }
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
       }
       const query = params.toString();
       const response = await fetch(
@@ -70,9 +74,17 @@ export default function Projects({
 
   const refreshProjectsCache = async () => {
     try {
-      const response = await fetch(`${apiBase}/api/projects`, {
-        credentials: 'include',
-      });
+      const params = new URLSearchParams();
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
+      }
+      const query = params.toString();
+      const response = await fetch(
+        `${apiBase}/api/projects${query ? `?${query}` : ''}`,
+        {
+          credentials: 'include',
+        }
+      );
       if (!response.ok) {
         return;
       }
@@ -110,6 +122,7 @@ export default function Projects({
           description: projectData.description,
           dueDate: projectData.dueDate || null,
           startDate: projectData.startDate || null,
+          workspaceId: selectedWorkspaceId || null,
         }),
       });
       if (!response.ok) {
@@ -186,7 +199,7 @@ export default function Projects({
 
   useEffect(() => {
     refreshProjects();
-  }, [effectiveStatusFilter, searchQuery, sortOption]);
+  }, [effectiveStatusFilter, searchQuery, sortOption, selectedWorkspaceId]);
 
   const projectsToRender = visibleProjects;
 

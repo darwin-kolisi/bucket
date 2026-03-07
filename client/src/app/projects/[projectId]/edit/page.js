@@ -22,7 +22,7 @@ export default function EditProjectPage() {
   const projectId = Array.isArray(params.projectId)
     ? params.projectId[0]
     : params.projectId;
-  const { projects, setProjects } = useAppContext();
+  const { projects, setProjects, selectedWorkspaceId } = useAppContext();
   const project = projects.find((item) => item.id === projectId);
   const [projectName, setProjectName] = useState('');
   const [description, setDescription] = useState('');
@@ -37,7 +37,12 @@ export default function EditProjectPage() {
 
   const refreshProjects = async () => {
     try {
-      const response = await fetch(`${apiBase}/api/projects`, {
+      const params = new URLSearchParams();
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
+      }
+      const query = params.toString();
+      const response = await fetch(`${apiBase}/api/projects${query ? `?${query}` : ''}`, {
         credentials: 'include',
       });
       if (!response.ok) return;
