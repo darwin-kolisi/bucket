@@ -1,6 +1,93 @@
 'use client';
 import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppContext } from '@/app/providers/Provider';
+import { useErrorToast } from '@/components/ui/ErrorToastProvider';
+
+const getWorkspaceGif = (name) => {
+  const normalized = name?.toString().toLowerCase() || '';
+  if (normalized.includes('personal')) {
+    return '/personal-minecraft-sheep.gif';
+  }
+  if (normalized.includes('work')) {
+    return '/work-jake.gif';
+  }
+  return '/productive-cat.gif';
+};
+
+const WORKSPACE_TEMPLATES = [
+  {
+    id: 'work',
+    title: 'For work',
+    description: 'Track team projects, timelines, and deliverables.',
+    defaultName: 'Work',
+  },
+  {
+    id: 'personal',
+    title: 'For personal life',
+    description: 'Plan goals, habits, routines, and personal tasks.',
+    defaultName: 'Personal',
+  },
+  {
+    id: 'school',
+    title: 'For school',
+    description: 'Organize classes, assignments, and revision notes.',
+    defaultName: 'School',
+  },
+];
+
+const getWorkspaceTemplateIcon = (templateId) => {
+  if (templateId === 'work') {
+    return (
+      <svg
+        className="h-4 w-4 text-gray-700"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round">
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <path d="M3 12h18" />
+      </svg>
+    );
+  }
+
+  if (templateId === 'personal') {
+    return (
+      <svg
+        className="h-4 w-4 text-gray-700"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round">
+        <path d="m3 11.5 9-8 9 8" />
+        <path d="M5.5 10.5V20a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1v-9.5" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      className="h-4 w-4 text-gray-700"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round">
+      <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z" />
+      <path d="M4 8h16" />
+      <path d="M9 4v4" />
+      <path d="M15 4v4" />
+      <path d="M8 13h8" />
+    </svg>
+  );
+};
 
 export default function Sidebar({
   activeItem = 'dashboard',
@@ -11,7 +98,26 @@ export default function Sidebar({
   isOpen = false,
   onClose,
 }) {
-  const { unreadNotificationsCount } = useAppContext();
+  const {
+    unreadNotificationsCount,
+    workspaces,
+    selectedWorkspaceId,
+    setSelectedWorkspaceId,
+    createWorkspace,
+    isWorkspacesLoading,
+  } = useAppContext();
+  const { pushError } = useErrorToast();
+  const [isClient, setIsClient] = useState(false);
+  const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
+  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [selectedWorkspaceTemplateId, setSelectedWorkspaceTemplateId] = useState(
+    WORKSPACE_TEMPLATES[0].id
+  );
+  const [newWorkspaceName, setNewWorkspaceName] = useState(
+    WORKSPACE_TEMPLATES[0].defaultName
+  );
+  const workspaceMenuRef = useRef(null);
   const navigationItems = [
     {
       id: 'dashboard',
@@ -92,6 +198,104 @@ export default function Sidebar({
       onItemSelect(itemId);
     }
   };
+  const selectedWorkspace =
+    workspaces.find((workspace) => workspace.id === selectedWorkspaceId) || null;
+  const selectedWorkspaceTemplate =
+    WORKSPACE_TEMPLATES.find(
+      (workspaceTemplate) => workspaceTemplate.id === selectedWorkspaceTemplateId
+    ) || WORKSPACE_TEMPLATES[0];
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        workspaceMenuRef.current &&
+        !workspaceMenuRef.current.contains(event.target)
+      ) {
+        setIsWorkspaceMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!isWorkspaceModalOpen) return;
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && !isCreatingWorkspace) {
+        setIsWorkspaceModalOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isWorkspaceModalOpen, isCreatingWorkspace]);
+
+  useEffect(() => {
+    if (!isWorkspaceModalOpen || !isClient) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isWorkspaceModalOpen, isClient]);
+
+  const closeWorkspaceModal = () => {
+    if (isCreatingWorkspace) return;
+    setIsWorkspaceModalOpen(false);
+  };
+
+  const openWorkspaceModal = () => {
+    const defaultTemplate = WORKSPACE_TEMPLATES[0];
+    setSelectedWorkspaceTemplateId(defaultTemplate.id);
+    setNewWorkspaceName(defaultTemplate.defaultName);
+    setIsWorkspaceMenuOpen(false);
+    setIsWorkspaceModalOpen(true);
+  };
+
+  const handleWorkspaceTemplateSelect = (template) => {
+    setSelectedWorkspaceTemplateId(template.id);
+    setNewWorkspaceName((currentName) => {
+      const trimmedCurrentName = currentName.trim();
+      const isPresetName = WORKSPACE_TEMPLATES.some(
+        (workspaceTemplate) =>
+          workspaceTemplate.defaultName.toLowerCase() ===
+          trimmedCurrentName.toLowerCase()
+      );
+
+      if (!trimmedCurrentName || isPresetName) {
+        return template.defaultName;
+      }
+
+      return currentName;
+    });
+  };
+
+  const handleCreateWorkspace = async () => {
+    const trimmedName = newWorkspaceName.trim();
+    if (!trimmedName) {
+      pushError('Workspace name is required.');
+      return;
+    }
+
+    setIsCreatingWorkspace(true);
+    const workspace = await createWorkspace(trimmedName);
+    setIsCreatingWorkspace(false);
+
+    if (!workspace) {
+      pushError('Unable to create workspace. Please try again.');
+      return;
+    }
+
+    setIsWorkspaceModalOpen(false);
+  };
 
   const showFull = isMobile || !isCollapsed;
   const containerClasses = isMobile
@@ -100,12 +304,139 @@ export default function Sidebar({
     : `fixed top-0 left-0 z-40 h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 hidden md:flex ${isCollapsed ? 'w-[70px]' : 'w-[220px]'
     }`;
 
-  return (
-    <aside className={containerClasses} id={isMobile ? 'mobile-sidebar' : undefined}>
+  const workspaceModal = isWorkspaceModalOpen ? (
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-4"
+      onClick={closeWorkspaceModal}>
       <div
-        className={`relative flex h-[var(--chrome-height)] items-center justify-between px-5 transition-all duration-300 ${
-          isMobile ? 'border-b border-gray-200' : ''
-        }`}>
+        role="dialog"
+        aria-modal="true"
+        aria-label="Create workspace"
+        onClick={(event) => event.stopPropagation()}
+        className="max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-gray-200 px-5 py-4">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              New workspace
+            </p>
+            <h2 className="mt-1 text-xl font-semibold text-gray-900">
+              How do you want to use Bucket?
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Pick a setup style, then name your workspace.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={closeWorkspaceModal}
+            disabled={isCreatingWorkspace}
+            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50">
+            <span className="sr-only">Close</span>
+            <svg
+              className="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round">
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5">
+          <div className="space-y-2">
+            {WORKSPACE_TEMPLATES.map((workspaceTemplate) => {
+              const isSelected =
+                workspaceTemplate.id === selectedWorkspaceTemplateId;
+
+              return (
+                <button
+                  key={workspaceTemplate.id}
+                  type="button"
+                  onClick={() => handleWorkspaceTemplateSelect(workspaceTemplate)}
+                  className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                    isSelected
+                      ? 'border-gray-900 bg-gray-100'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2`}>
+                  <div
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border ${
+                      isSelected ? 'border-gray-400 bg-white' : 'border-gray-200 bg-gray-50'
+                    }`}>
+                    {getWorkspaceTemplateIcon(workspaceTemplate.id)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {workspaceTemplate.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {workspaceTemplate.description}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white">
+                {getWorkspaceTemplateIcon(selectedWorkspaceTemplate.id)}
+              </div>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                {selectedWorkspaceTemplate.title}
+              </p>
+            </div>
+
+            <label
+              htmlFor="workspace-name-input"
+              className="mt-3 block text-xs font-medium uppercase tracking-wide text-gray-500">
+              Workspace name
+            </label>
+            <input
+              id="workspace-name-input"
+              type="text"
+              value={newWorkspaceName}
+              onChange={(event) => setNewWorkspaceName(event.target.value)}
+              placeholder="Workspace name"
+              className="mt-1 h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+            />
+            <p className="mt-2 text-[11px] text-gray-500">
+              This will show up in your sidebar workspace menu.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-5 py-4">
+          <button
+            type="button"
+            onClick={closeWorkspaceModal}
+            disabled={isCreatingWorkspace}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleCreateWorkspace}
+            disabled={isCreatingWorkspace}
+            className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400">
+            {isCreatingWorkspace ? 'Creating...' : 'Create workspace'}
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  return (
+    <>
+      <aside className={containerClasses} id={isMobile ? 'mobile-sidebar' : undefined}>
+        <div
+          className={`relative flex h-[var(--chrome-height)] items-center justify-between px-5 transition-all duration-300 ${
+            isMobile ? 'border-b border-gray-200' : ''
+          }`}>
         <div className="flex items-center gap-3">
           <Image
             src="/cat.gif"
@@ -195,6 +526,151 @@ export default function Sidebar({
         </div>
       </nav>
 
-    </aside>
+      <div className="h-[var(--footer-height-mobile)] border-t border-gray-200 bg-white md:h-[var(--footer-height)]">
+        <div className="flex h-full items-center p-2">
+          <div className="relative" ref={workspaceMenuRef}>
+            {isWorkspaceMenuOpen && (
+              <div
+                className={`absolute z-[70] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl ${
+                  isMobile || !isCollapsed
+                    ? 'bottom-full left-0 right-0 mb-2'
+                    : 'bottom-0 left-full ml-2 w-72'
+                }`}>
+                <div className="border-b border-gray-200 px-3 py-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                    Workspaces
+                  </p>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    Select a workspace to scope your projects and notes.
+                  </p>
+                </div>
+
+                <div className="max-h-64 overflow-y-auto p-2">
+                  {isWorkspacesLoading && (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                      Loading workspaces...
+                    </div>
+                  )}
+
+                  {!isWorkspacesLoading && workspaces.length === 0 && (
+                    <div className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                      <div className="relative h-28 w-full">
+                        <Image
+                          src="/productive-cat.gif"
+                          alt="Choose workspace"
+                          fill
+                          sizes="280px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="px-3 py-2 text-xs text-gray-600">
+                        Create your first workspace to get started.
+                      </p>
+                    </div>
+                  )}
+
+                  {!isWorkspacesLoading && workspaces.length > 0 && (
+                    <div className="space-y-1">
+                      {workspaces.map((workspace) => {
+                        const isSelected = workspace.id === selectedWorkspaceId;
+                        return (
+                          <button
+                            key={workspace.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedWorkspaceId(workspace.id);
+                              setIsWorkspaceMenuOpen(false);
+                            }}
+                            className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors ${
+                              isSelected
+                                ? 'bg-gray-100 text-gray-900'
+                                : 'text-gray-700 hover:bg-gray-50'
+                            }`}>
+                            <div className="relative h-6 w-6 overflow-hidden rounded-md border border-gray-200">
+                              <Image
+                                src={getWorkspaceGif(workspace.name)}
+                                alt={workspace.name}
+                                fill
+                                sizes="24px"
+                                className="object-cover"
+                              />
+                            </div>
+                            <span className="flex-1 truncate text-sm">{workspace.name}</span>
+                            {isSelected && (
+                              <svg
+                                className="h-4 w-4 text-gray-700"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round">
+                                <path d="M4.5 12.75 10.5 18l9-13.5" />
+                              </svg>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-gray-200 p-2">
+                  <button
+                    type="button"
+                    onClick={openWorkspaceModal}
+                    className="flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50">
+                    <span className="text-base leading-none">+</span>
+                    Add workspace
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setIsWorkspaceMenuOpen((current) => !current)}
+              className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-left text-gray-700 transition hover:bg-gray-50">
+              <div className="relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                <Image
+                  src={getWorkspaceGif(selectedWorkspace?.name)}
+                  alt={selectedWorkspace?.name || 'Workspace'}
+                  fill
+                  sizes="24px"
+                  className="object-cover"
+                />
+              </div>
+              {showFull && (
+                <>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs uppercase tracking-wide text-gray-500">
+                      Workspace
+                    </p>
+                    <p className="truncate text-sm font-medium text-gray-900">
+                      {selectedWorkspace?.name || 'Choose workspace'}
+                    </p>
+                  </div>
+                  <svg
+                    className={`h-4 w-4 text-gray-400 transition-transform ${
+                      isWorkspaceMenuOpen ? 'rotate-180' : ''
+                    }`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round">
+                    <path d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      </aside>
+      {isClient && workspaceModal ? createPortal(workspaceModal, document.body) : null}
+    </>
   );
 }
