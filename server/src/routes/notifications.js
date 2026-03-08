@@ -33,11 +33,34 @@ const parsePriority = (rawValue) => {
   return undefined;
 };
 
+const toOptionalTrimmedString = (rawValue) => {
+  if (rawValue === undefined || rawValue === null) return null;
+  const value = rawValue.toString().trim();
+  return value || null;
+};
+
+const hasWorkspaceAccess = async (workspaceId, userId) => {
+  if (!workspaceId || !userId) return false;
+  const membership = await prisma.workspaceMember.findFirst({
+    where: { workspaceId, userId },
+    select: { id: true },
+  });
+  return Boolean(membership);
+};
+
 router.get('/notifications', requireAuth, async (req, res) => {
   const limit = parseLimit(req.query.limit);
   const unreadFilter = parseBoolean(req.query.unread);
   const priority = parsePriority(req.query.priority);
   const type = req.query.type?.toString().trim();
+  const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
 
   const notifications = await prisma.notification.findMany({
     where: {
@@ -46,6 +69,7 @@ router.get('/notifications', requireAuth, async (req, res) => {
       ...(unreadFilter === false ? { NOT: { readAt: null } } : {}),
       ...(priority ? { priority } : {}),
       ...(type ? { type } : {}),
+      ...(workspaceId ? { project: { workspaceId } } : {}),
     },
     include: notificationInclude,
     orderBy: { createdAt: 'desc' },
@@ -85,20 +109,33 @@ router.patch('/notifications/:id/read', requireAuth, async (req, res) => {
 
 router.patch('/notifications/read-all', requireAuth, async (req, res) => {
   const readAt = new Date();
+  const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
 
   const { count } = await prisma.notification.updateMany({
     where: {
       userId: req.user.id,
       readAt: null,
+      ...(workspaceId ? { project: { workspaceId } } : {}),
     },
     data: { readAt },
   });
 
   if (count > 0) {
-    publishNotificationsReadAll(req.user.id, readAt);
+    publishNotificationsReadAll(req.user.id, readAt, workspaceId);
   }
 
-  res.json({ updatedCount: count, readAt: readAt.toISOString() });
+  res.json({
+    updatedCount: count,
+    readAt: readAt.toISOString(),
+    workspaceId,
+  });
 });
 
 router.delete('/notifications/:id', requireAuth, async (req, res) => {

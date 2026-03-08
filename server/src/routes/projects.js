@@ -59,6 +59,7 @@ const taskScopeWhere = (taskId, userId) => ({
   id: taskId,
   deletedAt: null,
   project: {
+    deletedAt: null,
     workspace: {
       members: {
         some: { userId },
@@ -71,6 +72,7 @@ const noteScopeWhere = (noteId, userId) => ({
   id: noteId,
   deletedAt: null,
   project: {
+    deletedAt: null,
     workspace: {
       members: {
         some: { userId },
@@ -118,6 +120,25 @@ const parseSubtasks = (value) => {
   }));
 };
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const toUtcDateOnlyFromParts = (year, monthIndex, day) => {
+  if (!Number.isInteger(year) || !Number.isInteger(monthIndex) || !Number.isInteger(day)) {
+    return null;
+  }
+
+  const parsed = new Date(Date.UTC(year, monthIndex, day));
+  if (Number.isNaN(parsed.getTime())) return null;
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== monthIndex ||
+    parsed.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return parsed;
+};
+
 const resolveTaskStatusAndSubtasks = (subtasksValue, statusValue) => {
   const subtasks = parseSubtasks(subtasksValue);
   const hasSubtasks = subtasks.length > 0;
@@ -161,14 +182,29 @@ const getTaskCompletionUnits = (task) => {
 
 const parseDateInput = (value) => {
   if (!value) return null;
-  const parsed = new Date(value);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed;
+
+  const rawValue = value.toString().trim();
+  if (!rawValue) return null;
+
+  const isoMatch = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const year = Number.parseInt(isoMatch[1], 10);
+    const monthIndex = Number.parseInt(isoMatch[2], 10) - 1;
+    const day = Number.parseInt(isoMatch[3], 10);
+    return toUtcDateOnlyFromParts(year, monthIndex, day);
   }
 
-  const [dayStr, monthStr, yearStr] = value.toString().split(' ');
+  const [dayStr, monthStr, yearStr] = rawValue.split(' ');
   if (!dayStr || !monthStr || !yearStr) {
-    return null;
+    const parsed = new Date(rawValue);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return toUtcDateOnlyFromParts(
+      parsed.getUTCFullYear(),
+      parsed.getUTCMonth(),
+      parsed.getUTCDate()
+    );
   }
 
   const monthIndex = new Date(`${monthStr} 1, 2000`).getMonth();
@@ -181,7 +217,7 @@ const parseDateInput = (value) => {
     return null;
   }
 
-  return new Date(year, monthIndex, day);
+  return toUtcDateOnlyFromParts(year, monthIndex, day);
 };
 
 const formatDate = (value) => {
@@ -192,6 +228,7 @@ const formatDate = (value) => {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: 'UTC',
   }).format(date);
 };
 
@@ -205,21 +242,40 @@ const toComparableDate = (value) => {
   return parsed;
 };
 
+const toUtcDateOnly = (value) => {
+  const parsed = toComparableDate(value);
+  if (!parsed) return null;
+  return toUtcDateOnlyFromParts(
+    parsed.getUTCFullYear(),
+    parsed.getUTCMonth(),
+    parsed.getUTCDate()
+  );
+};
+
+const compareUtcDateOnly = (leftValue, rightValue) => {
+  const left = toUtcDateOnly(leftValue);
+  const right = toUtcDateOnly(rightValue);
+  if (!left && !right) return 0;
+  if (!left) return -1;
+  if (!right) return 1;
+  return Math.round((left.getTime() - right.getTime()) / MS_PER_DAY);
+};
+
 const isSameDateTime = (a, b) => {
   const left = toComparableDate(a);
   const right = toComparableDate(b);
   if (!left && !right) return true;
   if (!left || !right) return false;
-  return left.getTime() === right.getTime();
+  return compareUtcDateOnly(left, right) === 0;
 };
 
 const getDueDateState = (value) => {
-  const dueDate = toComparableDate(value);
+  const dueDate = toUtcDateOnly(value);
   if (!dueDate) return null;
-  const now = new Date();
-  const delta = dueDate.getTime() - now.getTime();
-  if (delta < 0) return 'overdue';
-  if (delta <= 24 * 60 * 60 * 1000) return 'due_soon';
+  const today = toUtcDateOnly(new Date());
+  const deltaDays = compareUtcDateOnly(dueDate, today);
+  if (deltaDays < 0) return 'overdue';
+  if (deltaDays <= 1) return 'due_soon';
   return null;
 };
 
@@ -243,6 +299,23 @@ const toOptionalTrimmedString = (value) => {
   if (value === undefined || value === null) return null;
   const trimmed = value.toString().trim();
   return trimmed || null;
+};
+
+const normalizeTaskPriority = (value) => {
+  if (value === undefined) return undefined;
+  const normalized = value?.toString().trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === 'low') return 'Low';
+  if (normalized === 'medium') return 'Medium';
+  if (normalized === 'high') return 'High';
+  return null;
+};
+
+const normalizeOptionalIdInput = (value) => {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const normalized = value.toString().trim();
+  return normalized || null;
 };
 
 const getProgressByStatus = (status, total = 10) => {
@@ -304,7 +377,7 @@ const toUiNote = (note) => ({
 
 const computeProjectStatus = (project) => {
   const tasks = project.tasks || [];
-  const now = new Date();
+  const today = new Date();
 
   if (!tasks.length) {
     return 'in_progress';
@@ -313,7 +386,11 @@ const computeProjectStatus = (project) => {
   const hasOverdueTask = tasks.some((task) => {
     const status =
       resolveTaskStatusAndSubtasks(task.subtasks, task.status).status;
-    return task.dueDate && status !== 'done' && task.dueDate < now;
+    return (
+      task.dueDate &&
+      status !== 'done' &&
+      compareUtcDateOnly(task.dueDate, today) < 0
+    );
   });
   if (hasOverdueTask) {
     return 'at_risk';
@@ -531,6 +608,11 @@ router.get('/projects/:id', requireAuth, async (req, res) => {
 
 router.patch('/projects/:id', requireAuth, async (req, res) => {
   const { name, description, dueDate, startDate } = req.body || {};
+
+  if (name !== undefined && !name?.toString().trim()) {
+    return res.status(400).json({ error: 'Project name is required' });
+  }
+
   const existingProject = await getAccessibleProject(req.params.id, req.user.id, {
     select: {
       id: true,
@@ -544,14 +626,49 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Project not found' });
   }
 
+  const nextProjectDueDate =
+    dueDate === null
+      ? null
+      : dueDate !== undefined
+        ? parseDateInput(dueDate)
+        : existingProject.dueDate;
+
+  if (nextProjectDueDate) {
+    const latestTaskDueDate = await prisma.task.findFirst({
+      where: {
+        projectId: existingProject.id,
+        deletedAt: null,
+        dueDate: { not: null },
+      },
+      select: { dueDate: true },
+      orderBy: { dueDate: 'desc' },
+    });
+
+    if (
+      latestTaskDueDate?.dueDate &&
+      compareUtcDateOnly(latestTaskDueDate.dueDate, nextProjectDueDate) > 0
+    ) {
+      return res.status(400).json({
+        error: 'Project due date cannot be earlier than active task due dates.',
+      });
+    }
+  }
+
   const project = await prisma.project.update({
     where: { id: req.params.id },
     data: {
       name: name?.trim(),
       description: description?.trim(),
-      dueDate: dueDate === null ? null : dueDate ? parseDateInput(dueDate) : undefined,
+      dueDate:
+        dueDate === null ? null : dueDate !== undefined ? nextProjectDueDate : undefined,
       startDate:
         startDate === null ? null : startDate ? parseDateInput(startDate) : undefined,
+    },
+    include: {
+      tasks: {
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'asc' },
+      },
     },
   });
 
@@ -599,12 +716,23 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
     }
   }
 
+  const totals = project.tasks.reduce(
+    (acc, task) => {
+      const units = getTaskCompletionUnits(task);
+      acc.total += units.total;
+      acc.completed += units.completed;
+      return acc;
+    },
+    { total: 0, completed: 0 }
+  );
+
   res.json({
     project: {
       ...project,
-      status: computeProjectStatus({ ...project, tasks: [] }),
-      totalTasks: 0,
-      completedTasks: 0,
+      tasks: project.tasks.map(toUiTask),
+      status: computeProjectStatus(project),
+      totalTasks: totals.total,
+      completedTasks: totals.completed,
     },
   });
 });
@@ -647,8 +775,30 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Project not found' });
   }
 
+  if (status !== undefined && toDbTaskStatus(status) === undefined) {
+    return res.status(400).json({ error: 'Invalid task status.' });
+  }
+
+  const normalizedPriority = normalizeTaskPriority(priority);
+  if (priority !== undefined && normalizedPriority === null) {
+    return res.status(400).json({ error: 'Invalid task priority.' });
+  }
+
+  const normalizedAssigneeId = normalizeOptionalIdInput(assigneeId);
+  if (normalizedAssigneeId) {
+    const hasAssigneeAccess = await hasWorkspaceAccess(
+      project.workspaceId,
+      normalizedAssigneeId
+    );
+    if (!hasAssigneeAccess) {
+      return res.status(400).json({
+        error: 'Task assignee must be a member of the project workspace.',
+      });
+    }
+  }
+
   const parsedDueDate = dueDate ? parseDateInput(dueDate) : null;
-  if (parsedDueDate && project.dueDate && parsedDueDate > project.dueDate) {
+  if (parsedDueDate && project.dueDate && compareUtcDateOnly(parsedDueDate, project.dueDate) > 0) {
     return res.status(400).json({
       error: 'Task due date cannot be after the project due date.',
     });
@@ -661,11 +811,11 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
       projectId: req.params.id,
       title: title.trim(),
       description: description?.trim() || null,
-      dueDate: parseDateInput(dueDate),
-      assigneeId: assigneeId || null,
+      dueDate: parsedDueDate,
+      assigneeId: normalizedAssigneeId || null,
       status: resolved.status,
       order: Number.isInteger(order) ? order : null,
-      priority: priority || 'Medium',
+      priority: normalizedPriority || 'Medium',
       subtasks: resolved.subtasks,
     },
   });
@@ -710,6 +860,20 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
 router.patch('/tasks/:id', requireAuth, async (req, res) => {
   const { title, description, dueDate, assigneeId, status, order, priority, subtasks } =
     req.body || {};
+
+  if (title !== undefined && !title?.toString().trim()) {
+    return res.status(400).json({ error: 'Task title is required' });
+  }
+
+  if (status !== undefined && toDbTaskStatus(status) === undefined) {
+    return res.status(400).json({ error: 'Invalid task status.' });
+  }
+
+  const normalizedPriority = normalizeTaskPriority(priority);
+  if (priority !== undefined && normalizedPriority === null) {
+    return res.status(400).json({ error: 'Invalid task priority.' });
+  }
+
   const existing = await getAccessibleTask(req.params.id, req.user.id);
   if (!existing) {
     return res.status(404).json({ error: 'Task not found' });
@@ -727,7 +891,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
         ? parseDateInput(dueDate)
         : existing.dueDate;
 
-  if (nextDueDate && project.dueDate && nextDueDate > project.dueDate) {
+  if (nextDueDate && project.dueDate && compareUtcDateOnly(nextDueDate, project.dueDate) > 0) {
     return res.status(400).json({
       error: 'Task due date cannot be after the project due date.',
     });
@@ -736,17 +900,30 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
   const incomingSubtasks = subtasks !== undefined ? subtasks : existing.subtasks;
   const incomingStatus = status !== undefined ? status : existing.status;
   const resolved = resolveTaskStatusAndSubtasks(incomingSubtasks, incomingStatus);
+  const normalizedAssigneeId = normalizeOptionalIdInput(assigneeId);
+
+  if (normalizedAssigneeId) {
+    const hasAssigneeAccess = await hasWorkspaceAccess(
+      project.workspaceId,
+      normalizedAssigneeId
+    );
+    if (!hasAssigneeAccess) {
+      return res.status(400).json({
+        error: 'Task assignee must be a member of the project workspace.',
+      });
+    }
+  }
 
   const task = await prisma.task.update({
     where: { id: req.params.id },
     data: {
       title: title?.trim(),
       description: description?.trim(),
-      dueDate: dueDate === null ? null : dueDate ? parseDateInput(dueDate) : undefined,
-      assigneeId: assigneeId === null ? null : assigneeId,
+      dueDate: dueDate === null ? null : dueDate !== undefined ? nextDueDate : undefined,
+      assigneeId: normalizedAssigneeId,
       status: resolved.status,
       order,
-      priority,
+      priority: priority !== undefined ? normalizedPriority : undefined,
       subtasks: resolved.subtasks,
     },
   });
@@ -757,7 +934,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
   const titleChanged =
     title !== undefined && title?.trim() && title.trim() !== existing.title;
   const descriptionChanged = description !== undefined;
-  const priorityChanged = priority !== undefined && priority !== existing.priority;
+  const priorityChanged = priority !== undefined && task.priority !== existing.priority;
 
   if (statusChanged) {
     const completed = task.status === 'done';
@@ -879,9 +1056,17 @@ router.get('/projects/:id/tasks', requireAuth, async (req, res) => {
 });
 
 router.get('/notes', requireAuth, async (req, res) => {
+  const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
   const projectId = toOptionalTrimmedString(req.query.projectId);
   const taskId = toOptionalTrimmedString(req.query.taskId);
   const searchQuery = toOptionalTrimmedString(req.query.q);
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
 
   if (projectId) {
     const project = await getAccessibleProject(projectId, req.user.id, {
@@ -912,6 +1097,8 @@ router.get('/notes', requireAuth, async (req, res) => {
       ...(projectId ? { projectId } : {}),
       ...(taskId ? { taskId } : {}),
       project: {
+        deletedAt: null,
+        ...(workspaceId ? { workspaceId } : {}),
         workspace: {
           members: {
             some: { userId: req.user.id },

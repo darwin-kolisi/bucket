@@ -217,6 +217,9 @@ export default function Notes() {
       if (selectedTaskId) {
         params.set('taskId', selectedTaskId);
       }
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
+      }
       if (searchQuery.trim()) {
         params.set('q', searchQuery.trim());
       }
@@ -241,7 +244,14 @@ export default function Notes() {
     } finally {
       setIsLoadingNotes(false);
     }
-  }, [apiBase, selectedProjectId, selectedTaskId, searchQuery, pushError]);
+  }, [
+    apiBase,
+    selectedProjectId,
+    selectedTaskId,
+    selectedWorkspaceId,
+    searchQuery,
+    pushError,
+  ]);
 
   useEffect(() => {
     fetchProjects();

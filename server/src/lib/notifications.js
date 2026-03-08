@@ -13,7 +13,7 @@ const toUiTaskStatus = (status) => status?.replace(/_/g, '-') || 'todo';
 
 export const notificationInclude = {
   project: {
-    select: { id: true, name: true },
+    select: { id: true, name: true, workspaceId: true },
   },
   task: {
     select: { id: true, title: true, status: true },
@@ -76,8 +76,11 @@ export const publishNotificationUpdated = (notification) => {
   });
 };
 
-export const publishNotificationsReadAll = (userId, readAt) => {
-  publishToUser(userId, 'notifications.read_all', { readAt: readAt.toISOString() });
+export const publishNotificationsReadAll = (userId, readAt, workspaceId = null) => {
+  publishToUser(userId, 'notifications.read_all', {
+    readAt: readAt.toISOString(),
+    workspaceId,
+  });
 };
 
 export const publishNotificationDeleted = (userId, notificationId) => {
@@ -156,4 +159,256 @@ export const createWorkspaceNotifications = async ({
     noteId,
     metadata,
   });
+};
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const toUtcDateOnlyFromParts = (year, monthIndex, day) => {
+  const parsed = new Date(Date.UTC(year, monthIndex, day));
+  if (Number.isNaN(parsed.getTime())) return null;
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== monthIndex ||
+    parsed.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return parsed;
+};
+
+const toUtcDateOnly = (value) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return toUtcDateOnlyFromParts(
+    parsed.getUTCFullYear(),
+    parsed.getUTCMonth(),
+    parsed.getUTCDate()
+  );
+};
+
+const compareUtcDateOnly = (leftValue, rightValue) => {
+  const left = toUtcDateOnly(leftValue);
+  const right = toUtcDateOnly(rightValue);
+  if (!left && !right) return 0;
+  if (!left) return -1;
+  if (!right) return 1;
+  return Math.round((left.getTime() - right.getTime()) / MS_PER_DAY);
+};
+
+const getDueDateState = (value) => {
+  const dueDate = toUtcDateOnly(value);
+  if (!dueDate) return null;
+  const today = toUtcDateOnly(new Date());
+  const deltaDays = compareUtcDateOnly(dueDate, today);
+  if (deltaDays < 0) return 'overdue';
+  if (deltaDays <= 1) return 'due_soon';
+  return null;
+};
+
+const formatDateUtc = (value) => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(parsed);
+};
+
+const parseSubtasks = (value) => {
+  if (!value) return [];
+  if (!Array.isArray(value)) return [];
+  return value.map((subtask) => ({
+    ...subtask,
+    completed: Boolean(subtask?.completed),
+  }));
+};
+
+const resolveTaskStatusAndSubtasks = (subtasksValue, statusValue) => {
+  const subtasks = parseSubtasks(subtasksValue);
+  const hasSubtasks = subtasks.length > 0;
+  const normalizedStatus = statusValue
+    ?.toString()
+    .toLowerCase()
+    .replace(/-/g, '_') || 'todo';
+
+  if (!hasSubtasks) {
+    return { status: normalizedStatus, subtasks };
+  }
+
+  const allCompleted = subtasks.every((subtask) => subtask.completed);
+
+  if (normalizedStatus === 'done' && !allCompleted) {
+    return {
+      status: 'done',
+      subtasks: subtasks.map((subtask) => ({
+        ...subtask,
+        completed: true,
+      })),
+    };
+  }
+
+  if (allCompleted) {
+    return { status: 'done', subtasks };
+  }
+
+  return { status: normalizedStatus, subtasks };
+};
+
+const getUtcDayStart = (value = new Date()) => {
+  const parsed = new Date(value);
+  return new Date(
+    Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate())
+  );
+};
+
+const getRecipientsMissingTodayDueNotification = async ({
+  userIds,
+  type,
+  projectId = null,
+  taskId = null,
+}) => {
+  const recipients = uniqueUserIds(userIds);
+  if (recipients.length === 0) return [];
+
+  const existing = await prisma.notification.findMany({
+    where: {
+      userId: { in: recipients },
+      type,
+      createdAt: { gte: getUtcDayStart() },
+      ...(projectId ? { projectId } : {}),
+      ...(taskId ? { taskId } : {}),
+    },
+    select: { userId: true },
+  });
+
+  const notifiedUserIds = new Set(existing.map((notification) => notification.userId));
+  return recipients.filter((userId) => !notifiedUserIds.has(userId));
+};
+
+const createDailyDueNotificationsForUsers = async ({
+  userIds,
+  type,
+  title,
+  message,
+  priority = 'high',
+  projectId = null,
+  taskId = null,
+}) => {
+  const recipients = await getRecipientsMissingTodayDueNotification({
+    userIds,
+    type,
+    projectId,
+    taskId,
+  });
+
+  if (recipients.length === 0) return [];
+
+  return createNotificationsForUsers({
+    userIds: recipients,
+    type,
+    title,
+    message,
+    priority,
+    projectId,
+    taskId,
+  });
+};
+
+export const runDueDateNotificationSweep = async () => {
+  const [projects, tasks] = await Promise.all([
+    prisma.project.findMany({
+      where: {
+        deletedAt: null,
+        dueDate: { not: null },
+      },
+      select: {
+        id: true,
+        name: true,
+        dueDate: true,
+        workspace: {
+          select: {
+            members: {
+              select: { userId: true },
+            },
+          },
+        },
+      },
+    }),
+    prisma.task.findMany({
+      where: {
+        deletedAt: null,
+        dueDate: { not: null },
+        project: {
+          deletedAt: null,
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        subtasks: true,
+        dueDate: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+            workspace: {
+              select: {
+                members: {
+                  select: { userId: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  let createdCount = 0;
+
+  for (const project of projects) {
+    const dueDateState = getDueDateState(project.dueDate);
+    if (!dueDateState) continue;
+
+    const notifications = await createDailyDueNotificationsForUsers({
+      userIds: project.workspace.members.map((member) => member.userId),
+      type: dueDateState === 'due_soon' ? 'project_due_soon' : 'project_overdue',
+      title: dueDateState === 'due_soon' ? 'Project due soon' : 'Project overdue',
+      message:
+        dueDateState === 'due_soon'
+          ? `"${project.name}" is due on ${formatDateUtc(project.dueDate)}.`
+          : `"${project.name}" is overdue since ${formatDateUtc(project.dueDate)}.`,
+      priority: 'high',
+      projectId: project.id,
+    });
+    createdCount += notifications.length;
+  }
+
+  for (const task of tasks) {
+    const resolved = resolveTaskStatusAndSubtasks(task.subtasks, task.status);
+    if (resolved.status === 'done') continue;
+
+    const dueDateState = getDueDateState(task.dueDate);
+    if (!dueDateState) continue;
+
+    const notifications = await createDailyDueNotificationsForUsers({
+      userIds: task.project.workspace.members.map((member) => member.userId),
+      type: dueDateState === 'due_soon' ? 'task_due_soon' : 'task_overdue',
+      title: dueDateState === 'due_soon' ? 'Task due soon' : 'Task overdue',
+      message:
+        dueDateState === 'due_soon'
+          ? `"${task.title}" is due on ${formatDateUtc(task.dueDate)}.`
+          : `"${task.title}" is overdue since ${formatDateUtc(task.dueDate)}.`,
+      priority: 'high',
+      projectId: task.project.id,
+      taskId: task.id,
+    });
+    createdCount += notifications.length;
+  }
+
+  return { createdCount };
 };

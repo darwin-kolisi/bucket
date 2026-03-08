@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { toNodeHandler } from 'better-auth/node';
 import { auth } from './lib/auth.js';
+import { runDueDateNotificationSweep } from './lib/notifications.js';
 import projectsRouter from './routes/projects.js';
 import accountRouter from './routes/account.js';
 import notificationsRouter from './routes/notifications.js';
@@ -14,6 +15,25 @@ const configuredOrigins = (process.env.CLIENT_URL || '')
   .filter(Boolean);
 const allowedOrigins =
   configuredOrigins.length > 0 ? configuredOrigins : ['http://localhost:3000'];
+const configuredSweepIntervalMs = Number.parseInt(
+  process.env.DUE_NOTIFICATION_SWEEP_MS || '',
+  10
+);
+const dueSweepIntervalMs =
+  Number.isInteger(configuredSweepIntervalMs) && configuredSweepIntervalMs > 0
+    ? configuredSweepIntervalMs
+    : 15 * 60 * 1000;
+
+const runDueSweepSafely = async () => {
+  try {
+    const result = await runDueDateNotificationSweep();
+    if (result?.createdCount) {
+      console.log(`Due-date sweep created ${result.createdCount} notifications.`);
+    }
+  } catch (error) {
+    console.error('Due-date notification sweep failed:', error);
+  }
+};
 
 app.use(express.json());
 app.use(
@@ -39,4 +59,6 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
+  runDueSweepSafely();
+  setInterval(runDueSweepSafely, dueSweepIntervalMs);
 });

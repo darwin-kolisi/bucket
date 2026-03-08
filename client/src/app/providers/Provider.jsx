@@ -26,6 +26,12 @@ const upsertNotification = (items, notification) => {
   return sortNotificationsByDateDesc(next);
 };
 
+const matchesWorkspace = (notification, workspaceId) => {
+  if (!workspaceId) return true;
+  const notificationWorkspaceId = notification?.project?.workspaceId;
+  return notificationWorkspaceId === workspaceId;
+};
+
 export function useAppContext() {
   const context = useContext(Context);
   if (!context) {
@@ -196,7 +202,13 @@ export function Provider({ children }) {
         setIsNotificationsLoading(true);
       }
       try {
-        const response = await fetch(`${apiBase}/api/notifications?limit=150`, {
+        const params = new URLSearchParams();
+        params.set('limit', '150');
+        if (selectedWorkspaceId) {
+          params.set('workspaceId', selectedWorkspaceId);
+        }
+
+        const response = await fetch(`${apiBase}/api/notifications?${params.toString()}`, {
           credentials: 'include',
         });
         if (!response.ok) {
@@ -217,7 +229,7 @@ export function Provider({ children }) {
         }
       }
     },
-    [apiBase]
+    [apiBase, selectedWorkspaceId]
   );
 
   const markNotificationAsRead = useCallback(
@@ -249,26 +261,40 @@ export function Provider({ children }) {
 
   const markAllNotificationsAsRead = useCallback(async () => {
     try {
-      const response = await fetch(`${apiBase}/api/notifications/read-all`, {
-        method: 'PATCH',
-        credentials: 'include',
-      });
+      const params = new URLSearchParams();
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
+      }
+      const query = params.toString();
+
+      const response = await fetch(
+        `${apiBase}/api/notifications/read-all${query ? `?${query}` : ''}`,
+        {
+          method: 'PATCH',
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) return;
 
       const payload = await response.json().catch(() => null);
       const readAt = payload?.readAt || new Date().toISOString();
+      const payloadWorkspaceId = payload?.workspaceId || null;
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.read
-            ? notification
-            : { ...notification, read: true, readAt }
-        )
+        prev.map((notification) => {
+          if (notification.read) return notification;
+          if (payloadWorkspaceId) {
+            if (notification?.project?.workspaceId !== payloadWorkspaceId) {
+              return notification;
+            }
+          }
+          return { ...notification, read: true, readAt };
+        })
       );
     } catch (error) {
       // noop for now
     }
-  }, [apiBase]);
+  }, [apiBase, selectedWorkspaceId]);
 
   const deleteNotification = useCallback(
     async (notificationId) => {
@@ -312,6 +338,7 @@ export function Provider({ children }) {
       const payload = safeParse(event);
       const next = payload?.notification;
       if (!next) return;
+      if (!matchesWorkspace(next, selectedWorkspaceId)) return;
       setNotifications((prev) => upsertNotification(prev, next));
     };
 
@@ -319,18 +346,37 @@ export function Provider({ children }) {
       const payload = safeParse(event);
       const next = payload?.notification;
       if (!next) return;
+      if (!matchesWorkspace(next, selectedWorkspaceId)) return;
       setNotifications((prev) => upsertNotification(prev, next));
     };
 
     const handleReadAll = (event) => {
       const payload = safeParse(event);
       const readAt = payload?.readAt || new Date().toISOString();
+      const payloadWorkspaceId = payload?.workspaceId || null;
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.read
-            ? notification
-            : { ...notification, read: true, readAt }
-        )
+        prev.map((notification) => {
+          if (notification.read) return notification;
+
+          if (selectedWorkspaceId) {
+            if (
+              payloadWorkspaceId &&
+              payloadWorkspaceId !== selectedWorkspaceId
+            ) {
+              return notification;
+            }
+            return { ...notification, read: true, readAt };
+          }
+
+          if (
+            payloadWorkspaceId &&
+            notification?.project?.workspaceId !== payloadWorkspaceId
+          ) {
+            return notification;
+          }
+
+          return { ...notification, read: true, readAt };
+        })
       );
     };
 
@@ -363,7 +409,7 @@ export function Provider({ children }) {
       source.removeEventListener('notification.deleted', handleDeleted);
       source.close();
     };
-  }, [apiBase]);
+  }, [apiBase, selectedWorkspaceId]);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
