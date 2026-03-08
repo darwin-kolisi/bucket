@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useAppContext } from '@/app/providers/Provider';
 import { useParams, useRouter } from 'next/navigation';
 import ProjectKanban from '@/components/projects/ProjectKanban';
@@ -9,10 +10,93 @@ export default function ProjectDetailPage() {
   const { projectId } = useParams();
   const { projects, setProjects, isSidebarCollapsed } = useAppContext();
   const router = useRouter();
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  const [isProjectLoading, setIsProjectLoading] = useState(true);
+  const [isProjectMissing, setIsProjectMissing] = useState(false);
 
   const project = projects.find((p) => p.id === projectId);
 
-  if (!project) {
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProject = async () => {
+      if (!projectId) {
+        if (isMounted) {
+          setIsProjectMissing(true);
+          setIsProjectLoading(false);
+        }
+        return;
+      }
+
+      if (project) {
+        if (isMounted) {
+          setIsProjectMissing(false);
+          setIsProjectLoading(false);
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setIsProjectLoading(true);
+      }
+
+      try {
+        const response = await fetch(`${apiBase}/api/projects/${projectId}`, {
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          if (isMounted) {
+            setIsProjectMissing(true);
+          }
+          return;
+        }
+
+        const data = await response.json();
+        if (!data?.project) {
+          if (isMounted) {
+            setIsProjectMissing(true);
+          }
+          return;
+        }
+
+        if (isMounted) {
+          setProjects((prev) => {
+            const existingIndex = prev.findIndex((item) => item.id === data.project.id);
+            if (existingIndex === -1) {
+              return [...prev, data.project];
+            }
+            return prev.map((item) => (item.id === data.project.id ? data.project : item));
+          });
+          setIsProjectMissing(false);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setIsProjectMissing(true);
+        }
+      } finally {
+        if (isMounted) {
+          setIsProjectLoading(false);
+        }
+      }
+    };
+
+    loadProject();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [apiBase, projectId, project, setProjects]);
+
+  if (isProjectLoading) {
+    return (
+      <Layout>
+        <div className="p-6 text-sm text-gray-500">Loading project...</div>
+      </Layout>
+    );
+  }
+
+  if (!project && isProjectMissing) {
     return (
       <Layout>
         <NotFound
@@ -25,6 +109,10 @@ export default function ProjectDetailPage() {
         />
       </Layout>
     );
+  }
+
+  if (!project) {
+    return null;
   }
 
   const handleBackToProjects = () => {
