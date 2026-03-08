@@ -546,12 +546,38 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Project not found' });
   }
 
+  const nextProjectDueDate =
+    dueDate === null
+      ? null
+      : dueDate !== undefined
+        ? parseDateInput(dueDate)
+        : existingProject.dueDate;
+
+  if (nextProjectDueDate) {
+    const violatingTask = await prisma.task.findFirst({
+      where: {
+        projectId: existingProject.id,
+        deletedAt: null,
+        dueDate: { gt: nextProjectDueDate },
+      },
+      select: { id: true },
+      orderBy: { dueDate: 'asc' },
+    });
+
+    if (violatingTask) {
+      return res.status(400).json({
+        error: 'Project due date cannot be earlier than active task due dates.',
+      });
+    }
+  }
+
   const project = await prisma.project.update({
     where: { id: req.params.id },
     data: {
       name: name?.trim(),
       description: description?.trim(),
-      dueDate: dueDate === null ? null : dueDate ? parseDateInput(dueDate) : undefined,
+      dueDate:
+        dueDate === null ? null : dueDate !== undefined ? nextProjectDueDate : undefined,
       startDate:
         startDate === null ? null : startDate ? parseDateInput(startDate) : undefined,
     },
