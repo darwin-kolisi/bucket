@@ -533,6 +533,11 @@ router.get('/projects/:id', requireAuth, async (req, res) => {
 
 router.patch('/projects/:id', requireAuth, async (req, res) => {
   const { name, description, dueDate, startDate } = req.body || {};
+
+  if (name !== undefined && !name?.toString().trim()) {
+    return res.status(400).json({ error: 'Project name is required' });
+  }
+
   const existingProject = await getAccessibleProject(req.params.id, req.user.id, {
     select: {
       id: true,
@@ -738,6 +743,11 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
 router.patch('/tasks/:id', requireAuth, async (req, res) => {
   const { title, description, dueDate, assigneeId, status, order, priority, subtasks } =
     req.body || {};
+
+  if (title !== undefined && !title?.toString().trim()) {
+    return res.status(400).json({ error: 'Task title is required' });
+  }
+
   const existing = await getAccessibleTask(req.params.id, req.user.id);
   if (!existing) {
     return res.status(404).json({ error: 'Task not found' });
