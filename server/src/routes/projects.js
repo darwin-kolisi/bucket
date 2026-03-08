@@ -59,6 +59,7 @@ const taskScopeWhere = (taskId, userId) => ({
   id: taskId,
   deletedAt: null,
   project: {
+    deletedAt: null,
     workspace: {
       members: {
         some: { userId },
@@ -71,6 +72,7 @@ const noteScopeWhere = (noteId, userId) => ({
   id: noteId,
   deletedAt: null,
   project: {
+    deletedAt: null,
     workspace: {
       members: {
         some: { userId },
@@ -920,6 +922,7 @@ router.get('/notes', requireAuth, async (req, res) => {
       ...(projectId ? { projectId } : {}),
       ...(taskId ? { taskId } : {}),
       project: {
+        deletedAt: null,
         ...(workspaceId ? { workspaceId } : {}),
         workspace: {
           members: {
