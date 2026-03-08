@@ -1,6 +1,18 @@
 import { prisma } from './auth.js';
 
 const notificationStreams = new Map();
+const HIGH_SIGNAL_NOTIFICATION_TYPE_SET = new Set([
+  'project_due_soon',
+  'project_overdue',
+  'task_due_soon',
+  'task_overdue',
+  'task_completed',
+  'project_reminder',
+  'task_reminder',
+  'reminder',
+]);
+
+export const HIGH_SIGNAL_NOTIFICATION_TYPES = [...HIGH_SIGNAL_NOTIFICATION_TYPE_SET];
 
 const normalizePriority = (value) => {
   const normalized = value?.toString().toLowerCase();
@@ -8,6 +20,9 @@ const normalizePriority = (value) => {
   if (normalized === 'low') return 'low';
   return 'medium';
 };
+
+export const isHighSignalNotificationType = (value) =>
+  HIGH_SIGNAL_NOTIFICATION_TYPE_SET.has(value?.toString().trim().toLowerCase() || '');
 
 const toUiTaskStatus = (status) => status?.replace(/_/g, '-') || 'todo';
 
@@ -26,6 +41,7 @@ export const notificationInclude = {
 export const toApiNotification = (notification) => ({
   ...notification,
   read: Boolean(notification.readAt),
+  starred: Boolean(notification.starredAt),
   task: notification.task
     ? { ...notification.task, status: toUiTaskStatus(notification.task.status) }
     : null,
@@ -65,12 +81,14 @@ export const registerNotificationStream = (userId, res) => {
 };
 
 export const publishNotificationCreated = (notification) => {
+  if (!isHighSignalNotificationType(notification?.type)) return;
   publishToUser(notification.userId, 'notification.created', {
     notification: toApiNotification(notification),
   });
 };
 
 export const publishNotificationUpdated = (notification) => {
+  if (!isHighSignalNotificationType(notification?.type)) return;
   publishToUser(notification.userId, 'notification.updated', {
     notification: toApiNotification(notification),
   });
@@ -101,6 +119,8 @@ export const createNotificationsForUsers = async ({
   noteId = null,
   metadata,
 }) => {
+  if (!isHighSignalNotificationType(type)) return [];
+
   const recipients = uniqueUserIds(userIds);
   if (recipients.length === 0) return [];
 
@@ -308,6 +328,33 @@ const createDailyDueNotificationsForUsers = async ({
 
   return createNotificationsForUsers({
     userIds: recipients,
+    type,
+    title,
+    message,
+    priority,
+    projectId,
+    taskId,
+  });
+};
+
+export const createDailyDueNotificationsForWorkspace = async ({
+  workspaceId,
+  type,
+  title,
+  message,
+  priority = 'high',
+  projectId = null,
+  taskId = null,
+}) => {
+  if (!workspaceId) return [];
+
+  const members = await prisma.workspaceMember.findMany({
+    where: { workspaceId },
+    select: { userId: true },
+  });
+
+  return createDailyDueNotificationsForUsers({
+    userIds: members.map((member) => member.userId),
     type,
     title,
     message,

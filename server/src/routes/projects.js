@@ -1,6 +1,9 @@
 import express from 'express';
 import { prisma } from '../lib/auth.js';
-import { createWorkspaceNotifications } from '../lib/notifications.js';
+import {
+  createDailyDueNotificationsForWorkspace,
+  createWorkspaceNotifications,
+} from '../lib/notifications.js';
 import { requireAuth } from './utils.js';
 
 const router = express.Router();
@@ -279,13 +282,6 @@ const getDueDateState = (value) => {
   return null;
 };
 
-const formatTaskStatusLabel = (value) =>
-  value
-    ?.toString()
-    .replace(/_/g, ' ')
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase()) || 'To do';
-
 const normalizeStatusFilter = (value) => {
   if (!value) return '';
   return value
@@ -535,19 +531,9 @@ router.post('/projects', requireAuth, async (req, res) => {
     },
   });
 
-  const actor = actorLabel(req.user);
-  await createWorkspaceNotifications({
-    workspaceId: project.workspaceId,
-    type: 'project_created',
-    title: 'Project created',
-    message: `${actor} created "${project.name}".`,
-    priority: 'low',
-    projectId: project.id,
-  });
-
   const dueDateState = getDueDateState(project.dueDate);
   if (dueDateState === 'due_soon') {
-    await createWorkspaceNotifications({
+    await createDailyDueNotificationsForWorkspace({
       workspaceId: project.workspaceId,
       type: 'project_due_soon',
       title: 'Project due soon',
@@ -556,7 +542,7 @@ router.post('/projects', requireAuth, async (req, res) => {
       projectId: project.id,
     });
   } else if (dueDateState === 'overdue') {
-    await createWorkspaceNotifications({
+    await createDailyDueNotificationsForWorkspace({
       workspaceId: project.workspaceId,
       type: 'project_overdue',
       title: 'Project overdue',
@@ -672,31 +658,13 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
     },
   });
 
-  const actor = actorLabel(req.user);
-  const nameChanged =
-    name !== undefined && name?.trim() && name.trim() !== existingProject.name;
   const dueDateChanged =
     dueDate !== undefined && !isSameDateTime(existingProject.dueDate, project.dueDate);
-  const startDateChanged =
-    startDate !== undefined &&
-    !isSameDateTime(existingProject.startDate, project.startDate);
-  const descriptionChanged = description !== undefined;
-
-  if (nameChanged || dueDateChanged || startDateChanged || descriptionChanged) {
-    await createWorkspaceNotifications({
-      workspaceId: existingProject.workspaceId,
-      type: 'project_updated',
-      title: 'Project updated',
-      message: `${actor} updated "${project.name}".`,
-      priority: 'medium',
-      projectId: project.id,
-    });
-  }
 
   if (dueDateChanged) {
     const dueDateState = getDueDateState(project.dueDate);
     if (dueDateState === 'due_soon') {
-      await createWorkspaceNotifications({
+      await createDailyDueNotificationsForWorkspace({
         workspaceId: existingProject.workspaceId,
         type: 'project_due_soon',
         title: 'Project due soon',
@@ -705,7 +673,7 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
         projectId: project.id,
       });
     } else if (dueDateState === 'overdue') {
-      await createWorkspaceNotifications({
+      await createDailyDueNotificationsForWorkspace({
         workspaceId: existingProject.workspaceId,
         type: 'project_overdue',
         title: 'Project overdue',
@@ -748,15 +716,6 @@ router.delete('/projects/:id', requireAuth, async (req, res) => {
   await prisma.project.update({
     where: { id: req.params.id },
     data: { deletedAt: new Date() },
-  });
-
-  await createWorkspaceNotifications({
-    workspaceId: existingProject.workspaceId,
-    type: 'project_deleted',
-    title: 'Project deleted',
-    message: `${actorLabel(req.user)} removed "${existingProject.name}".`,
-    priority: 'medium',
-    projectId: existingProject.id,
   });
 
   res.status(204).send();
@@ -820,20 +779,9 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
     },
   });
 
-  const actor = actorLabel(req.user);
-  await createWorkspaceNotifications({
-    workspaceId: project.workspaceId,
-    type: 'task_created',
-    title: 'Task created',
-    message: `${actor} added "${task.title}" to "${project.name}".`,
-    priority: 'medium',
-    projectId: project.id,
-    taskId: task.id,
-  });
-
   const dueDateState = getDueDateState(task.dueDate);
   if (dueDateState === 'due_soon') {
-    await createWorkspaceNotifications({
+    await createDailyDueNotificationsForWorkspace({
       workspaceId: project.workspaceId,
       type: 'task_due_soon',
       title: 'Task due soon',
@@ -843,7 +791,7 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
       taskId: task.id,
     });
   } else if (dueDateState === 'overdue') {
-    await createWorkspaceNotifications({
+    await createDailyDueNotificationsForWorkspace({
       workspaceId: project.workspaceId,
       type: 'task_overdue',
       title: 'Task overdue',
@@ -931,21 +879,14 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
   const actor = actorLabel(req.user);
   const statusChanged = existing.status !== task.status;
   const dueDateChanged = !isSameDateTime(existing.dueDate, task.dueDate);
-  const titleChanged =
-    title !== undefined && title?.trim() && title.trim() !== existing.title;
-  const descriptionChanged = description !== undefined;
-  const priorityChanged = priority !== undefined && task.priority !== existing.priority;
 
-  if (statusChanged) {
-    const completed = task.status === 'done';
+  if (statusChanged && task.status === 'done') {
     await createWorkspaceNotifications({
       workspaceId: project.workspaceId,
-      type: completed ? 'task_completed' : 'task_status_updated',
-      title: completed ? 'Task completed' : 'Task status updated',
-      message: completed
-        ? `${actor} marked "${task.title}" as done.`
-        : `${actor} moved "${task.title}" to ${formatTaskStatusLabel(task.status)}.`,
-      priority: completed ? 'medium' : 'low',
+      type: 'task_completed',
+      title: 'Task completed',
+      message: `${actor} marked "${task.title}" as done.`,
+      priority: 'medium',
       projectId: project.id,
       taskId: task.id,
     });
@@ -954,7 +895,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
   if (dueDateChanged) {
     const dueDateState = getDueDateState(task.dueDate);
     if (dueDateState === 'due_soon') {
-      await createWorkspaceNotifications({
+      await createDailyDueNotificationsForWorkspace({
         workspaceId: project.workspaceId,
         type: 'task_due_soon',
         title: 'Task due soon',
@@ -964,7 +905,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
         taskId: task.id,
       });
     } else if (dueDateState === 'overdue') {
-      await createWorkspaceNotifications({
+      await createDailyDueNotificationsForWorkspace({
         workspaceId: project.workspaceId,
         type: 'task_overdue',
         title: 'Task overdue',
@@ -973,29 +914,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
         projectId: project.id,
         taskId: task.id,
       });
-    } else if (task.dueDate) {
-      await createWorkspaceNotifications({
-        workspaceId: project.workspaceId,
-        type: 'task_due_date_updated',
-        title: 'Task due date updated',
-        message: `${actor} updated "${task.title}" due date to ${formatDate(task.dueDate)}.`,
-        priority: 'medium',
-        projectId: project.id,
-        taskId: task.id,
-      });
     }
-  }
-
-  if (!statusChanged && !dueDateChanged && (titleChanged || descriptionChanged || priorityChanged)) {
-    await createWorkspaceNotifications({
-      workspaceId: project.workspaceId,
-      type: 'task_updated',
-      title: 'Task updated',
-      message: `${actor} updated "${task.title}".`,
-      priority: 'low',
-      projectId: project.id,
-      taskId: task.id,
-    });
   }
 
   res.json({ task: toUiTask(task) });
@@ -1022,16 +941,6 @@ router.delete('/tasks/:id', requireAuth, async (req, res) => {
   await prisma.task.update({
     where: { id: req.params.id },
     data: { deletedAt: new Date() },
-  });
-
-  await createWorkspaceNotifications({
-    workspaceId: existing.project.workspaceId,
-    type: 'task_deleted',
-    title: 'Task deleted',
-    message: `${actorLabel(req.user)} removed "${existing.title}" from "${existing.project.name}".`,
-    priority: 'medium',
-    projectId: existing.project.id,
-    taskId: existing.id,
   });
 
   res.status(204).send();
@@ -1142,7 +1051,6 @@ router.post('/notes', requireAuth, async (req, res) => {
   }
 
   let resolvedTaskId = null;
-  let resolvedTaskTitle = null;
   if (taskId) {
     const task = await getAccessibleTask(taskId, req.user.id, {
       select: { id: true, projectId: true, title: true },
@@ -1156,7 +1064,6 @@ router.post('/notes', requireAuth, async (req, res) => {
       });
     }
     resolvedTaskId = task.id;
-    resolvedTaskTitle = task.title;
   }
 
   const note = await prisma.note.create({
@@ -1168,19 +1075,6 @@ router.post('/notes', requireAuth, async (req, res) => {
       createdById: req.user.id,
     },
     include: noteInclude,
-  });
-
-  await createWorkspaceNotifications({
-    workspaceId: project.workspaceId,
-    type: 'note_created',
-    title: 'Note added',
-    message: resolvedTaskTitle
-      ? `${actorLabel(req.user)} added a note to "${resolvedTaskTitle}".`
-      : `${actorLabel(req.user)} added a note in "${project.name}".`,
-    priority: 'low',
-    projectId: project.id,
-    taskId: resolvedTaskId,
-    noteId: note.id,
   });
 
   res.status(201).json({ note: toUiNote(note) });
@@ -1260,25 +1154,6 @@ router.patch('/notes/:id', requireAuth, async (req, res) => {
     include: noteInclude,
   });
 
-  const changedTaskReference = incomingTaskIdProvided && nextTaskId !== existingNote.taskId;
-  const changedTitle = nextTitle !== undefined && nextTitle !== existingNote.title;
-  const changedContent = nextContent !== undefined;
-  if (changedTaskReference || changedTitle || changedContent) {
-    const targetTask = note.task?.title || existingNote.task?.title || null;
-    await createWorkspaceNotifications({
-      workspaceId: existingNote.project.workspaceId,
-      type: 'note_updated',
-      title: 'Note updated',
-      message: targetTask
-        ? `${actorLabel(req.user)} updated a note on "${targetTask}".`
-        : `${actorLabel(req.user)} updated a note in "${existingNote.project.name}".`,
-      priority: 'low',
-      projectId: existingNote.project.id,
-      taskId: note.taskId,
-      noteId: note.id,
-    });
-  }
-
   res.json({ note: toUiNote(note) });
 });
 
@@ -1309,19 +1184,6 @@ router.delete('/notes/:id', requireAuth, async (req, res) => {
   await prisma.note.update({
     where: { id: req.params.id },
     data: { deletedAt: new Date() },
-  });
-
-  await createWorkspaceNotifications({
-    workspaceId: existing.project.workspaceId,
-    type: 'note_deleted',
-    title: 'Note deleted',
-    message: existing.task?.title
-      ? `${actorLabel(req.user)} removed a note from "${existing.task.title}".`
-      : `${actorLabel(req.user)} removed a note from "${existing.project.name}".`,
-    priority: 'low',
-    projectId: existing.project.id,
-    taskId: existing.task?.id || null,
-    noteId: existing.id,
   });
 
   res.status(204).send();
