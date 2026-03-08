@@ -247,6 +247,23 @@ const toOptionalTrimmedString = (value) => {
   return trimmed || null;
 };
 
+const normalizeTaskPriority = (value) => {
+  if (value === undefined) return undefined;
+  const normalized = value?.toString().trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === 'low') return 'Low';
+  if (normalized === 'medium') return 'Medium';
+  if (normalized === 'high') return 'High';
+  return null;
+};
+
+const normalizeOptionalIdInput = (value) => {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const normalized = value.toString().trim();
+  return normalized || null;
+};
+
 const getProgressByStatus = (status, total = 10) => {
   switch (status) {
     case 'todo':
@@ -586,6 +603,12 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
       startDate:
         startDate === null ? null : startDate ? parseDateInput(startDate) : undefined,
     },
+    include: {
+      tasks: {
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
   });
 
   const actor = actorLabel(req.user);
@@ -632,12 +655,23 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
     }
   }
 
+  const totals = project.tasks.reduce(
+    (acc, task) => {
+      const units = getTaskCompletionUnits(task);
+      acc.total += units.total;
+      acc.completed += units.completed;
+      return acc;
+    },
+    { total: 0, completed: 0 }
+  );
+
   res.json({
     project: {
       ...project,
-      status: computeProjectStatus({ ...project, tasks: [] }),
-      totalTasks: 0,
-      completedTasks: 0,
+      tasks: project.tasks.map(toUiTask),
+      status: computeProjectStatus(project),
+      totalTasks: totals.total,
+      completedTasks: totals.completed,
     },
   });
 });
@@ -680,6 +714,28 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Project not found' });
   }
 
+  if (status !== undefined && toDbTaskStatus(status) === undefined) {
+    return res.status(400).json({ error: 'Invalid task status.' });
+  }
+
+  const normalizedPriority = normalizeTaskPriority(priority);
+  if (priority !== undefined && normalizedPriority === null) {
+    return res.status(400).json({ error: 'Invalid task priority.' });
+  }
+
+  const normalizedAssigneeId = normalizeOptionalIdInput(assigneeId);
+  if (normalizedAssigneeId) {
+    const hasAssigneeAccess = await hasWorkspaceAccess(
+      project.workspaceId,
+      normalizedAssigneeId
+    );
+    if (!hasAssigneeAccess) {
+      return res.status(400).json({
+        error: 'Task assignee must be a member of the project workspace.',
+      });
+    }
+  }
+
   const parsedDueDate = dueDate ? parseDateInput(dueDate) : null;
   if (parsedDueDate && project.dueDate && parsedDueDate > project.dueDate) {
     return res.status(400).json({
@@ -695,10 +751,10 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
       title: title.trim(),
       description: description?.trim() || null,
       dueDate: parseDateInput(dueDate),
-      assigneeId: assigneeId || null,
+      assigneeId: normalizedAssigneeId || null,
       status: resolved.status,
       order: Number.isInteger(order) ? order : null,
-      priority: priority || 'Medium',
+      priority: normalizedPriority || 'Medium',
       subtasks: resolved.subtasks,
     },
   });
@@ -748,6 +804,15 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Task title is required' });
   }
 
+  if (status !== undefined && toDbTaskStatus(status) === undefined) {
+    return res.status(400).json({ error: 'Invalid task status.' });
+  }
+
+  const normalizedPriority = normalizeTaskPriority(priority);
+  if (priority !== undefined && normalizedPriority === null) {
+    return res.status(400).json({ error: 'Invalid task priority.' });
+  }
+
   const existing = await getAccessibleTask(req.params.id, req.user.id);
   if (!existing) {
     return res.status(404).json({ error: 'Task not found' });
@@ -774,6 +839,19 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
   const incomingSubtasks = subtasks !== undefined ? subtasks : existing.subtasks;
   const incomingStatus = status !== undefined ? status : existing.status;
   const resolved = resolveTaskStatusAndSubtasks(incomingSubtasks, incomingStatus);
+  const normalizedAssigneeId = normalizeOptionalIdInput(assigneeId);
+
+  if (normalizedAssigneeId) {
+    const hasAssigneeAccess = await hasWorkspaceAccess(
+      project.workspaceId,
+      normalizedAssigneeId
+    );
+    if (!hasAssigneeAccess) {
+      return res.status(400).json({
+        error: 'Task assignee must be a member of the project workspace.',
+      });
+    }
+  }
 
   const task = await prisma.task.update({
     where: { id: req.params.id },
@@ -781,10 +859,10 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
       title: title?.trim(),
       description: description?.trim(),
       dueDate: dueDate === null ? null : dueDate ? parseDateInput(dueDate) : undefined,
-      assigneeId: assigneeId === null ? null : assigneeId,
+      assigneeId: normalizedAssigneeId,
       status: resolved.status,
       order,
-      priority,
+      priority: priority !== undefined ? normalizedPriority : undefined,
       subtasks: resolved.subtasks,
     },
   });
@@ -795,7 +873,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
   const titleChanged =
     title !== undefined && title?.trim() && title.trim() !== existing.title;
   const descriptionChanged = description !== undefined;
-  const priorityChanged = priority !== undefined && priority !== existing.priority;
+  const priorityChanged = priority !== undefined && task.priority !== existing.priority;
 
   if (statusChanged) {
     const completed = task.status === 'done';
