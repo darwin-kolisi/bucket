@@ -879,9 +879,17 @@ router.get('/projects/:id/tasks', requireAuth, async (req, res) => {
 });
 
 router.get('/notes', requireAuth, async (req, res) => {
+  const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
   const projectId = toOptionalTrimmedString(req.query.projectId);
   const taskId = toOptionalTrimmedString(req.query.taskId);
   const searchQuery = toOptionalTrimmedString(req.query.q);
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
 
   if (projectId) {
     const project = await getAccessibleProject(projectId, req.user.id, {
@@ -912,6 +920,7 @@ router.get('/notes', requireAuth, async (req, res) => {
       ...(projectId ? { projectId } : {}),
       ...(taskId ? { taskId } : {}),
       project: {
+        ...(workspaceId ? { workspaceId } : {}),
         workspace: {
           members: {
             some: { userId: req.user.id },
