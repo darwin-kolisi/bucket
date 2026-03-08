@@ -12,6 +12,9 @@ import KanbanColumn from '../tasks/KanbanColumn';
 import TaskCard from '../tasks/TaskCard';
 import { PlusIcon } from '@/components/icons/Icons';
 
+const KANBAN_STATUSES = ['todo', 'in-progress', 'in-review', 'done'];
+const KANBAN_STATUS_SET = new Set(KANBAN_STATUSES);
+
 export default function ProjectKanban({
   project,
   onBack,
@@ -89,7 +92,25 @@ export default function ProjectKanban({
     setActiveTaskId(null);
 
     if (!over) return;
-    const targetStatus = typeof over.id === 'string' ? over.id : null;
+    const targetStatusFromOverId =
+      typeof over.id === 'string' && KANBAN_STATUS_SET.has(over.id)
+        ? over.id
+        : null;
+    const targetStatusFromData =
+      typeof over.data?.current?.status === 'string' &&
+      KANBAN_STATUS_SET.has(over.data.current.status)
+        ? over.data.current.status
+        : null;
+    const targetStatusFromTask =
+      typeof over.id === 'string'
+        ? tasks.find((task) => task.id === over.id)?.status
+        : null;
+    const targetStatus = [
+      targetStatusFromOverId,
+      targetStatusFromData,
+      targetStatusFromTask,
+    ].find((status) => KANBAN_STATUS_SET.has(status));
+
     if (!targetStatus) return;
 
     const draggedTask = tasks.find((task) => task.id === active.id);
@@ -140,6 +161,7 @@ export default function ProjectKanban({
     const updatedTasks = tasks.map((task) =>
       task.id === draggedTask.id ? nextTask : task
     );
+    const previousTasks = tasks;
 
     setTasks(updatedTasks);
     onUpdateTasks(updatedTasks);
@@ -148,15 +170,19 @@ export default function ProjectKanban({
       if (nextTask.subtasks && targetStatus === 'done') {
         payload.subtasks = nextTask.subtasks;
       }
-      await fetch(`${apiBase}/api/tasks/${draggedTask.id}`, {
+      const response = await fetch(`${apiBase}/api/tasks/${draggedTask.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload),
       });
+      if (!response.ok) {
+        throw new Error('Failed to move task');
+      }
       await refreshTasks();
     } catch (error) {
-      // noop for now
+      setTasks(previousTasks);
+      onUpdateTasks(previousTasks);
     }
   };
 
@@ -167,6 +193,7 @@ export default function ProjectKanban({
   };
 
   const handleToggleSubtask = async (taskId, subtaskId) => {
+    const previousTasks = tasks;
     const updatedTasks = tasks.map((task) => {
       if (task.id === taskId) {
         const updatedSubtasks = task.subtasks.map((subtask) =>
@@ -195,7 +222,7 @@ export default function ProjectKanban({
     const changedTask = updatedTasks.find((task) => task.id === taskId);
     if (!changedTask) return;
     try {
-      await fetch(`${apiBase}/api/tasks/${taskId}`, {
+      const response = await fetch(`${apiBase}/api/tasks/${taskId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -204,9 +231,13 @@ export default function ProjectKanban({
           status: changedTask.status,
         }),
       });
+      if (!response.ok) {
+        throw new Error('Failed to update subtask');
+      }
       await refreshTasks();
     } catch (error) {
-      // noop for now
+      setTasks(previousTasks);
+      onUpdateTasks(previousTasks);
     }
   };
 

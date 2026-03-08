@@ -120,6 +120,25 @@ const parseSubtasks = (value) => {
   }));
 };
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const toUtcDateOnlyFromParts = (year, monthIndex, day) => {
+  if (!Number.isInteger(year) || !Number.isInteger(monthIndex) || !Number.isInteger(day)) {
+    return null;
+  }
+
+  const parsed = new Date(Date.UTC(year, monthIndex, day));
+  if (Number.isNaN(parsed.getTime())) return null;
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== monthIndex ||
+    parsed.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return parsed;
+};
+
 const resolveTaskStatusAndSubtasks = (subtasksValue, statusValue) => {
   const subtasks = parseSubtasks(subtasksValue);
   const hasSubtasks = subtasks.length > 0;
@@ -163,14 +182,29 @@ const getTaskCompletionUnits = (task) => {
 
 const parseDateInput = (value) => {
   if (!value) return null;
-  const parsed = new Date(value);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed;
+
+  const rawValue = value.toString().trim();
+  if (!rawValue) return null;
+
+  const isoMatch = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const year = Number.parseInt(isoMatch[1], 10);
+    const monthIndex = Number.parseInt(isoMatch[2], 10) - 1;
+    const day = Number.parseInt(isoMatch[3], 10);
+    return toUtcDateOnlyFromParts(year, monthIndex, day);
   }
 
-  const [dayStr, monthStr, yearStr] = value.toString().split(' ');
+  const [dayStr, monthStr, yearStr] = rawValue.split(' ');
   if (!dayStr || !monthStr || !yearStr) {
-    return null;
+    const parsed = new Date(rawValue);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return toUtcDateOnlyFromParts(
+      parsed.getUTCFullYear(),
+      parsed.getUTCMonth(),
+      parsed.getUTCDate()
+    );
   }
 
   const monthIndex = new Date(`${monthStr} 1, 2000`).getMonth();
@@ -183,7 +217,7 @@ const parseDateInput = (value) => {
     return null;
   }
 
-  return new Date(year, monthIndex, day);
+  return toUtcDateOnlyFromParts(year, monthIndex, day);
 };
 
 const formatDate = (value) => {
@@ -194,6 +228,7 @@ const formatDate = (value) => {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: 'UTC',
   }).format(date);
 };
 
@@ -207,21 +242,40 @@ const toComparableDate = (value) => {
   return parsed;
 };
 
+const toUtcDateOnly = (value) => {
+  const parsed = toComparableDate(value);
+  if (!parsed) return null;
+  return toUtcDateOnlyFromParts(
+    parsed.getUTCFullYear(),
+    parsed.getUTCMonth(),
+    parsed.getUTCDate()
+  );
+};
+
+const compareUtcDateOnly = (leftValue, rightValue) => {
+  const left = toUtcDateOnly(leftValue);
+  const right = toUtcDateOnly(rightValue);
+  if (!left && !right) return 0;
+  if (!left) return -1;
+  if (!right) return 1;
+  return Math.round((left.getTime() - right.getTime()) / MS_PER_DAY);
+};
+
 const isSameDateTime = (a, b) => {
   const left = toComparableDate(a);
   const right = toComparableDate(b);
   if (!left && !right) return true;
   if (!left || !right) return false;
-  return left.getTime() === right.getTime();
+  return compareUtcDateOnly(left, right) === 0;
 };
 
 const getDueDateState = (value) => {
-  const dueDate = toComparableDate(value);
+  const dueDate = toUtcDateOnly(value);
   if (!dueDate) return null;
-  const now = new Date();
-  const delta = dueDate.getTime() - now.getTime();
-  if (delta < 0) return 'overdue';
-  if (delta <= 24 * 60 * 60 * 1000) return 'due_soon';
+  const today = toUtcDateOnly(new Date());
+  const deltaDays = compareUtcDateOnly(dueDate, today);
+  if (deltaDays < 0) return 'overdue';
+  if (deltaDays <= 1) return 'due_soon';
   return null;
 };
 
@@ -323,7 +377,7 @@ const toUiNote = (note) => ({
 
 const computeProjectStatus = (project) => {
   const tasks = project.tasks || [];
-  const now = new Date();
+  const today = new Date();
 
   if (!tasks.length) {
     return 'in_progress';
@@ -332,7 +386,11 @@ const computeProjectStatus = (project) => {
   const hasOverdueTask = tasks.some((task) => {
     const status =
       resolveTaskStatusAndSubtasks(task.subtasks, task.status).status;
-    return task.dueDate && status !== 'done' && task.dueDate < now;
+    return (
+      task.dueDate &&
+      status !== 'done' &&
+      compareUtcDateOnly(task.dueDate, today) < 0
+    );
   });
   if (hasOverdueTask) {
     return 'at_risk';
@@ -576,17 +634,20 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
         : existingProject.dueDate;
 
   if (nextProjectDueDate) {
-    const violatingTask = await prisma.task.findFirst({
+    const latestTaskDueDate = await prisma.task.findFirst({
       where: {
         projectId: existingProject.id,
         deletedAt: null,
-        dueDate: { gt: nextProjectDueDate },
+        dueDate: { not: null },
       },
-      select: { id: true },
-      orderBy: { dueDate: 'asc' },
+      select: { dueDate: true },
+      orderBy: { dueDate: 'desc' },
     });
 
-    if (violatingTask) {
+    if (
+      latestTaskDueDate?.dueDate &&
+      compareUtcDateOnly(latestTaskDueDate.dueDate, nextProjectDueDate) > 0
+    ) {
       return res.status(400).json({
         error: 'Project due date cannot be earlier than active task due dates.',
       });
@@ -737,7 +798,7 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
   }
 
   const parsedDueDate = dueDate ? parseDateInput(dueDate) : null;
-  if (parsedDueDate && project.dueDate && parsedDueDate > project.dueDate) {
+  if (parsedDueDate && project.dueDate && compareUtcDateOnly(parsedDueDate, project.dueDate) > 0) {
     return res.status(400).json({
       error: 'Task due date cannot be after the project due date.',
     });
@@ -750,7 +811,7 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
       projectId: req.params.id,
       title: title.trim(),
       description: description?.trim() || null,
-      dueDate: parseDateInput(dueDate),
+      dueDate: parsedDueDate,
       assigneeId: normalizedAssigneeId || null,
       status: resolved.status,
       order: Number.isInteger(order) ? order : null,
@@ -830,7 +891,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
         ? parseDateInput(dueDate)
         : existing.dueDate;
 
-  if (nextDueDate && project.dueDate && nextDueDate > project.dueDate) {
+  if (nextDueDate && project.dueDate && compareUtcDateOnly(nextDueDate, project.dueDate) > 0) {
     return res.status(400).json({
       error: 'Task due date cannot be after the project due date.',
     });
@@ -858,7 +919,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
     data: {
       title: title?.trim(),
       description: description?.trim(),
-      dueDate: dueDate === null ? null : dueDate ? parseDateInput(dueDate) : undefined,
+      dueDate: dueDate === null ? null : dueDate !== undefined ? nextDueDate : undefined,
       assigneeId: normalizedAssigneeId,
       status: resolved.status,
       order,
