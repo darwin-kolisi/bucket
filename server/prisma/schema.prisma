@@ -133,6 +133,7 @@ model Notification {
   priority  String   @default("medium")
   readAt    DateTime?
   starredAt DateTime?
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   projectId String?
@@ -147,6 +148,7 @@ model Notification {
   @@index([userId, createdAt])
   @@index([readAt])
   @@index([starredAt])
+  @@index([deletedAt])
   @@index([projectId])
   @@index([taskId])
   @@index([noteId])

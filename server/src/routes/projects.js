@@ -314,6 +314,28 @@ const normalizeOptionalIdInput = (value) => {
   return normalized || null;
 };
 
+const getTrashProjectScopeWhere = (projectId, userId) => ({
+  id: projectId,
+  deletedAt: { not: null },
+  workspace: {
+    members: {
+      some: { userId },
+    },
+  },
+});
+
+const getTrashTaskScopeWhere = (taskId, userId) => ({
+  id: taskId,
+  deletedAt: { not: null },
+  project: {
+    workspace: {
+      members: {
+        some: { userId },
+      },
+    },
+  },
+});
+
 const getProgressByStatus = (status, total = 10) => {
   switch (status) {
     case 'todo':
@@ -407,6 +429,222 @@ const computeProjectStatus = (project) => {
   });
   return anyProgress ? 'on_track' : 'in_progress';
 };
+
+router.get('/projects/trash', requireAuth, async (req, res) => {
+  const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
+
+  const projects = await prisma.project.findMany({
+    where: {
+      deletedAt: { not: null },
+      ...(workspaceId ? { workspaceId } : {}),
+      workspace: {
+        members: {
+          some: { userId: req.user.id },
+        },
+      },
+    },
+    include: {
+      tasks: {
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'asc' },
+      },
+      workspace: {
+        select: { id: true, name: true },
+      },
+    },
+    orderBy: { deletedAt: 'desc' },
+  });
+
+  const payload = projects.map((project) => {
+    const totals = project.tasks.reduce(
+      (acc, task) => {
+        const units = getTaskCompletionUnits(task);
+        acc.total += units.total;
+        acc.completed += units.completed;
+        return acc;
+      },
+      { total: 0, completed: 0 }
+    );
+
+    return {
+      ...project,
+      tasks: project.tasks.map(toUiTask),
+      status: computeProjectStatus(project),
+      totalTasks: totals.total,
+      completedTasks: totals.completed,
+    };
+  });
+
+  res.json({ projects: payload });
+});
+
+router.patch('/projects/:id/restore', requireAuth, async (req, res) => {
+  const existingProject = await prisma.project.findFirst({
+    where: getTrashProjectScopeWhere(req.params.id, req.user.id),
+    include: {
+      tasks: {
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+  });
+
+  if (!existingProject) {
+    return res.status(404).json({ error: 'Project not found in trash' });
+  }
+
+  const project = await prisma.project.update({
+    where: { id: req.params.id },
+    data: { deletedAt: null },
+    include: {
+      tasks: {
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+  });
+
+  const totals = project.tasks.reduce(
+    (acc, task) => {
+      const units = getTaskCompletionUnits(task);
+      acc.total += units.total;
+      acc.completed += units.completed;
+      return acc;
+    },
+    { total: 0, completed: 0 }
+  );
+
+  res.json({
+    project: {
+      ...project,
+      tasks: project.tasks.map(toUiTask),
+      status: computeProjectStatus(project),
+      totalTasks: totals.total,
+      completedTasks: totals.completed,
+    },
+  });
+});
+
+router.delete('/projects/:id/permanent', requireAuth, async (req, res) => {
+  const existingProject = await prisma.project.findFirst({
+    where: getTrashProjectScopeWhere(req.params.id, req.user.id),
+    select: { id: true },
+  });
+
+  if (!existingProject) {
+    return res.status(404).json({ error: 'Project not found in trash' });
+  }
+
+  await prisma.project.delete({
+    where: { id: req.params.id },
+  });
+
+  res.status(204).send();
+});
+
+router.get('/tasks/trash', requireAuth, async (req, res) => {
+  const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
+
+  const tasks = await prisma.task.findMany({
+    where: {
+      deletedAt: { not: null },
+      project: {
+        ...(workspaceId ? { workspaceId } : {}),
+        workspace: {
+          members: {
+            some: { userId: req.user.id },
+          },
+        },
+      },
+    },
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+          deletedAt: true,
+          workspaceId: true,
+          workspace: {
+            select: { id: true, name: true },
+          },
+        },
+      },
+    },
+    orderBy: { deletedAt: 'desc' },
+  });
+
+  res.json({
+    tasks: tasks.map((task) => ({
+      ...toUiTask(task),
+      deletedAt: task.deletedAt,
+      project: task.project,
+    })),
+  });
+});
+
+router.patch('/tasks/:id/restore', requireAuth, async (req, res) => {
+  const existingTask = await prisma.task.findFirst({
+    where: getTrashTaskScopeWhere(req.params.id, req.user.id),
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+          deletedAt: true,
+          workspaceId: true,
+        },
+      },
+    },
+  });
+
+  if (!existingTask) {
+    return res.status(404).json({ error: 'Task not found in trash' });
+  }
+
+  if (existingTask.project?.deletedAt) {
+    return res.status(409).json({
+      error: 'Restore the parent project before restoring this task.',
+    });
+  }
+
+  const task = await prisma.task.update({
+    where: { id: req.params.id },
+    data: { deletedAt: null },
+  });
+
+  res.json({ task: toUiTask(task) });
+});
+
+router.delete('/tasks/:id/permanent', requireAuth, async (req, res) => {
+  const existingTask = await prisma.task.findFirst({
+    where: getTrashTaskScopeWhere(req.params.id, req.user.id),
+    select: { id: true },
+  });
+
+  if (!existingTask) {
+    return res.status(404).json({ error: 'Task not found in trash' });
+  }
+
+  await prisma.task.delete({
+    where: { id: req.params.id },
+  });
+
+  res.status(204).send();
+});
 
 router.get('/projects', requireAuth, async (req, res) => {
   const workspaceId = req.query.workspaceId?.toString();

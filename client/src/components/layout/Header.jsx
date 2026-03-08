@@ -90,6 +90,13 @@ export default function Header({ isMobileMenuOpen, onMenuClick }) {
             </MenuItem>
             <MenuItem>
               <button
+                onClick={() => router.push('/bin')}
+                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-gray-100">
+                Bin
+              </button>
+            </MenuItem>
+            <MenuItem>
+              <button
                 onClick={() => router.push('/profile')}
                 className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-gray-100">
                 Profile

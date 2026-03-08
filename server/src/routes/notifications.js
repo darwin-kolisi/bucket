@@ -3,6 +3,7 @@ import { prisma } from '../lib/auth.js';
 import {
   HIGH_SIGNAL_NOTIFICATION_TYPES,
   notificationInclude,
+  publishNotificationCreated,
   toApiNotification,
   publishNotificationUpdated,
   publishNotificationsReadAll,
@@ -53,11 +54,16 @@ const buildNotificationWhere = ({
   type,
   starredFilter,
   ids,
+  includeDeleted = false,
 }) => {
   const where = {
     userId,
     type: { in: HIGH_SIGNAL_NOTIFICATION_TYPES },
   };
+
+  if (!includeDeleted) {
+    where.deletedAt = null;
+  }
 
   if (unreadFilter === true) {
     where.readAt = null;
@@ -103,6 +109,11 @@ const hasWorkspaceAccess = async (workspaceId, userId) => {
   return Boolean(membership);
 };
 
+const buildNotificationTrashData = () => ({
+  deletedAt: new Date(),
+  readAt: new Date(),
+});
+
 const updateNotificationState = async ({ notificationId, userId, read, starred }) => {
   const existing = await prisma.notification.findFirst({
     where: buildNotificationWhere({
@@ -143,6 +154,47 @@ const updateNotificationState = async ({ notificationId, userId, read, starred }
 
   return { notification: toApiNotification(notification) };
 };
+
+const findTrashedNotification = (notificationId, userId, include = notificationInclude) =>
+  prisma.notification.findFirst({
+    where: {
+      ...buildNotificationWhere({
+        userId,
+        ids: [notificationId],
+        includeDeleted: true,
+      }),
+      deletedAt: { not: null },
+    },
+    include,
+  });
+
+router.get('/notifications/trash', requireAuth, async (req, res) => {
+  const limit = parseLimit(req.query.limit);
+  const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
+
+  const notifications = await prisma.notification.findMany({
+    where: {
+      ...buildNotificationWhere({
+        userId: req.user.id,
+        workspaceId,
+        includeDeleted: true,
+      }),
+      deletedAt: { not: null },
+    },
+    include: notificationInclude,
+    orderBy: { deletedAt: 'desc' },
+    take: limit,
+  });
+
+  res.json({ notifications: notifications.map(toApiNotification) });
+});
 
 router.get('/notifications', requireAuth, async (req, res) => {
   const limit = parseLimit(req.query.limit);
@@ -312,6 +364,24 @@ router.patch('/notifications/:id', requireAuth, async (req, res) => {
   res.json({ notification: result.notification });
 });
 
+router.patch('/notifications/:id/restore', requireAuth, async (req, res) => {
+  const existing = await findTrashedNotification(req.params.id, req.user.id, notificationInclude);
+
+  if (!existing) {
+    return res.status(404).json({ error: 'Notification not found in trash' });
+  }
+
+  const notification = await prisma.notification.update({
+    where: { id: req.params.id },
+    data: { deletedAt: null },
+    include: notificationInclude,
+  });
+
+  publishNotificationCreated(notification);
+
+  res.json({ notification: toApiNotification(notification) });
+});
+
 router.delete('/notifications/bulk', requireAuth, async (req, res) => {
   const ids = normalizeNotificationIds(req.body?.ids);
 
@@ -331,8 +401,13 @@ router.delete('/notifications/bulk', requireAuth, async (req, res) => {
     return res.json({ deletedCount: 0 });
   }
 
-  await prisma.notification.deleteMany({
-    where: { id: { in: notifications.map((notification) => notification.id) } },
+  await prisma.notification.updateMany({
+    where: {
+      id: { in: notifications.map((notification) => notification.id) },
+      userId: req.user.id,
+      deletedAt: null,
+    },
+    data: buildNotificationTrashData(),
   });
 
   for (const notification of notifications) {
@@ -340,6 +415,32 @@ router.delete('/notifications/bulk', requireAuth, async (req, res) => {
   }
 
   res.json({ deletedCount: notifications.length });
+});
+
+router.delete('/notifications/:id/permanent', requireAuth, async (req, res) => {
+  const existing = await prisma.notification.findFirst({
+    where: {
+      ...buildNotificationWhere({
+        userId: req.user.id,
+        ids: [req.params.id],
+        includeDeleted: true,
+      }),
+      deletedAt: { not: null },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!existing) {
+    return res.status(404).json({ error: 'Notification not found in trash' });
+  }
+
+  await prisma.notification.delete({
+    where: { id: req.params.id },
+  });
+
+  res.status(204).send();
 });
 
 router.delete('/notifications', requireAuth, async (req, res) => {
@@ -364,8 +465,13 @@ router.delete('/notifications', requireAuth, async (req, res) => {
     return res.json({ deletedCount: 0, workspaceId });
   }
 
-  await prisma.notification.deleteMany({
-    where: { id: { in: notifications.map((notification) => notification.id) } },
+  await prisma.notification.updateMany({
+    where: {
+      id: { in: notifications.map((notification) => notification.id) },
+      userId: req.user.id,
+      deletedAt: null,
+    },
+    data: buildNotificationTrashData(),
   });
 
   for (const notification of notifications) {
@@ -388,8 +494,9 @@ router.delete('/notifications/:id', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Notification not found' });
   }
 
-  await prisma.notification.delete({
+  await prisma.notification.update({
     where: { id: req.params.id },
+    data: buildNotificationTrashData(),
   });
 
   publishNotificationDeleted(existing.userId, existing.id);
