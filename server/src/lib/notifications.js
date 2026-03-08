@@ -76,8 +76,11 @@ export const publishNotificationUpdated = (notification) => {
   });
 };
 
-export const publishNotificationsReadAll = (userId, readAt) => {
-  publishToUser(userId, 'notifications.read_all', { readAt: readAt.toISOString() });
+export const publishNotificationsReadAll = (userId, readAt, workspaceId = null) => {
+  publishToUser(userId, 'notifications.read_all', {
+    readAt: readAt.toISOString(),
+    workspaceId,
+  });
 };
 
 export const publishNotificationDeleted = (userId, notificationId) => {

@@ -109,20 +109,33 @@ router.patch('/notifications/:id/read', requireAuth, async (req, res) => {
 
 router.patch('/notifications/read-all', requireAuth, async (req, res) => {
   const readAt = new Date();
+  const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
 
   const { count } = await prisma.notification.updateMany({
     where: {
       userId: req.user.id,
       readAt: null,
+      ...(workspaceId ? { project: { workspaceId } } : {}),
     },
     data: { readAt },
   });
 
   if (count > 0) {
-    publishNotificationsReadAll(req.user.id, readAt);
+    publishNotificationsReadAll(req.user.id, readAt, workspaceId);
   }
 
-  res.json({ updatedCount: count, readAt: readAt.toISOString() });
+  res.json({
+    updatedCount: count,
+    readAt: readAt.toISOString(),
+    workspaceId,
+  });
 });
 
 router.delete('/notifications/:id', requireAuth, async (req, res) => {

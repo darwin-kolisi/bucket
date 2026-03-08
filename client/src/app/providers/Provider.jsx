@@ -261,26 +261,40 @@ export function Provider({ children }) {
 
   const markAllNotificationsAsRead = useCallback(async () => {
     try {
-      const response = await fetch(`${apiBase}/api/notifications/read-all`, {
-        method: 'PATCH',
-        credentials: 'include',
-      });
+      const params = new URLSearchParams();
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
+      }
+      const query = params.toString();
+
+      const response = await fetch(
+        `${apiBase}/api/notifications/read-all${query ? `?${query}` : ''}`,
+        {
+          method: 'PATCH',
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) return;
 
       const payload = await response.json().catch(() => null);
       const readAt = payload?.readAt || new Date().toISOString();
+      const payloadWorkspaceId = payload?.workspaceId || null;
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.read
-            ? notification
-            : { ...notification, read: true, readAt }
-        )
+        prev.map((notification) => {
+          if (notification.read) return notification;
+          if (payloadWorkspaceId) {
+            if (notification?.project?.workspaceId !== payloadWorkspaceId) {
+              return notification;
+            }
+          }
+          return { ...notification, read: true, readAt };
+        })
       );
     } catch (error) {
       // noop for now
     }
-  }, [apiBase]);
+  }, [apiBase, selectedWorkspaceId]);
 
   const deleteNotification = useCallback(
     async (notificationId) => {
@@ -339,12 +353,30 @@ export function Provider({ children }) {
     const handleReadAll = (event) => {
       const payload = safeParse(event);
       const readAt = payload?.readAt || new Date().toISOString();
+      const payloadWorkspaceId = payload?.workspaceId || null;
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.read
-            ? notification
-            : { ...notification, read: true, readAt }
-        )
+        prev.map((notification) => {
+          if (notification.read) return notification;
+
+          if (selectedWorkspaceId) {
+            if (
+              payloadWorkspaceId &&
+              payloadWorkspaceId !== selectedWorkspaceId
+            ) {
+              return notification;
+            }
+            return { ...notification, read: true, readAt };
+          }
+
+          if (
+            payloadWorkspaceId &&
+            notification?.project?.workspaceId !== payloadWorkspaceId
+          ) {
+            return notification;
+          }
+
+          return { ...notification, read: true, readAt };
+        })
       );
     };
 
