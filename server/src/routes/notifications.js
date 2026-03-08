@@ -33,11 +33,34 @@ const parsePriority = (rawValue) => {
   return undefined;
 };
 
+const toOptionalTrimmedString = (rawValue) => {
+  if (rawValue === undefined || rawValue === null) return null;
+  const value = rawValue.toString().trim();
+  return value || null;
+};
+
+const hasWorkspaceAccess = async (workspaceId, userId) => {
+  if (!workspaceId || !userId) return false;
+  const membership = await prisma.workspaceMember.findFirst({
+    where: { workspaceId, userId },
+    select: { id: true },
+  });
+  return Boolean(membership);
+};
+
 router.get('/notifications', requireAuth, async (req, res) => {
   const limit = parseLimit(req.query.limit);
   const unreadFilter = parseBoolean(req.query.unread);
   const priority = parsePriority(req.query.priority);
   const type = req.query.type?.toString().trim();
+  const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
+
+  if (workspaceId) {
+    const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
 
   const notifications = await prisma.notification.findMany({
     where: {
@@ -46,6 +69,7 @@ router.get('/notifications', requireAuth, async (req, res) => {
       ...(unreadFilter === false ? { NOT: { readAt: null } } : {}),
       ...(priority ? { priority } : {}),
       ...(type ? { type } : {}),
+      ...(workspaceId ? { project: { workspaceId } } : {}),
     },
     include: notificationInclude,
     orderBy: { createdAt: 'desc' },

@@ -26,6 +26,12 @@ const upsertNotification = (items, notification) => {
   return sortNotificationsByDateDesc(next);
 };
 
+const matchesWorkspace = (notification, workspaceId) => {
+  if (!workspaceId) return true;
+  const notificationWorkspaceId = notification?.project?.workspaceId;
+  return notificationWorkspaceId === workspaceId;
+};
+
 export function useAppContext() {
   const context = useContext(Context);
   if (!context) {
@@ -196,7 +202,13 @@ export function Provider({ children }) {
         setIsNotificationsLoading(true);
       }
       try {
-        const response = await fetch(`${apiBase}/api/notifications?limit=150`, {
+        const params = new URLSearchParams();
+        params.set('limit', '150');
+        if (selectedWorkspaceId) {
+          params.set('workspaceId', selectedWorkspaceId);
+        }
+
+        const response = await fetch(`${apiBase}/api/notifications?${params.toString()}`, {
           credentials: 'include',
         });
         if (!response.ok) {
@@ -217,7 +229,7 @@ export function Provider({ children }) {
         }
       }
     },
-    [apiBase]
+    [apiBase, selectedWorkspaceId]
   );
 
   const markNotificationAsRead = useCallback(
@@ -312,6 +324,7 @@ export function Provider({ children }) {
       const payload = safeParse(event);
       const next = payload?.notification;
       if (!next) return;
+      if (!matchesWorkspace(next, selectedWorkspaceId)) return;
       setNotifications((prev) => upsertNotification(prev, next));
     };
 
@@ -319,6 +332,7 @@ export function Provider({ children }) {
       const payload = safeParse(event);
       const next = payload?.notification;
       if (!next) return;
+      if (!matchesWorkspace(next, selectedWorkspaceId)) return;
       setNotifications((prev) => upsertNotification(prev, next));
     };
 
@@ -363,7 +377,7 @@ export function Provider({ children }) {
       source.removeEventListener('notification.deleted', handleDeleted);
       source.close();
     };
-  }, [apiBase]);
+  }, [apiBase, selectedWorkspaceId]);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');

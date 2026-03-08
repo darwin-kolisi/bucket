@@ -13,7 +13,7 @@ const toUiTaskStatus = (status) => status?.replace(/_/g, '-') || 'todo';
 
 export const notificationInclude = {
   project: {
-    select: { id: true, name: true },
+    select: { id: true, name: true, workspaceId: true },
   },
   task: {
     select: { id: true, title: true, status: true },
