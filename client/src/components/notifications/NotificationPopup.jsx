@@ -242,6 +242,11 @@ export default function NotificationPopup() {
                         <h3 className="text-sm font-medium text-gray-900 truncate">
                           {notification.title}
                         </h3>
+                        {notification.starred && (
+                          <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                            Starred
+                          </span>
+                        )}
                         <span
                           className={`text-xs px-1.5 py-0.5 rounded-full ${getPriorityClass(
                             notification.priority

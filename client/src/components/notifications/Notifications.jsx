@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/app/providers/Provider';
 import AppSelect from '@/components/ui/AppSelect';
@@ -68,9 +68,6 @@ const getTypeIconWrapStyles = (type) => {
   if (normalized.includes('project')) {
     return 'bg-indigo-100 text-indigo-600';
   }
-  if (normalized.includes('note')) {
-    return 'bg-blue-100 text-blue-600';
-  }
   return 'bg-gray-100 text-gray-600';
 };
 
@@ -128,24 +125,6 @@ const getTypeIcon = (type) => {
     );
   }
 
-  if (normalized.includes('note')) {
-    return (
-      <svg
-        className="h-5 w-5 text-blue-500"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth="1.5"
-        stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
-        />
-        <polyline points="14,2 14,8 20,8" />
-      </svg>
-    );
-  }
-
   return (
     <svg
       className="h-5 w-5 text-gray-500"
@@ -162,76 +141,129 @@ const getTypeIcon = (type) => {
   );
 };
 
+const matchesQuery = (notification, query) => {
+  if (!query) return true;
+  return (
+    notification.title?.toLowerCase().includes(query) ||
+    notification.message?.toLowerCase().includes(query) ||
+    notification.project?.name?.toLowerCase().includes(query) ||
+    notification.task?.title?.toLowerCase().includes(query)
+  );
+};
+
 export default function Notifications() {
   const router = useRouter();
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
   const {
     notifications,
     markNotificationAsRead,
+    markNotificationAsUnread,
+    markAllNotificationsAsRead,
+    markSelectedNotificationsAsRead,
+    markSelectedNotificationsAsUnread,
     deleteNotification,
+    deleteSelectedNotifications,
+    deleteAllNotifications,
+    starNotification,
+    unstarNotification,
+    starSelectedNotifications,
+    unstarSelectedNotifications,
     isNotificationsLoading,
   } = useAppContext();
 
   const filterOptions = [
     { label: 'All', value: 'all' },
     { label: 'Unread', value: 'unread' },
+    { label: 'Starred', value: 'starred' },
     { label: 'High Priority', value: 'high' },
   ];
 
   const filteredNotifications = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    if (filter === 'unread') {
-      return notifications.filter((notification) => {
-        if (notification.read) return false;
-        if (!normalizedQuery) return true;
-        return (
-          notification.title?.toLowerCase().includes(normalizedQuery) ||
-          notification.message?.toLowerCase().includes(normalizedQuery) ||
-          notification.project?.name?.toLowerCase().includes(normalizedQuery) ||
-          notification.task?.title?.toLowerCase().includes(normalizedQuery)
-        );
-      });
-    }
-    if (filter === 'high') {
-      return notifications.filter((notification) => {
-        if (notification.priority !== 'high') return false;
-        if (!normalizedQuery) return true;
-        return (
-          notification.title?.toLowerCase().includes(normalizedQuery) ||
-          notification.message?.toLowerCase().includes(normalizedQuery) ||
-          notification.project?.name?.toLowerCase().includes(normalizedQuery) ||
-          notification.task?.title?.toLowerCase().includes(normalizedQuery)
-        );
-      });
-    }
     return notifications.filter((notification) => {
-      if (!normalizedQuery) return true;
-      return (
-        notification.title?.toLowerCase().includes(normalizedQuery) ||
-        notification.message?.toLowerCase().includes(normalizedQuery) ||
-        notification.project?.name?.toLowerCase().includes(normalizedQuery) ||
-        notification.task?.title?.toLowerCase().includes(normalizedQuery)
-      );
+      if (filter === 'unread' && notification.read) return false;
+      if (filter === 'starred' && !notification.starred) return false;
+      if (filter === 'high' && notification.priority !== 'high') return false;
+      return matchesQuery(notification, normalizedQuery);
     });
   }, [filter, notifications, searchQuery]);
 
+  useEffect(() => {
+    setSelectedIds((prev) =>
+      prev.filter((id) => filteredNotifications.some((notification) => notification.id === id))
+    );
+  }, [filteredNotifications]);
+
+  const selectedNotifications = useMemo(
+    () => filteredNotifications.filter((notification) => selectedIds.includes(notification.id)),
+    [filteredNotifications, selectedIds]
+  );
+
+  const allVisibleSelected =
+    filteredNotifications.length > 0 &&
+    filteredNotifications.every((notification) => selectedIds.includes(notification.id));
+  const selectedUnreadCount = selectedNotifications.filter((notification) => !notification.read)
+    .length;
+  const selectedStarredCount = selectedNotifications.filter((notification) => notification.starred)
+    .length;
+
   const openSource = (notification) => {
-    if (notification?.type?.toString().startsWith('note_')) {
-      const params = new URLSearchParams();
-      if (notification?.project?.id) {
-        params.set('projectId', notification.project.id);
-      }
-      if (notification?.task?.id) {
-        params.set('taskId', notification.task.id);
-      }
-      const query = params.toString();
-      router.push(query ? `/notes?${query}` : '/notes');
-      return;
-    }
     if (notification?.project?.id) {
       router.push(`/projects/${notification.project.id}`);
+      return;
+    }
+    router.push('/notifications');
+  };
+
+  const toggleSelection = (notificationId) => {
+    setSelectedIds((prev) =>
+      prev.includes(notificationId)
+        ? prev.filter((id) => id !== notificationId)
+        : [...prev, notificationId]
+    );
+  };
+
+  const toggleSelectAllVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedIds([]);
+      return;
+    }
+    setSelectedIds(filteredNotifications.map((notification) => notification.id));
+  };
+
+  const handleSelectedReadToggle = async () => {
+    if (selectedIds.length === 0) return;
+    if (selectedUnreadCount > 0) {
+      await markSelectedNotificationsAsRead(selectedIds);
+      return;
+    }
+    await markSelectedNotificationsAsUnread(selectedIds);
+  };
+
+  const handleSelectedStarToggle = async () => {
+    if (selectedIds.length === 0) return;
+    if (selectedStarredCount === selectedIds.length) {
+      await unstarSelectedNotifications(selectedIds);
+      return;
+    }
+    await starSelectedNotifications(selectedIds);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    const deleted = await deleteSelectedNotifications(selectedIds);
+    if (deleted) {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    const deleted = await deleteAllNotifications();
+    if (deleted) {
+      setSelectedIds([]);
     }
   };
 
@@ -239,11 +271,12 @@ export default function Notifications() {
     <div className="mx-auto max-w-[1400px] p-6">
       <section className="surface-card overflow-hidden rounded-2xl border border-gray-200 bg-white">
         <div className="border-b border-gray-200 p-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-gray-900">Activity Feed</h2>
               <p className="mt-0.5 text-xs text-gray-500">
                 {filteredNotifications.length} matching items
+                {selectedIds.length > 0 ? ` • ${selectedIds.length} selected` : ''}
               </p>
             </div>
 
@@ -256,12 +289,65 @@ export default function Notifications() {
                 className="h-10 w-full min-w-[240px] rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
               />
               <div className="w-full min-w-[170px] sm:w-auto">
-                <AppSelect
-                  value={filter}
-                  onChange={setFilter}
-                  options={filterOptions}
-                />
+                <AppSelect value={filter} onChange={setFilter} options={filterOptions} />
               </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50/80 p-3">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <label className="flex items-center gap-3 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleSelectAllVisible}
+                  className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-400"
+                />
+                Select all visible
+              </label>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={markAllNotificationsAsRead}
+                  disabled={!notifications.some((notification) => !notification.read)}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
+                  Mark all read
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteAll}
+                  disabled={notifications.length === 0}
+                  className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50">
+                  Delete all
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSelectedReadToggle}
+                disabled={selectedIds.length === 0}
+                className="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">
+                {selectedUnreadCount > 0 ? 'Mark selected read' : 'Mark selected unread'}
+              </button>
+              <button
+                type="button"
+                onClick={handleSelectedStarToggle}
+                disabled={selectedIds.length === 0}
+                className="rounded-lg border border-amber-200 bg-white px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50">
+                {selectedStarredCount === selectedIds.length && selectedIds.length > 0
+                  ? 'Unstar selected'
+                  : 'Star selected'}
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteSelected}
+                disabled={selectedIds.length === 0}
+                className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50">
+                Delete selected
+              </button>
             </div>
           </div>
         </div>
@@ -275,9 +361,19 @@ export default function Notifications() {
             filteredNotifications.map((notification) => (
               <article
                 key={notification.id}
-                className={`grid gap-3 p-4 transition-colors md:grid-cols-[auto_minmax(0,1fr)_auto] ${
+                className={`grid gap-3 p-4 transition-colors md:grid-cols-[auto_auto_minmax(0,1fr)_auto] ${
                   !notification.read ? 'bg-gray-100/70' : 'bg-white'
                 } hover:bg-gray-50`}>
+                <div className="pt-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(notification.id)}
+                    onChange={() => toggleSelection(notification.id)}
+                    aria-label={`Select ${notification.title}`}
+                    className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-400"
+                  />
+                </div>
+
                 <div
                   className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg ${getTypeIconWrapStyles(
                     notification.type
@@ -287,15 +383,18 @@ export default function Notifications() {
 
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold text-gray-900">
-                      {notification.title}
-                    </h3>
+                    <h3 className="text-sm font-semibold text-gray-900">{notification.title}</h3>
                     <span
                       className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${getPriorityStyles(
                         notification.priority
                       )}`}>
                       {notification.priority}
                     </span>
+                    {notification.starred && (
+                      <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                        Starred
+                      </span>
+                    )}
                     {!notification.read && (
                       <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700">
                         Unread
@@ -335,15 +434,33 @@ export default function Notifications() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {!notification.read && (
-                      <button
-                        onClick={() => markNotificationAsRead(notification.id)}
-                        className="rounded-lg border border-blue-200 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">
-                        Mark read
-                      </button>
-                    )}
+                  <div className="flex flex-wrap items-center justify-end gap-2">
                     <button
+                      type="button"
+                      onClick={() =>
+                        notification.starred
+                          ? unstarNotification(notification.id)
+                          : starNotification(notification.id)
+                      }
+                      className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+                        notification.starred
+                          ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                          : 'border-gray-200 text-gray-700 hover:bg-gray-100'
+                      }`}>
+                      {notification.starred ? 'Unstar' : 'Star'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        notification.read
+                          ? markNotificationAsUnread(notification.id)
+                          : markNotificationAsRead(notification.id)
+                      }
+                      className="rounded-lg border border-blue-200 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">
+                      {notification.read ? 'Mark unread' : 'Mark read'}
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => deleteNotification(notification.id)}
                       className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50">
                       Delete

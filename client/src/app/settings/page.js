@@ -43,10 +43,7 @@ export default function SettingsPage() {
     value: option,
   }));
 
-  const profileEmail = useMemo(
-    () => account?.email || 'Not available',
-    [account],
-  );
+  const profileEmail = useMemo(() => account?.email || 'Not available', [account]);
 
   useEffect(() => {
     const storedLanguage = window.localStorage.getItem(LANGUAGE_KEY);
@@ -104,7 +101,7 @@ export default function SettingsPage() {
     }
 
     const confirmed = window.confirm(
-      'This permanently deletes your account and workspace data. Continue?',
+      'This permanently deletes your account and workspace data. Continue?'
     );
 
     if (!confirmed) {
@@ -133,7 +130,6 @@ export default function SettingsPage() {
   return (
     <Layout>
       <div className="mx-auto max-w-[1400px] p-6">
-        {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
@@ -146,12 +142,9 @@ export default function SettingsPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Appearance */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-900">Appearance</h2>
-            <p className="mt-0.5 text-xs text-gray-500">
-              Choose your interface theme
-            </p>
+            <p className="mt-0.5 text-xs text-gray-500">Choose your interface theme</p>
 
             <div className="mt-5 grid grid-cols-3 gap-3">
               <button
@@ -190,19 +183,14 @@ export default function SettingsPage() {
                 <div className="mb-2 flex h-12 w-full items-center justify-center rounded border border-gray-300 bg-gradient-to-r from-white to-gray-800">
                   <div className="h-4 w-4 rounded bg-gradient-to-r from-gray-200 to-gray-600"></div>
                 </div>
-                <span className="text-xs font-medium text-gray-900">
-                  System
-                </span>
+                <span className="text-xs font-medium text-gray-900">System</span>
               </button>
             </div>
           </div>
 
-          {/* Preferences */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-900">Preferences</h2>
-            <p className="mt-0.5 text-xs text-gray-500">
-              Language and timezone settings
-            </p>
+            <p className="mt-0.5 text-xs text-gray-500">Language and timezone settings</p>
 
             <div className="mt-5 space-y-4">
               <label className="block">
@@ -230,23 +218,16 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Danger Zone */}
         <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-900">
-            Delete Account
-          </h2>
+          <h2 className="text-sm font-semibold text-gray-900">Delete Account</h2>
           <p className="mt-0.5 text-xs text-gray-500">
-            Permanently delete your account and all data for{' '}
-            {isLoadingAccount ? '...' : profileEmail}
+            Permanently delete your account and all data for {isLoadingAccount ? '...' : profileEmail}
           </p>
 
           <div className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-red-900">
-              Warning
-            </p>
+            <p className="text-xs font-medium uppercase tracking-wide text-red-900">Warning</p>
             <p className="mt-1 text-sm text-red-800">
-              This action cannot be undone. All projects, tasks, and workspace
-              data will be permanently deleted.
+              This action cannot be undone. All projects, tasks, and workspace data will be permanently deleted.
             </p>
 
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">

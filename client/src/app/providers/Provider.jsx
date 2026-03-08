@@ -4,8 +4,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 const Context = createContext();
 const WORKSPACE_STORAGE_KEY = 'bucket-workspace-id';
 
-const sortNotificationsByDateDesc = (items) =>
+const sortNotifications = (items) =>
   [...items].sort((left, right) => {
+    const leftStarred = left?.starredAt ? new Date(left.starredAt).getTime() : 0;
+    const rightStarred = right?.starredAt ? new Date(right.starredAt).getTime() : 0;
+    if (rightStarred !== leftStarred) {
+      return rightStarred - leftStarred;
+    }
+
     const leftDate = left?.createdAt ? new Date(left.createdAt).getTime() : 0;
     const rightDate = right?.createdAt ? new Date(right.createdAt).getTime() : 0;
     return rightDate - leftDate;
@@ -18,13 +24,16 @@ const upsertNotification = (items, notification) => {
 
   const index = items.findIndex((item) => item.id === notification.id);
   if (index === -1) {
-    return sortNotificationsByDateDesc([notification, ...items]);
+    return sortNotifications([notification, ...items]);
   }
 
   const next = [...items];
   next[index] = notification;
-  return sortNotificationsByDateDesc(next);
+  return sortNotifications(next);
 };
+
+const upsertNotifications = (items, notifications) =>
+  notifications.reduce((next, notification) => upsertNotification(next, notification), items);
 
 const matchesWorkspace = (notification, workspaceId) => {
   if (!workspaceId) return true;
@@ -217,7 +226,7 @@ export function Provider({ children }) {
         }
         const data = await response.json();
         setNotifications(
-          sortNotificationsByDateDesc(
+          sortNotifications(
             Array.isArray(data?.notifications) ? data.notifications : []
           )
         );
@@ -232,31 +241,99 @@ export function Provider({ children }) {
     [apiBase, selectedWorkspaceId]
   );
 
-  const markNotificationAsRead = useCallback(
-    async (notificationId) => {
-      if (!notificationId) return;
+  const updateNotification = useCallback(
+    async (notificationId, updates) => {
+      if (!notificationId) return null;
       try {
-        const response = await fetch(
-          `${apiBase}/api/notifications/${notificationId}/read`,
-          {
-            method: 'PATCH',
-            credentials: 'include',
-          }
-        );
+        const response = await fetch(`${apiBase}/api/notifications/${notificationId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(updates),
+        });
 
-        if (!response.ok) return;
+        if (!response.ok) return null;
 
         const data = await response.json();
         if (data?.notification) {
-          setNotifications((prev) =>
-            upsertNotification(prev, data.notification)
-          );
+          setNotifications((prev) => upsertNotification(prev, data.notification));
+          return data.notification;
         }
       } catch (error) {
         // noop for now
       }
+      return null;
     },
     [apiBase]
+  );
+
+  const updateSelectedNotifications = useCallback(
+    async (ids, updates) => {
+      const normalizedIds = [...new Set((ids || []).filter(Boolean))];
+      if (normalizedIds.length === 0) return [];
+
+      try {
+        const response = await fetch(`${apiBase}/api/notifications`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ ids: normalizedIds, ...updates }),
+        });
+
+        if (!response.ok) return [];
+
+        const data = await response.json();
+        const nextNotifications = Array.isArray(data?.notifications) ? data.notifications : [];
+        if (nextNotifications.length > 0) {
+          setNotifications((prev) => upsertNotifications(prev, nextNotifications));
+        }
+        return nextNotifications;
+      } catch (error) {
+        // noop for now
+      }
+      return [];
+    },
+    [apiBase]
+  );
+
+  const markNotificationAsRead = useCallback(
+    async (notificationId) => updateNotification(notificationId, { read: true }),
+    [updateNotification]
+  );
+
+  const markNotificationAsUnread = useCallback(
+    async (notificationId) => updateNotification(notificationId, { read: false }),
+    [updateNotification]
+  );
+
+  const starNotification = useCallback(
+    async (notificationId) => updateNotification(notificationId, { starred: true }),
+    [updateNotification]
+  );
+
+  const unstarNotification = useCallback(
+    async (notificationId) => updateNotification(notificationId, { starred: false }),
+    [updateNotification]
+  );
+
+  const markSelectedNotificationsAsRead = useCallback(
+    async (ids) => updateSelectedNotifications(ids, { read: true }),
+    [updateSelectedNotifications]
+  );
+
+  const markSelectedNotificationsAsUnread = useCallback(
+    async (ids) => updateSelectedNotifications(ids, { read: false }),
+    [updateSelectedNotifications]
+  );
+
+  const starSelectedNotifications = useCallback(
+    async (ids) => updateSelectedNotifications(ids, { starred: true }),
+    [updateSelectedNotifications]
+  );
+
+  const unstarSelectedNotifications = useCallback(
+    async (ids) => updateSelectedNotifications(ids, { starred: false }),
+    [updateSelectedNotifications]
   );
 
   const markAllNotificationsAsRead = useCallback(async () => {
@@ -316,6 +393,63 @@ export function Provider({ children }) {
     },
     [apiBase]
   );
+
+  const deleteSelectedNotifications = useCallback(
+    async (ids) => {
+      const normalizedIds = [...new Set((ids || []).filter(Boolean))];
+      if (normalizedIds.length === 0) return false;
+
+      try {
+        const response = await fetch(`${apiBase}/api/notifications/bulk`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ ids: normalizedIds }),
+        });
+
+        if (!response.ok) return false;
+
+        setNotifications((prev) =>
+          prev.filter((notification) => !normalizedIds.includes(notification.id))
+        );
+        return true;
+      } catch (error) {
+        // noop for now
+      }
+
+      return false;
+    },
+    [apiBase]
+  );
+
+  const deleteAllNotifications = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (selectedWorkspaceId) {
+        params.set('workspaceId', selectedWorkspaceId);
+      }
+      const query = params.toString();
+
+      const response = await fetch(`${apiBase}/api/notifications${query ? `?${query}` : ''}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) return false;
+
+      setNotifications((prev) =>
+        prev.filter((notification) => {
+          if (!selectedWorkspaceId) return false;
+          return notification?.project?.workspaceId !== selectedWorkspaceId;
+        })
+      );
+      return true;
+    } catch (error) {
+      // noop for now
+    }
+
+    return false;
+  }, [apiBase, selectedWorkspaceId]);
 
   useEffect(() => {
     refreshNotifications();
@@ -487,8 +621,17 @@ export function Provider({ children }) {
     isNotificationsRealtimeConnected,
     refreshNotifications,
     markNotificationAsRead,
+    markNotificationAsUnread,
     markAllNotificationsAsRead,
+    markSelectedNotificationsAsRead,
+    markSelectedNotificationsAsUnread,
+    starNotification,
+    unstarNotification,
+    starSelectedNotifications,
+    unstarSelectedNotifications,
     deleteNotification,
+    deleteSelectedNotifications,
+    deleteAllNotifications,
   };
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
