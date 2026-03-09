@@ -7,10 +7,22 @@ import {
 import { requireAuth } from './utils.js';
 
 const router = express.Router();
+const WORKSPACE_NAME_MAX_LENGTH = 120;
+
+const getPersonalWorkspaceName = (name) => {
+  const firstName = name?.toString().trim().split(/\s+/)[0];
+  if (!firstName) return 'Personal Workspace';
+  return `${firstName}'s Workspace`;
+};
 
 const getDefaultWorkspace = async (userId) => {
   const membership = await prisma.workspaceMember.findFirst({
-    where: { userId },
+    where: {
+      userId,
+      workspace: {
+        deletedAt: null,
+      },
+    },
     orderBy: { createdAt: 'asc' },
     include: { workspace: true },
   });
@@ -22,12 +34,9 @@ const ensureWorkspace = async (user) => {
   if (existing) {
     return existing;
   }
-  const workspaceName = user?.name
-    ? `${user.name.split(' ')[0] || 'Personal'} Workspace`
-    : 'Personal Workspace';
   return prisma.workspace.create({
     data: {
-      name: workspaceName,
+      name: getPersonalWorkspaceName(user?.name),
       ownerId: user.id,
       members: {
         create: {
@@ -42,10 +51,39 @@ const ensureWorkspace = async (user) => {
 const hasWorkspaceAccess = async (workspaceId, userId) => {
   if (!workspaceId || !userId) return false;
   const membership = await prisma.workspaceMember.findFirst({
-    where: { workspaceId, userId },
+    where: {
+      workspaceId,
+      userId,
+      workspace: {
+        deletedAt: null,
+      },
+    },
     select: { id: true },
   });
   return Boolean(membership);
+};
+
+const getWorkspaceMembership = async (workspaceId, userId) => {
+  if (!workspaceId || !userId) return null;
+  return prisma.workspaceMember.findFirst({
+    where: {
+      workspaceId,
+      userId,
+      workspace: {
+        deletedAt: null,
+      },
+    },
+    select: {
+      role: true,
+      workspace: {
+        select: {
+          id: true,
+          name: true,
+          ownerId: true,
+        },
+      },
+    },
+  });
 };
 
 const projectScopeWhere = (projectId, userId) => ({
@@ -1429,22 +1467,142 @@ router.delete('/notes/:id', requireAuth, async (req, res) => {
 
 router.get('/workspaces', requireAuth, async (req, res) => {
   const memberships = await prisma.workspaceMember.findMany({
-    where: { userId: req.user.id },
+    where: {
+      userId: req.user.id,
+      workspace: {
+        deletedAt: null,
+      },
+    },
     include: { workspace: true },
     orderBy: { createdAt: 'asc' },
   });
-  const workspaces = memberships.map((member) => member.workspace);
+
+  let workspaces = memberships.map((member) => member.workspace);
+  if (workspaces.length === 0) {
+    const defaultWorkspace = await ensureWorkspace(req.user);
+    if (defaultWorkspace) {
+      workspaces = [defaultWorkspace];
+    }
+  }
+
   res.json({ workspaces });
 });
 
-router.post('/workspaces', requireAuth, async (req, res) => {
-  const { name } = req.body || {};
-  if (!name?.trim()) {
+router.patch('/workspaces/:id', requireAuth, async (req, res) => {
+  const workspaceId = req.params.id?.toString().trim();
+  if (!workspaceId) {
+    return res.status(400).json({ error: 'Workspace id is required' });
+  }
+
+  const nextName = req.body?.name?.toString().trim();
+  if (!nextName) {
     return res.status(400).json({ error: 'Workspace name is required' });
+  }
+  if (nextName.length > WORKSPACE_NAME_MAX_LENGTH) {
+    return res
+      .status(400)
+      .json({ error: `Workspace name must be ${WORKSPACE_NAME_MAX_LENGTH} characters or less` });
+  }
+
+  const membership = await getWorkspaceMembership(workspaceId, req.user.id);
+  if (!membership?.workspace) {
+    return res.status(404).json({ error: 'Workspace not found' });
+  }
+  if (membership.role !== 'owner' || membership.workspace.ownerId !== req.user.id) {
+    return res.status(403).json({ error: 'Only workspace owners can rename this workspace' });
+  }
+
+  const workspace = await prisma.workspace.update({
+    where: { id: workspaceId },
+    data: { name: nextName },
+  });
+
+  return res.json({ workspace });
+});
+
+router.delete('/workspaces/:id', requireAuth, async (req, res) => {
+  const workspaceId = req.params.id?.toString().trim();
+  if (!workspaceId) {
+    return res.status(400).json({ error: 'Workspace id is required' });
+  }
+
+  const membership = await getWorkspaceMembership(workspaceId, req.user.id);
+  if (!membership?.workspace) {
+    return res.status(404).json({ error: 'Workspace not found' });
+  }
+  if (membership.role !== 'owner' || membership.workspace.ownerId !== req.user.id) {
+    return res.status(403).json({ error: 'Only workspace owners can delete this workspace' });
+  }
+
+  const [projectsCount, tasksCount] = await prisma.$transaction([
+    prisma.project.count({
+      where: {
+        workspaceId,
+        deletedAt: null,
+      },
+    }),
+    prisma.task.count({
+      where: {
+        deletedAt: null,
+        project: {
+          deletedAt: null,
+          workspaceId,
+        },
+      },
+    }),
+  ]);
+
+  const hasActiveContent = projectsCount > 0 || tasksCount > 0;
+  const force = req.body?.force === true;
+  const confirmation = req.body?.confirmation?.toString().trim() || '';
+
+  if (hasActiveContent && (!force || confirmation !== membership.workspace.name)) {
+    return res.status(409).json({
+      error:
+        'Workspace has active projects/tasks. Confirm deletion to continue.',
+      requiresConfirmation: true,
+      safeguards: {
+        workspaceName: membership.workspace.name,
+        activeProjects: projectsCount,
+        activeTasks: tasksCount,
+      },
+    });
+  }
+
+  await prisma.workspace.delete({
+    where: { id: workspaceId },
+  });
+
+  const remainingMemberships = await prisma.workspaceMember.findMany({
+    where: {
+      userId: req.user.id,
+      workspace: {
+        deletedAt: null,
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+    select: { workspaceId: true },
+  });
+
+  return res.json({
+    deletedWorkspaceId: workspaceId,
+    nextWorkspaceId: remainingMemberships[0]?.workspaceId || '',
+  });
+});
+
+router.post('/workspaces', requireAuth, async (req, res) => {
+  const name = req.body?.name?.toString().trim();
+  if (!name) {
+    return res.status(400).json({ error: 'Workspace name is required' });
+  }
+  if (name.length > WORKSPACE_NAME_MAX_LENGTH) {
+    return res
+      .status(400)
+      .json({ error: `Workspace name must be ${WORKSPACE_NAME_MAX_LENGTH} characters or less` });
   }
   const workspace = await prisma.workspace.create({
     data: {
-      name: name.trim(),
+      name,
       ownerId: req.user.id,
       members: {
         create: { userId: req.user.id, role: 'owner' },
