@@ -205,6 +205,100 @@ export function Provider({ children }) {
     [apiBase]
   );
 
+  const renameWorkspace = useCallback(
+    async (workspaceId, nextName) => {
+      const normalizedWorkspaceId = workspaceId?.toString().trim();
+      const normalizedName = nextName?.toString().trim();
+
+      if (!normalizedWorkspaceId || !normalizedName) {
+        return { workspace: null, error: 'Workspace name is required.' };
+      }
+
+      try {
+        const response = await fetch(`${apiBase}/api/workspaces/${normalizedWorkspaceId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name: normalizedName }),
+        });
+
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          return {
+            workspace: null,
+            error: payload?.error || 'Unable to rename workspace.',
+          };
+        }
+
+        const workspace = payload?.workspace || null;
+        if (!workspace?.id) {
+          return { workspace: null, error: 'Unable to rename workspace.' };
+        }
+
+        setWorkspaces((prev) =>
+          prev.map((existingWorkspace) =>
+            existingWorkspace.id === workspace.id ? workspace : existingWorkspace
+          )
+        );
+
+        return { workspace, error: null };
+      } catch (error) {
+        return { workspace: null, error: 'Unable to rename workspace.' };
+      }
+    },
+    [apiBase]
+  );
+
+  const deleteWorkspace = useCallback(
+    async (workspaceId, options = {}) => {
+      const normalizedWorkspaceId = workspaceId?.toString().trim();
+      if (!normalizedWorkspaceId) {
+        return { deleted: false, error: 'Workspace id is required.' };
+      }
+
+      const force = options?.force === true;
+      const confirmation = options?.confirmation?.toString().trim() || '';
+
+      try {
+        const response = await fetch(`${apiBase}/api/workspaces/${normalizedWorkspaceId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ force, confirmation }),
+        });
+
+        const payload = await response.json().catch(() => null);
+
+        if (response.status === 409 && payload?.requiresConfirmation) {
+          return {
+            deleted: false,
+            requiresConfirmation: true,
+            safeguards: payload?.safeguards || null,
+            error: payload?.error || 'Workspace requires confirmation before deletion.',
+          };
+        }
+
+        if (!response.ok) {
+          return {
+            deleted: false,
+            error: payload?.error || 'Unable to delete workspace.',
+          };
+        }
+
+        await refreshWorkspaces();
+
+        return {
+          deleted: true,
+          deletedWorkspaceId: payload?.deletedWorkspaceId || normalizedWorkspaceId,
+          nextWorkspaceId: payload?.nextWorkspaceId || '',
+        };
+      } catch (error) {
+        return { deleted: false, error: 'Unable to delete workspace.' };
+      }
+    },
+    [apiBase, refreshWorkspaces]
+  );
+
   const refreshNotifications = useCallback(
     async ({ silent = false } = {}) => {
       if (!silent) {
@@ -610,6 +704,8 @@ export function Provider({ children }) {
     setSelectedWorkspaceId,
     refreshWorkspaces,
     createWorkspace,
+    renameWorkspace,
+    deleteWorkspace,
     projectsView,
     setProjectsView,
     theme,

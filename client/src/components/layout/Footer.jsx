@@ -21,7 +21,7 @@ export default function Footer({ isCollapsed, isMobile }) {
                 BUCKET
               </h3>
               <p className="max-w-[250px] text-sm leading-relaxed text-gray-600">
-                Simple project management for a focused mind
+                ☆⋆｡𖦹°‧ᯓ★
               </p>
             </div>
           </div>

@@ -17,6 +17,11 @@ const trustedOrigins = (process.env.CLIENT_URL || '')
   .filter(Boolean);
 const authBaseURL = process.env.BETTER_AUTH_URL || 'http://localhost:4000';
 const useSecureCrossSiteCookies = authBaseURL.startsWith('https://');
+const getPersonalWorkspaceName = (name) => {
+  const firstName = name?.toString().trim().split(/\s+/)[0];
+  if (!firstName) return 'Personal Workspace';
+  return `${firstName}'s Workspace`;
+};
 
 export const auth = betterAuth({
   baseURL: authBaseURL,
@@ -49,12 +54,9 @@ export const auth = betterAuth({
         return data;
       },
       afterCreate: async (user) => {
-        const workspaceName = user?.name
-          ? `${user.name.split(' ')[0] || 'Personal'} Workspace`
-          : 'Personal Workspace';
         await prisma.workspace.create({
           data: {
-            name: workspaceName,
+            name: getPersonalWorkspaceName(user?.name),
             ownerId: user.id,
             members: {
               create: {

@@ -104,6 +104,8 @@ export default function Sidebar({
     selectedWorkspaceId,
     setSelectedWorkspaceId,
     createWorkspace,
+    renameWorkspace,
+    deleteWorkspace,
     isWorkspacesLoading,
   } = useAppContext();
   const { pushError } = useErrorToast();
@@ -111,6 +113,12 @@ export default function Sidebar({
   const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [isRenameWorkspaceModalOpen, setIsRenameWorkspaceModalOpen] = useState(false);
+  const [isDeleteWorkspaceModalOpen, setIsDeleteWorkspaceModalOpen] = useState(false);
+  const [isManagingWorkspace, setIsManagingWorkspace] = useState(false);
+  const [renamedWorkspaceName, setRenamedWorkspaceName] = useState('');
+  const [deleteConfirmationInput, setDeleteConfirmationInput] = useState('');
+  const [deleteSafeguards, setDeleteSafeguards] = useState(null);
   const [selectedWorkspaceTemplateId, setSelectedWorkspaceTemplateId] = useState(
     WORKSPACE_TEMPLATES[0].id
   );
@@ -204,6 +212,8 @@ export default function Sidebar({
     WORKSPACE_TEMPLATES.find(
       (workspaceTemplate) => workspaceTemplate.id === selectedWorkspaceTemplateId
     ) || WORKSPACE_TEMPLATES[0];
+  const isAnyWorkspaceModalOpen =
+    isWorkspaceModalOpen || isRenameWorkspaceModalOpen || isDeleteWorkspaceModalOpen;
 
   useEffect(() => {
     setIsClient(true);
@@ -224,20 +234,37 @@ export default function Sidebar({
   }, []);
 
   useEffect(() => {
-    if (!isWorkspaceModalOpen) return;
+    if (!isAnyWorkspaceModalOpen) return;
 
     const handleEscape = (event) => {
-      if (event.key === 'Escape' && !isCreatingWorkspace) {
+      if (event.key !== 'Escape') return;
+      if (isCreatingWorkspace || isManagingWorkspace) return;
+      if (isDeleteWorkspaceModalOpen) {
+        setIsDeleteWorkspaceModalOpen(false);
+        return;
+      }
+      if (isRenameWorkspaceModalOpen) {
+        setIsRenameWorkspaceModalOpen(false);
+        return;
+      }
+      if (isWorkspaceModalOpen) {
         setIsWorkspaceModalOpen(false);
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isWorkspaceModalOpen, isCreatingWorkspace]);
+  }, [
+    isAnyWorkspaceModalOpen,
+    isCreatingWorkspace,
+    isManagingWorkspace,
+    isDeleteWorkspaceModalOpen,
+    isRenameWorkspaceModalOpen,
+    isWorkspaceModalOpen,
+  ]);
 
   useEffect(() => {
-    if (!isWorkspaceModalOpen || !isClient) return;
+    if (!isAnyWorkspaceModalOpen || !isClient) return;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -245,7 +272,7 @@ export default function Sidebar({
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [isWorkspaceModalOpen, isClient]);
+  }, [isAnyWorkspaceModalOpen, isClient]);
 
   const closeWorkspaceModal = () => {
     if (isCreatingWorkspace) return;
@@ -258,6 +285,37 @@ export default function Sidebar({
     setNewWorkspaceName(defaultTemplate.defaultName);
     setIsWorkspaceMenuOpen(false);
     setIsWorkspaceModalOpen(true);
+  };
+
+  const closeRenameWorkspaceModal = () => {
+    if (isManagingWorkspace) return;
+    setIsRenameWorkspaceModalOpen(false);
+  };
+
+  const openRenameWorkspaceModal = () => {
+    if (!selectedWorkspace) {
+      pushError('Select a workspace first.');
+      return;
+    }
+    setRenamedWorkspaceName(selectedWorkspace.name || '');
+    setIsWorkspaceMenuOpen(false);
+    setIsRenameWorkspaceModalOpen(true);
+  };
+
+  const closeDeleteWorkspaceModal = () => {
+    if (isManagingWorkspace) return;
+    setIsDeleteWorkspaceModalOpen(false);
+  };
+
+  const openDeleteWorkspaceModal = () => {
+    if (!selectedWorkspace) {
+      pushError('Select a workspace first.');
+      return;
+    }
+    setDeleteSafeguards(null);
+    setDeleteConfirmationInput('');
+    setIsWorkspaceMenuOpen(false);
+    setIsDeleteWorkspaceModalOpen(true);
   };
 
   const handleWorkspaceTemplateSelect = (template) => {
@@ -295,6 +353,68 @@ export default function Sidebar({
     }
 
     setIsWorkspaceModalOpen(false);
+  };
+
+  const handleRenameWorkspace = async () => {
+    if (!selectedWorkspace) {
+      pushError('Select a workspace first.');
+      return;
+    }
+
+    const trimmedName = renamedWorkspaceName.trim();
+    if (!trimmedName) {
+      pushError('Workspace name is required.');
+      return;
+    }
+
+    setIsManagingWorkspace(true);
+    const result = await renameWorkspace(selectedWorkspace.id, trimmedName);
+    setIsManagingWorkspace(false);
+
+    if (result?.workspace) {
+      setIsRenameWorkspaceModalOpen(false);
+      return;
+    }
+
+    pushError(result?.error || 'Unable to rename workspace. Please try again.');
+  };
+
+  const handleDeleteWorkspace = async () => {
+    if (!selectedWorkspace) {
+      pushError('Select a workspace first.');
+      return;
+    }
+
+    if (
+      deleteSafeguards?.workspaceName &&
+      deleteConfirmationInput.trim() !== deleteSafeguards.workspaceName
+    ) {
+      pushError(`Type "${deleteSafeguards.workspaceName}" to confirm deletion.`);
+      return;
+    }
+
+    setIsManagingWorkspace(true);
+    const result = deleteSafeguards
+      ? await deleteWorkspace(selectedWorkspace.id, {
+          force: true,
+          confirmation: deleteConfirmationInput.trim(),
+        })
+      : await deleteWorkspace(selectedWorkspace.id);
+    setIsManagingWorkspace(false);
+
+    if (result?.deleted) {
+      setDeleteSafeguards(null);
+      setDeleteConfirmationInput('');
+      setIsDeleteWorkspaceModalOpen(false);
+      return;
+    }
+
+    if (result?.requiresConfirmation) {
+      setDeleteSafeguards(result.safeguards || null);
+      return;
+    }
+
+    pushError(result?.error || 'Unable to delete workspace. Please try again.');
   };
 
   const showFull = isMobile || !isCollapsed;
@@ -430,6 +550,143 @@ export default function Sidebar({
     </div>
   ) : null;
 
+  const renameWorkspaceModal = isRenameWorkspaceModalOpen ? (
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-4"
+      onClick={closeRenameWorkspaceModal}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Rename workspace"
+        onClick={(event) => event.stopPropagation()}
+        className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div className="border-b border-gray-200 px-5 py-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            Workspace settings
+          </p>
+          <h2 className="mt-1 text-lg font-semibold text-gray-900">
+            Rename workspace
+          </h2>
+        </div>
+        <div className="space-y-2 px-5 py-4">
+          <label
+            htmlFor="workspace-rename-input"
+            className="block text-xs font-medium uppercase tracking-wide text-gray-500">
+            Workspace name
+          </label>
+          <input
+            id="workspace-rename-input"
+            type="text"
+            value={renamedWorkspaceName}
+            onChange={(event) => setRenamedWorkspaceName(event.target.value)}
+            className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+            placeholder="Workspace name"
+          />
+        </div>
+        <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-5 py-4">
+          <button
+            type="button"
+            onClick={closeRenameWorkspaceModal}
+            disabled={isManagingWorkspace}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleRenameWorkspace}
+            disabled={isManagingWorkspace}
+            className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400">
+            {isManagingWorkspace ? 'Saving...' : 'Save changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const requiresDeleteConfirmation = Boolean(deleteSafeguards?.workspaceName);
+  const expectedDeleteConfirmation = deleteSafeguards?.workspaceName || '';
+  const isDeleteConfirmInputValid =
+    !requiresDeleteConfirmation ||
+    deleteConfirmationInput.trim() === expectedDeleteConfirmation;
+  let deleteActionLabel = 'Continue';
+  if (requiresDeleteConfirmation) {
+    deleteActionLabel = 'Delete permanently';
+  }
+  if (isManagingWorkspace) {
+    deleteActionLabel = 'Deleting...';
+  }
+  const deleteWorkspaceModal = isDeleteWorkspaceModalOpen ? (
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-4"
+      onClick={closeDeleteWorkspaceModal}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Delete workspace"
+        onClick={(event) => event.stopPropagation()}
+        className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div className="border-b border-gray-200 px-5 py-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-red-600">
+            Dangerous action
+          </p>
+          <h2 className="mt-1 text-lg font-semibold text-gray-900">
+            Delete workspace
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            This action cannot be undone.
+          </p>
+        </div>
+        <div className="space-y-3 px-5 py-4">
+          {!requiresDeleteConfirmation && (
+            <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+              We will check whether this workspace has active projects/tasks before deleting.
+            </p>
+          )}
+
+          {requiresDeleteConfirmation && (
+            <>
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                <strong>{deleteSafeguards?.activeProjects || 0}</strong> active projects and{' '}
+                <strong>{deleteSafeguards?.activeTasks || 0}</strong> active tasks will be
+                permanently deleted.
+              </p>
+              <label
+                htmlFor="workspace-delete-confirm-input"
+                className="block text-xs font-medium uppercase tracking-wide text-gray-500">
+                Type <span className="font-semibold text-gray-800">{expectedDeleteConfirmation}</span>{' '}
+                to confirm
+              </label>
+              <input
+                id="workspace-delete-confirm-input"
+                type="text"
+                value={deleteConfirmationInput}
+                onChange={(event) => setDeleteConfirmationInput(event.target.value)}
+                className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                placeholder={expectedDeleteConfirmation}
+              />
+            </>
+          )}
+        </div>
+        <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-5 py-4">
+          <button
+            type="button"
+            onClick={closeDeleteWorkspaceModal}
+            disabled={isManagingWorkspace}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteWorkspace}
+            disabled={isManagingWorkspace || !isDeleteConfirmInputValid}
+            className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300">
+            {deleteActionLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <>
       <aside className={containerClasses} id={isMobile ? 'mobile-sidebar' : undefined}>
@@ -526,14 +783,14 @@ export default function Sidebar({
         </div>
       </nav>
 
-      <div className="h-[var(--footer-height-mobile)] border-t border-gray-200 bg-white md:h-[var(--footer-height)]">
-        <div className="flex h-full items-center p-2">
-          <div className="relative" ref={workspaceMenuRef}>
+      <div className="h-[var(--footer-height-mobile)] bg-white md:h-[var(--footer-height)]">
+        <div className="flex h-full items-center p-3">
+          <div className="relative w-full" ref={workspaceMenuRef}>
             {isWorkspaceMenuOpen && (
               <div
                 className={`absolute z-[70] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl ${
                   isMobile || !isCollapsed
-                    ? 'bottom-full left-0 right-0 mb-2'
+                    ? 'bottom-[calc(100%+8px)] left-0 right-0'
                     : 'bottom-0 left-full ml-2 w-72'
                 }`}>
                 <div className="border-b border-gray-200 px-3 py-2">
@@ -616,13 +873,32 @@ export default function Sidebar({
                 </div>
 
                 <div className="border-t border-gray-200 p-2">
-                  <button
-                    type="button"
-                    onClick={openWorkspaceModal}
-                    className="flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50">
-                    <span className="text-base leading-none">+</span>
-                    Add workspace
-                  </button>
+                  <div className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={openWorkspaceModal}
+                      className="flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50">
+                      <span className="text-base leading-none">+</span>
+                      Add workspace
+                    </button>
+
+                    {selectedWorkspace && (
+                      <div className="grid grid-cols-2 gap-1">
+                        <button
+                          type="button"
+                          onClick={openRenameWorkspaceModal}
+                          className="rounded-lg border border-gray-200 bg-white px-2 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50">
+                          Rename
+                        </button>
+                        <button
+                          type="button"
+                          onClick={openDeleteWorkspaceModal}
+                          className="rounded-lg border border-red-200 bg-red-50 px-2 py-2 text-xs font-medium text-red-700 hover:bg-red-100">
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -644,7 +920,10 @@ export default function Sidebar({
                 <>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs uppercase tracking-wide text-gray-500">
-                      Workspace
+                      {(() => {
+                        const firstWord = selectedWorkspace?.name?.trim().split(/\s+/)[0] || '';
+                        return firstWord.length <= 5 ? 'Workspace' : 'Work';
+                      })()}
                     </p>
                     <p className="truncate text-sm font-medium text-gray-900">
                       {selectedWorkspace?.name || 'Choose workspace'}
@@ -671,6 +950,12 @@ export default function Sidebar({
 
       </aside>
       {isClient && workspaceModal ? createPortal(workspaceModal, document.body) : null}
+      {isClient && renameWorkspaceModal
+        ? createPortal(renameWorkspaceModal, document.body)
+        : null}
+      {isClient && deleteWorkspaceModal
+        ? createPortal(deleteWorkspaceModal, document.body)
+        : null}
     </>
   );
 }
