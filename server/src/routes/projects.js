@@ -1534,6 +1534,16 @@ router.delete('/workspaces/:id', requireAuth, async (req, res) => {
     return res.status(403).json({ error: 'Only workspace owners can delete this workspace' });
   }
 
+  const totalWorkspaces = await prisma.workspaceMember.count({
+    where: {
+      userId: req.user.id,
+      workspace: { deletedAt: null },
+    },
+  });
+  if (totalWorkspaces <= 1) {
+    return res.status(400).json({ error: 'You cannot delete your only workspace' });
+  }
+
   const [projectsCount, tasksCount] = await prisma.$transaction([
     prisma.project.count({
       where: {

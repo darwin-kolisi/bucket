@@ -890,12 +890,14 @@ export default function Sidebar({
                           className="rounded-lg border border-gray-200 bg-white px-2 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50">
                           Rename
                         </button>
-                        <button
-                          type="button"
-                          onClick={openDeleteWorkspaceModal}
-                          className="rounded-lg border border-red-200 bg-red-50 px-2 py-2 text-xs font-medium text-red-700 hover:bg-red-100">
-                          Delete
-                        </button>
+                        {workspaces.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={openDeleteWorkspaceModal}
+                            className="rounded-lg border border-red-200 bg-red-50 px-2 py-2 text-xs font-medium text-red-700 hover:bg-red-100">
+                            Delete
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
