@@ -252,24 +252,10 @@ export default function Projects({
   };
 
   const renderListView = () => {
-    if (projectsToRender.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-8">
-          <ListIcon className="w-16 h-16 text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects found</h3>
-          <p className="text-sm text-gray-500 text-center max-w-sm">
-            {searchQuery || effectiveStatusFilter !== 'all'
-              ? 'No projects match your filters. Try adjusting your search or filter settings.'
-              : 'Get started by creating your first project.'}
-          </p>
-        </div>
-      );
-    }
-
     return (
       <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
         {/* Desktop table */}
-        <div className="hidden sm:block rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="hidden sm:block rounded-2xl border border-gray-200 bg-white overflow-hidden">
           <div className="grid grid-cols-[minmax(0,1fr)_160px_180px_220px_32px] items-center gap-4 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 border-b border-gray-200">
             <span className="translate-x-[30px]">Project</span>
             <span className="inline-flex items-center gap-2">
@@ -290,7 +276,19 @@ export default function Projects({
             <span aria-hidden="true" />
           </div>
           <div className="divide-y divide-gray-100">
-            {projectsToRender.map((project) => {
+            {projectsToRender.length === 0 ? (
+              <div className="p-10 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                  <ListIcon className="h-6 w-6 text-gray-400" />
+                </div>
+                <p className="mt-3 text-sm font-medium text-gray-700">No projects found</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {searchQuery || effectiveStatusFilter !== 'all'
+                    ? 'No projects match your filters. Try adjusting your search or filter settings.'
+                    : 'Get started by creating your first project.'}
+                </p>
+              </div>
+            ) : projectsToRender.map((project) => {
               const completionPercentage =
                 project.totalTasks > 0
                   ? Math.round(
@@ -354,8 +352,20 @@ export default function Projects({
         </div>
 
         {/* Mobile list */}
-        <div className="sm:hidden rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden divide-y divide-gray-100">
-          {projectsToRender.map((project) => {
+        <div className="sm:hidden rounded-2xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
+          {projectsToRender.length === 0 ? (
+            <div className="p-10 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                <ListIcon className="h-6 w-6 text-gray-400" />
+              </div>
+              <p className="mt-3 text-sm font-medium text-gray-700">No projects found</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {searchQuery || effectiveStatusFilter !== 'all'
+                  ? 'No projects match your filters. Try adjusting your search or filter settings.'
+                  : 'Get started by creating your first project.'}
+              </p>
+            </div>
+          ) : projectsToRender.map((project) => {
             const completionPercentage =
               project.totalTasks > 0
                 ? Math.round(
@@ -404,14 +414,20 @@ export default function Projects({
   const renderBoardView = () => {
     if (projectsToRender.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-8">
-          <BoardIcon className="w-16 h-16 text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects found</h3>
-          <p className="text-sm text-gray-500 text-center max-w-sm">
-            {searchQuery || effectiveStatusFilter !== 'all'
-              ? 'No projects match your filters. Try adjusting your search or filter settings.'
-              : 'Get started by creating your first project.'}
-          </p>
+        <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="p-10 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                <BoardIcon className="h-6 w-6 text-gray-400" />
+              </div>
+              <p className="mt-3 text-sm font-medium text-gray-700">No projects found</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {searchQuery || effectiveStatusFilter !== 'all'
+                  ? 'No projects match your filters. Try adjusting your search or filter settings.'
+                  : 'Get started by creating your first project.'}
+              </p>
+            </div>
+          </div>
         </div>
       );
     }
@@ -459,8 +475,8 @@ export default function Projects({
                 <button
                   onClick={() => setProjectsView('list')}
                   className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'list'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    ? 'bg-white text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
                     }`}>
                   <ListIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">List</span>
@@ -468,8 +484,8 @@ export default function Projects({
                 <button
                   onClick={() => setProjectsView('board')}
                   className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'board'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    ? 'bg-white text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
                     }`}>
                   <BoardIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Board</span>
@@ -477,8 +493,8 @@ export default function Projects({
                 <button
                   onClick={() => setProjectsView('calendar')}
                   className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'calendar'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    ? 'bg-white text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
                     }`}>
                   <CalendarIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Calendar</span>

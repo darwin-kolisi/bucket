@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 
-export default function Footer({ isCollapsed, isMobile }) {
+export default function Footer({ isCollapsed }) {
   const currentYear = new Date().getFullYear();
 
   const handleLinkClick = (url) => {
@@ -10,8 +10,8 @@ export default function Footer({ isCollapsed, isMobile }) {
 
   return (
     <footer
-      className={`fixed bottom-0 right-0 z-40 border-t border-gray-200 bg-white transition-all duration-300 ease-in-out ${
-        isMobile ? 'left-0' : isCollapsed ? 'left-[70px]' : 'left-[220px]'
+      className={`fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white md:transition-[left] md:duration-300 md:ease-in-out ${
+        isCollapsed ? 'md:left-[70px]' : 'md:left-[220px]'
       }`}>
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-4 lg:py-3">
         <div className="flex flex-col gap-4 items-center text-center sm:flex-row sm:justify-between sm:text-left">

@@ -172,7 +172,7 @@ export default function Layout({ children }) {
           <div className={contentClassName}>{children}</div>
         </main>
       </div>
-      <Footer isCollapsed={isSidebarCollapsed} isMobile={isMobile} />
+      <Footer isCollapsed={isSidebarCollapsed} />
     </div>
   );
 }
