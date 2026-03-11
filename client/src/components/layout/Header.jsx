@@ -72,7 +72,7 @@ export default function Header({ isMobileMenuOpen, onMenuClick }) {
           )}
         </button>
 
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-3">
           <NotificationPopup />
 
           <Menu as="div" className="relative">
@@ -81,7 +81,7 @@ export default function Header({ isMobileMenuOpen, onMenuClick }) {
             </MenuButton>
             <MenuItems
               transition
-              className="absolute right-0 mt-2 w-56 origin-top-right overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl focus:outline-none transition duration-100 ease-out data-[closed]:scale-95 data-[closed]:opacity-0">
+              className="absolute right-0 mt-4 sm:mt-7 w-56 origin-top-right overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl focus:outline-none transition duration-100 ease-out data-[closed]:scale-95 data-[closed]:opacity-0">
               <div className="px-4 py-3 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-900 truncate">
                   {user?.name || 'User'}

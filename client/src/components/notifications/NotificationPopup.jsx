@@ -180,12 +180,17 @@ export default function NotificationPopup() {
           className="h-5 w-5"
           fill="none"
           viewBox="0 0 24 24"
-          strokeWidth="1.5"
+          strokeWidth="1.6"
           stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+            d="M6 8a6 6 0 0 1 12 0c0 6 3 8 3 8H3s3-2 3-8"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9.5 18.5a2.5 2.5 0 0 0 5 0"
           />
         </svg>
         {unreadNotificationsCount > 0 && (
@@ -194,7 +199,7 @@ export default function NotificationPopup() {
       </button>
 
       {isOpen && (
-        <div className="fixed left-1/2 top-[calc(var(--chrome-height)+0.5rem)] z-50 w-[min(20rem,calc(100vw-1.5rem))] -translate-x-1/2 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:translate-x-0">
+        <div className="fixed left-1/2 top-[calc(var(--chrome-height)+0.05rem)] z-50 w-[min(20rem,calc(100vw-1.5rem))] -translate-x-1/2 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-7 sm:w-80 sm:translate-x-0">
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-gray-900">Notifications</span>
@@ -271,12 +276,17 @@ export default function NotificationPopup() {
                     className="h-5 w-5 text-gray-400"
                     fill="none"
                     viewBox="0 0 24 24"
-                    strokeWidth="1.5"
+                    strokeWidth="1.6"
                     stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+                      d="M6 8a6 6 0 0 1 12 0c0 6 3 8 3 8H3s3-2 3-8"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9.5 18.5a2.5 2.5 0 0 0 5 0"
                     />
                   </svg>
                 </div>
