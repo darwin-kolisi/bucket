@@ -105,6 +105,10 @@ export default function NewTaskPage() {
   };
 
   const handleCancel = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+      return;
+    }
     router.push(projectId ? `/projects/${projectId}` : '/projects');
   };
 

@@ -87,6 +87,18 @@ export default function ProjectKanban({
     setActiveTaskId(null);
   };
 
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push('/projects');
+  };
+
   const handleDragEnd = async (event) => {
     const { active, over } = event;
     setActiveTaskId(null);
@@ -335,7 +347,7 @@ export default function ProjectKanban({
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 md:px-6 pt-4">
         <button
           type="button"
-          onClick={() => router.push('/projects')}
+          onClick={handleBack}
           className="px-4 h-9.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition-colors">
           Back
         </button>
