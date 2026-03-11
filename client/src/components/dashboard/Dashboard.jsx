@@ -46,6 +46,10 @@ const PRIORITY_META = {
   low: 'text-gray-500 bg-gray-100',
 };
 
+const RECENT_PROJECTS_LIMIT = 5;
+const UPCOMING_TASKS_LIMIT = 6;
+const DEADLINE_FEED_LIMIT = 5;
+
 const normalizeProjectStatus = (status) => {
   const normalized = status
     ?.toString()
@@ -160,19 +164,23 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
     };
   }, [projects]);
 
-  const recentProjects = useMemo(
+  const recentProjectsAll = useMemo(
     () =>
-      [...dashboardData.mappedProjects]
-        .sort(
-          (a, b) =>
-            (parseDate(b.updatedAt)?.getTime() || 0) -
-            (parseDate(a.updatedAt)?.getTime() || 0)
-        )
-        .slice(0, 5),
+      [...dashboardData.mappedProjects].sort(
+        (a, b) =>
+          (parseDate(b.updatedAt)?.getTime() || 0) -
+          (parseDate(a.updatedAt)?.getTime() || 0)
+      ),
     [dashboardData.mappedProjects]
   );
+  const recentProjects = useMemo(
+    () => recentProjectsAll.slice(0, RECENT_PROJECTS_LIMIT),
+    [recentProjectsAll]
+  );
+  const hasMoreRecentProjects =
+    recentProjectsAll.length > RECENT_PROJECTS_LIMIT;
 
-  const upcomingTasks = useMemo(() => {
+  const upcomingTasksAll = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -189,11 +197,16 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
         if (!task.dueDateObj) return false;
         return task.dueDateObj >= today && task.dueDateObj <= limit;
       })
-      .sort((a, b) => a.dueDateObj.getTime() - b.dueDateObj.getTime())
-      .slice(0, 6);
+      .sort((a, b) => a.dueDateObj.getTime() - b.dueDateObj.getTime());
   }, [dashboardData.allTasks, selectedTimeRange]);
+  const upcomingTasks = useMemo(
+    () => upcomingTasksAll.slice(0, UPCOMING_TASKS_LIMIT),
+    [upcomingTasksAll]
+  );
+  const hasMoreUpcomingTasks =
+    upcomingTasksAll.length > UPCOMING_TASKS_LIMIT;
 
-  const deadlineFeed = useMemo(() => {
+  const deadlineFeedAll = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const inTwentyOneDays = new Date(today);
@@ -244,10 +257,15 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
       })
       .filter(Boolean);
 
-    return [...projectEntries, ...taskEntries]
-      .sort((a, b) => a.dueDateObj.getTime() - b.dueDateObj.getTime())
-      .slice(0, 5);
+    return [...projectEntries, ...taskEntries].sort(
+      (a, b) => a.dueDateObj.getTime() - b.dueDateObj.getTime()
+    );
   }, [dashboardData, onProjectSelect]);
+  const deadlineFeed = useMemo(
+    () => deadlineFeedAll.slice(0, DEADLINE_FEED_LIMIT),
+    [deadlineFeedAll]
+  );
+  const hasMoreDeadlines = deadlineFeedAll.length > DEADLINE_FEED_LIMIT;
 
   return (
     <div className="page-shell mx-auto max-w-[1400px] p-6">
@@ -268,12 +286,14 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
               <h2 className="text-sm font-semibold text-gray-900">Recent Projects</h2>
-              <button
-                onClick={() => onNavigate && onNavigate('projects')}
-                className="text-xs font-medium text-gray-400 transition hover:text-gray-900"
-              >
-                View all →
-              </button>
+              {hasMoreRecentProjects && (
+                <button
+                  onClick={() => onNavigate && onNavigate('projects')}
+                  className="text-xs font-medium text-gray-400 transition hover:text-gray-900"
+                >
+                  View all →
+                </button>
+              )}
             </div>
 
             {recentProjects.length > 0 ? (
@@ -386,6 +406,14 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
                 <h2 className="text-sm font-semibold text-gray-900">Upcoming Deadlines</h2>
                 <p className="mt-0.5 text-[11px] text-gray-400">Next 21 days</p>
               </div>
+              {hasMoreDeadlines && (
+                <button
+                  onClick={() => onNavigate && onNavigate('projects')}
+                  className="text-xs font-medium text-gray-400 transition hover:text-gray-900"
+                >
+                  View all →
+                </button>
+              )}
             </div>
 
             {deadlineFeed.length > 0 ? (
@@ -453,27 +481,37 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
               <h2 className="text-sm font-semibold text-gray-900">Upcoming Tasks</h2>
-              <div className="flex items-center gap-px overflow-hidden rounded border border-gray-200">
-                <button
-                  onClick={() => setSelectedTimeRange('week')}
-                  className={`px-3 py-1.5 text-xs font-medium transition ${
-                    selectedTimeRange === 'week'
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  7d
-                </button>
-                <button
-                  onClick={() => setSelectedTimeRange('month')}
-                  className={`px-3 py-1.5 text-xs font-medium transition ${
-                    selectedTimeRange === 'month'
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  30d
-                </button>
+              <div className="flex items-center gap-2">
+                {hasMoreUpcomingTasks && (
+                  <button
+                    onClick={() => onNavigate && onNavigate('projects')}
+                    className="text-xs font-medium text-gray-400 transition hover:text-gray-900"
+                  >
+                    View all →
+                  </button>
+                )}
+                <div className="flex items-center gap-px overflow-hidden rounded border border-gray-200">
+                  <button
+                    onClick={() => setSelectedTimeRange('week')}
+                    className={`px-3 py-1.5 text-xs font-medium transition ${
+                      selectedTimeRange === 'week'
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    7d
+                  </button>
+                  <button
+                    onClick={() => setSelectedTimeRange('month')}
+                    className={`px-3 py-1.5 text-xs font-medium transition ${
+                      selectedTimeRange === 'month'
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    30d
+                  </button>
+                </div>
               </div>
             </div>
 
