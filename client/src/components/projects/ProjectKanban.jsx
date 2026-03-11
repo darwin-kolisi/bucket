@@ -331,7 +331,7 @@ export default function ProjectKanban({
   };
 
   return (
-    <div className="flex-1 overflow-hidden min-h-screen app-dots">
+    <div className="flex-1 overflow-hidden app-dots page-shell">
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 md:px-6 pt-4">
         <button
           type="button"

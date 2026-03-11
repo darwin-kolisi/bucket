@@ -245,7 +245,7 @@ export default function Projects({
 
   const renderCalendarView = () => {
     return (
-      <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
+      <div className="px-4 md:px-8 pt-2 pb-20">
         <Calendar projects={projectsToRender} onProjectSelect={onProjectSelect} />
       </div>
     );
@@ -253,7 +253,7 @@ export default function Projects({
 
   const renderListView = () => {
     return (
-      <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
+      <div className="px-4 md:px-8 pt-2 pb-20">
         {/* Desktop table */}
         <div className="hidden sm:block rounded-2xl border border-gray-200 bg-white overflow-hidden">
           <div className="grid grid-cols-[minmax(0,1fr)_160px_180px_220px_32px] items-center gap-4 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 border-b border-gray-200">
@@ -414,7 +414,7 @@ export default function Projects({
   const renderBoardView = () => {
     if (projectsToRender.length === 0) {
       return (
-        <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
+        <div className="px-4 md:px-8 pt-2 pb-20">
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <div className="p-10 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
@@ -433,7 +433,7 @@ export default function Projects({
     }
 
     return (
-      <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
+      <div className="px-4 md:px-8 pt-2 pb-20">
         <div className="block md:hidden space-y-4">
           {projectsToRender.map((project) => (
             <ProjectCard
@@ -467,7 +467,7 @@ export default function Projects({
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto min-h-screen">
+      <div className="flex-1 page-shell">
         <div className="px-5 md:px-8 pt-6 pb-2">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">

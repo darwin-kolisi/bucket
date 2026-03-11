@@ -401,7 +401,7 @@ export default function Notes() {
   };
 
   return (
-    <div className="mx-auto max-w-[1400px] p-6">
+    <div className="page-shell mx-auto max-w-[1400px] p-6">
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5">
         <h2 className="mb-4 text-sm font-semibold text-gray-900">Filters</h2>
         <div className="grid gap-4 md:grid-cols-3">

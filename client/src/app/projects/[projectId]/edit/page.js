@@ -164,7 +164,7 @@ export default function EditProjectPage() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="flex-1 min-h-screen app-dots">
+        <div className="flex-1 app-dots page-shell">
           <div className="px-5 md:px-8 pt-6 pb-12">
             <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-6 text-sm text-gray-500">
               Loading project...
@@ -177,7 +177,7 @@ export default function EditProjectPage() {
 
   return (
     <Layout>
-      <div className="flex-1 min-h-screen app-dots">
+      <div className="flex-1 app-dots page-shell">
         <div className="px-5 md:px-8 pt-6 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center">

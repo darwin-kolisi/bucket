@@ -268,7 +268,7 @@ export default function Notifications() {
   };
 
   return (
-    <div className="mx-auto max-w-[1400px] p-6">
+    <div className="page-shell mx-auto max-w-[1400px] p-6">
       <section className="surface-card overflow-hidden rounded-2xl border border-gray-200 bg-white">
         <div className="border-b border-gray-200 p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

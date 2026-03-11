@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Layout from '@/components/layout/Layout';
+import NotFound from '@/components/layout/NotFound';
 import { useAppContext } from '@/app/providers/Provider';
 import { useErrorToast } from '@/components/ui/ErrorToastProvider';
 import DatePicker from '@/components/ui/DatePicker';
@@ -45,6 +46,7 @@ export default function EditTaskPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [isTaskMissing, setIsTaskMissing] = useState(false);
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   const project = projects.find((item) => item.id === projectId);
@@ -101,13 +103,20 @@ export default function EditTaskPage() {
       setPriority(task.priority || 'Medium');
       setSubtasks(Array.isArray(task.subtasks) ? task.subtasks : []);
       setHasInitialized(true);
+      setIsTaskMissing(false);
       setIsLoading(false);
     }
   }, [task, hasInitialized]);
 
   useEffect(() => {
     const loadProject = async () => {
-      if (!projectId || task) return;
+      if (!projectId || !taskId) {
+        setError('Task not found.');
+        setIsTaskMissing(true);
+        setIsLoading(false);
+        return;
+      }
+      if (task) return;
       setIsLoading(true);
       try {
         const response = await fetch(`${apiBase}/api/projects/${projectId}`, {
@@ -115,12 +124,14 @@ export default function EditTaskPage() {
         });
         if (!response.ok) {
           setError('Task not found.');
+          setIsTaskMissing(true);
           setIsLoading(false);
           return;
         }
         const data = await response.json();
         if (!data?.project) {
           setError('Task not found.');
+          setIsTaskMissing(true);
           setIsLoading(false);
           return;
         }
@@ -136,6 +147,7 @@ export default function EditTaskPage() {
         const loadedTask = data.project.tasks?.find((item) => item.id === taskId);
         if (!loadedTask) {
           setError('Task not found.');
+          setIsTaskMissing(true);
           setIsLoading(false);
           return;
         }
@@ -147,6 +159,7 @@ export default function EditTaskPage() {
         setHasInitialized(true);
       } catch (err) {
         setError('Task not found.');
+        setIsTaskMissing(true);
       } finally {
         setIsLoading(false);
       }
@@ -227,10 +240,25 @@ export default function EditTaskPage() {
   const summaryProject = project?.name || 'Project';
   const summarySubtasks = subtasks.length;
 
+  if (!isLoading && isTaskMissing) {
+    return (
+      <Layout>
+        <NotFound
+          title="Task not found"
+          message="That task was deleted, archived, or you no longer have access to it."
+          primaryLabel="Back to Project"
+          primaryHref={targetProjectRoute}
+          secondaryLabel="Go to Projects"
+          secondaryHref="/projects"
+        />
+      </Layout>
+    );
+  }
+
   if (isLoading) {
     return (
       <Layout>
-        <div className="flex-1 min-h-screen app-dots">
+        <div className="flex-1 app-dots page-shell">
           <div className="px-5 md:px-8 pt-6 pb-12">
             <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-6 text-sm text-gray-500">
               Loading task...
@@ -243,7 +271,7 @@ export default function EditTaskPage() {
 
   return (
     <Layout>
-      <div className="flex-1 min-h-screen app-dots">
+      <div className="flex-1 app-dots page-shell">
         <div className="px-5 md:px-8 pt-6 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center">

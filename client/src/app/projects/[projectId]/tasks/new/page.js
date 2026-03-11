@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Layout from '@/components/layout/Layout';
+import NotFound from '@/components/layout/NotFound';
 import { useErrorToast } from '@/components/ui/ErrorToastProvider';
 import DatePicker from '@/components/ui/DatePicker';
 import { useAppContext } from '@/app/providers/Provider';
@@ -44,14 +45,24 @@ export default function NewTaskPage() {
     }
   };
 
+  if (!projectId) {
+    return (
+      <Layout>
+        <NotFound
+          title="Project not found"
+          message="That project was deleted, archived, or you no longer have access to it."
+          primaryLabel="Back to Projects"
+          primaryHref="/projects"
+          secondaryLabel="Go to Dashboard"
+          secondaryHref="/dashboard"
+        />
+      </Layout>
+    );
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
-
-    if (!projectId) {
-      setError('Missing project id.');
-      return;
-    }
     if (!taskName.trim()) {
       setError('Task name is required.');
       return;
@@ -143,7 +154,7 @@ export default function NewTaskPage() {
 
   return (
     <Layout>
-      <div className="flex-1 min-h-screen app-dots">
+      <div className="flex-1 app-dots page-shell">
         <div className="px-5 md:px-8 pt-6 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center">

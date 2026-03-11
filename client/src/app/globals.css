@@ -117,9 +117,19 @@ body {
   margin-right: auto;
 }
 
+.page-shell {
+  min-height: calc(
+    100vh - var(--chrome-height) - var(--footer-height-mobile)
+  );
+}
+
 @media (min-width: 768px) {
   .content-shell {
     max-width: min(1400px, calc(100vw - 220px));
+  }
+
+  .page-shell {
+    min-height: calc(100vh - var(--chrome-height) - var(--footer-height));
   }
 }
 

@@ -250,7 +250,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
   }, [dashboardData, onProjectSelect]);
 
   return (
-    <div className="mx-auto max-w-[1400px] p-6">
+    <div className="page-shell mx-auto max-w-[1400px] p-6">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-gray-900">Overview</h1>
         <p className="mt-0.5 text-sm text-gray-500">
