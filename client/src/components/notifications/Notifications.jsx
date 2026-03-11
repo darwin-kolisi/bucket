@@ -77,7 +77,7 @@ const getTypeIcon = (type) => {
   if (normalized.includes('overdue') || normalized.includes('due')) {
     return (
       <svg
-        className="h-5 w-5 text-red-500"
+        className="h-4.5 w-4.5 text-red-500"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth="1.5"
@@ -94,7 +94,7 @@ const getTypeIcon = (type) => {
   if (normalized.includes('completed')) {
     return (
       <svg
-        className="h-5 w-5 text-green-500"
+        className="h-4.5 w-4.5 text-green-500"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth="1.5"
@@ -111,7 +111,7 @@ const getTypeIcon = (type) => {
   if (normalized.includes('project')) {
     return (
       <svg
-        className="h-5 w-5 text-indigo-500"
+        className="h-4.5 w-4.5 text-indigo-500"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth="1.5"
@@ -127,7 +127,7 @@ const getTypeIcon = (type) => {
 
   return (
     <svg
-      className="h-5 w-5 text-gray-500"
+      className="h-4.5 w-4.5 text-gray-500"
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth="1.5"
@@ -375,7 +375,7 @@ export default function Notifications() {
                 </div>
 
                 <div
-                  className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg ${getTypeIconWrapStyles(
+                  className={`mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg ${getTypeIconWrapStyles(
                     notification.type
                   )}`}>
                   {getTypeIcon(notification.type)}
