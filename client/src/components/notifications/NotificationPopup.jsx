@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/app/providers/Provider';
 
@@ -123,9 +123,21 @@ const getNotificationIcon = (type) => {
   );
 };
 
-export default function NotificationPopup() {
+export default function NotificationPopup({ isOpen: controlledOpen, onOpenChange }) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = typeof controlledOpen === 'boolean';
+  const isOpen = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = useCallback(
+    (value) => {
+      if (isControlled) {
+        onOpenChange?.(value);
+        return;
+      }
+      setUncontrolledOpen(value);
+    },
+    [isControlled, onOpenChange]
+  );
   const popupRef = useRef(null);
   const {
     notifications,
@@ -138,15 +150,15 @@ export default function NotificationPopup() {
   const visibleNotifications = notifications.slice(0, 8);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handlePointerDown = (event) => {
       if (popupRef.current && !popupRef.current.contains(event.target)) {
-        setIsOpen(false);
+        setOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [setOpen]);
 
   const openNotificationTarget = (notification) => {
     if (notification?.type?.toString().startsWith('note_')) {
@@ -171,7 +183,7 @@ export default function NotificationPopup() {
   return (
     <div className="relative" ref={popupRef}>
       <button
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => setOpen(!isOpen)}
         className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
           isOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
         }`}
@@ -234,7 +246,7 @@ export default function NotificationPopup() {
                     if (!notification.read) {
                       markNotificationAsRead(notification.id);
                     }
-                    setIsOpen(false);
+                    setOpen(false);
                     openNotificationTarget(notification);
                   }}
                   className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${

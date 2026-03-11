@@ -1,6 +1,7 @@
 'use client';
 
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import NotificationPopup from '@/components/notifications/NotificationPopup';
@@ -25,6 +26,7 @@ export default function Header({ isMobileMenuOpen, onMenuClick }) {
   const session = authClient.useSession();
   const user = session?.data?.user;
   const initials = getInitials(user?.name, user?.email);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -73,10 +75,15 @@ export default function Header({ isMobileMenuOpen, onMenuClick }) {
         </button>
 
         <div className="ml-auto flex items-center gap-3">
-          <NotificationPopup />
+          <NotificationPopup
+            isOpen={isNotificationsOpen}
+            onOpenChange={setIsNotificationsOpen}
+          />
 
           <Menu as="div" className="relative">
-            <MenuButton className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-900 text-xs font-semibold text-white transition hover:bg-gray-700">
+            <MenuButton
+              onClick={() => setIsNotificationsOpen(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-900 text-xs font-semibold text-white transition hover:bg-gray-700">
               {initials}
             </MenuButton>
             <MenuItems
