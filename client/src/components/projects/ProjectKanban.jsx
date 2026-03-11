@@ -62,6 +62,34 @@ export default function ProjectKanban({
     }
   };
 
+  const toggleTaskStar = async (task) => {
+    if (!task?.id) return;
+    const nextStarred = !task.starredAt;
+    try {
+      const response = await fetch(`${apiBase}/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ starred: nextStarred }),
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      if (!data?.task) return;
+      let nextTasks = null;
+      setTasks((prev) => {
+        nextTasks = prev.map((item) =>
+          item.id === data.task.id ? data.task : item
+        );
+        return nextTasks;
+      });
+      if (nextTasks) {
+        onUpdateTasks?.(nextTasks);
+      }
+    } catch (error) {
+      // noop for now
+    }
+  };
+
   const sortTasksByDate = (tasks) => {
     return [...tasks].sort((a, b) => {
       const dateA = new Date(a.date);
@@ -387,7 +415,7 @@ export default function ProjectKanban({
         onDragStart={handleDragStart}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}>
-        <div className="block md:hidden p-4 overflow-x-auto kanban-scroll">
+        <div className="block md:hidden p-4 overflow-x-auto overflow-y-visible kanban-scroll">
           <div className="flex gap-3 pb-4" style={{ minWidth: 'max-content' }}>
             <KanbanColumn
               title="To do"
@@ -397,6 +425,7 @@ export default function ProjectKanban({
               onDuplicateTask={duplicateTask}
               onDeleteTask={deleteTask}
               onToggleSubtask={handleToggleSubtask}
+              onToggleStar={toggleTaskStar}
             />
             <KanbanColumn
               title="In progress"
@@ -406,6 +435,7 @@ export default function ProjectKanban({
               onDuplicateTask={duplicateTask}
               onDeleteTask={deleteTask}
               onToggleSubtask={handleToggleSubtask}
+              onToggleStar={toggleTaskStar}
             />
             <KanbanColumn
               title="In Review"
@@ -415,6 +445,7 @@ export default function ProjectKanban({
               onDuplicateTask={duplicateTask}
               onDeleteTask={deleteTask}
               onToggleSubtask={handleToggleSubtask}
+              onToggleStar={toggleTaskStar}
             />
             <KanbanColumn
               title="Done"
@@ -424,11 +455,12 @@ export default function ProjectKanban({
               onDuplicateTask={duplicateTask}
               onDeleteTask={deleteTask}
               onToggleSubtask={handleToggleSubtask}
+              onToggleStar={toggleTaskStar}
             />
           </div>
         </div>
 
-        <div className="hidden md:flex gap-4 p-6 overflow-x-auto min-h-full kanban-scroll">
+        <div className="hidden md:flex gap-4 p-6 overflow-x-auto overflow-y-visible min-h-full kanban-scroll">
           <KanbanColumn
             title="To do"
             tasks={sortTasksByDate(todoTasks)}
@@ -437,6 +469,7 @@ export default function ProjectKanban({
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
             onToggleSubtask={handleToggleSubtask}
+            onToggleStar={toggleTaskStar}
           />
           <KanbanColumn
             title="In progress"
@@ -446,6 +479,7 @@ export default function ProjectKanban({
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
             onToggleSubtask={handleToggleSubtask}
+            onToggleStar={toggleTaskStar}
           />
           <KanbanColumn
             title="In Review"
@@ -455,6 +489,7 @@ export default function ProjectKanban({
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
             onToggleSubtask={handleToggleSubtask}
+            onToggleStar={toggleTaskStar}
           />
           <KanbanColumn
             title="Completed"
@@ -464,6 +499,7 @@ export default function ProjectKanban({
             onDuplicateTask={duplicateTask}
             onDeleteTask={deleteTask}
             onToggleSubtask={handleToggleSubtask}
+            onToggleStar={toggleTaskStar}
           />
         </div>
 

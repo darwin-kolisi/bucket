@@ -758,25 +758,30 @@ router.get('/projects', requireAuth, async (req, res) => {
     });
   }
 
-  if (sortOption === 'oldest') {
-    filtered = [...filtered].sort((a, b) => {
+  const compareBySort = (a, b) => {
+    if (sortOption === 'oldest') {
       const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
       const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
       return dateA - dateB;
-    });
-  } else if (sortOption === 'due-soon') {
-    filtered = [...filtered].sort((a, b) => {
+    }
+    if (sortOption === 'due-soon') {
       const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
       const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
       return dueA - dueB;
-    });
-  } else {
-    filtered = [...filtered].sort((a, b) => {
-      const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-      const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-      return dateB - dateA;
-    });
-  }
+    }
+    const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return dateB - dateA;
+  };
+
+  filtered = [...filtered].sort((a, b) => {
+    const starredA = a.starredAt ? new Date(a.starredAt).getTime() : 0;
+    const starredB = b.starredAt ? new Date(b.starredAt).getTime() : 0;
+    if (starredA !== starredB) {
+      return starredB - starredA;
+    }
+    return compareBySort(a, b);
+  });
 
   res.json({ projects: filtered });
 });
@@ -869,7 +874,7 @@ router.get('/projects/:id', requireAuth, async (req, res) => {
 });
 
 router.patch('/projects/:id', requireAuth, async (req, res) => {
-  const { name, description, dueDate, startDate } = req.body || {};
+  const { name, description, dueDate, startDate, starred } = req.body || {};
 
   if (name !== undefined && !name?.toString().trim()) {
     return res.status(400).json({ error: 'Project name is required' });
@@ -925,6 +930,7 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
         dueDate === null ? null : dueDate !== undefined ? nextProjectDueDate : undefined,
       startDate:
         startDate === null ? null : startDate ? parseDateInput(startDate) : undefined,
+      starredAt: starred === true ? new Date() : starred === false ? null : undefined,
     },
     include: {
       tasks: {
@@ -1082,7 +1088,17 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
 });
 
 router.patch('/tasks/:id', requireAuth, async (req, res) => {
-  const { title, description, dueDate, assigneeId, status, order, priority, subtasks } =
+  const {
+    title,
+    description,
+    dueDate,
+    assigneeId,
+    status,
+    order,
+    priority,
+    subtasks,
+    starred,
+  } =
     req.body || {};
 
   if (title !== undefined && !title?.toString().trim()) {
@@ -1149,6 +1165,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
       order,
       priority: priority !== undefined ? normalizedPriority : undefined,
       subtasks: resolved.subtasks,
+      starredAt: starred === true ? new Date() : starred === false ? null : undefined,
     },
   });
 

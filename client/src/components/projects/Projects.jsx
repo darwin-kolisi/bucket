@@ -111,6 +111,7 @@ export default function Projects({
     setIsProjectModalOpen(true);
   };
 
+
   const createProject = async (projectData) => {
     try {
       const response = await fetch(`${apiBase}/api/projects`, {
@@ -197,11 +198,63 @@ export default function Projects({
     }
   };
 
+  const applyProjectUpdate = (updatedProject) => {
+    setVisibleProjects((prev) =>
+      prev.map((project) => (project.id === updatedProject.id ? updatedProject : project))
+    );
+    setProjects((prev) =>
+      prev.map((project) => (project.id === updatedProject.id ? updatedProject : project))
+    );
+  };
+
+  const applyProjectImportance = (projectId, updates) => {
+    setVisibleProjects((prev) =>
+      prev.map((project) =>
+        project.id === projectId ? { ...project, ...updates } : project
+      )
+    );
+    setProjects((prev) =>
+      prev.map((project) =>
+        project.id === projectId ? { ...project, ...updates } : project
+      )
+    );
+  };
+
+  const toggleProjectStar = async (project) => {
+    if (!project?.id) return;
+    const nextStarred = !project.starredAt;
+    const previousStarredAt = project.starredAt;
+    applyProjectImportance(project.id, {
+      starredAt: nextStarred ? new Date().toISOString() : null,
+    });
+    try {
+      const response = await fetch(`${apiBase}/api/projects/${project.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ starred: nextStarred }),
+      });
+      if (!response.ok) throw new Error('Failed to toggle project star.');
+      const data = await response.json();
+      if (data?.project) applyProjectUpdate(data.project);
+    } catch (error) {
+      applyProjectImportance(project.id, { starredAt: previousStarredAt ?? null });
+    }
+  };
+
   useEffect(() => {
     refreshProjects();
   }, [effectiveStatusFilter, searchQuery, sortOption, selectedWorkspaceId]);
 
-  const projectsToRender = visibleProjects;
+  const projectsToRender = visibleProjects
+    .map((project, index) => ({ project, index }))
+    .sort((a, b) => {
+      const starredA = a.project.starredAt ? new Date(a.project.starredAt).getTime() : 0;
+      const starredB = b.project.starredAt ? new Date(b.project.starredAt).getTime() : 0;
+      if (starredA !== starredB) return starredB - starredA;
+      return a.index - b.index;
+    })
+    .map(({ project }) => project);
 
   const formatDate = (value) => {
     if (!value) return 'No due date';
@@ -310,7 +363,7 @@ export default function Projects({
                         project.status
                       )}`}
                     />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-semibold text-gray-900 truncate">
                         {project.name}
                       </h3>
@@ -344,6 +397,8 @@ export default function Projects({
                     onDuplicate={() => duplicateProject(project.id)}
                     onOpenNotes={() => openProjectNotes(project.id)}
                     onDelete={() => deleteProject(project.id)}
+                    onToggleStar={() => toggleProjectStar(project)}
+                    isStarred={!!project.starredAt}
                   />
                 </div>
               );
@@ -402,6 +457,8 @@ export default function Projects({
                   onDuplicate={() => duplicateProject(project.id)}
                   onOpenNotes={() => openProjectNotes(project.id)}
                   onDelete={() => deleteProject(project.id)}
+                  onToggleStar={() => toggleProjectStar(project)}
+                  isStarred={!!project.starredAt}
                 />
               </div>
             );
@@ -444,6 +501,7 @@ export default function Projects({
               onOpenProjectNotes={openProjectNotes}
               onDeleteProject={deleteProject}
               onProjectClick={handleProjectClick}
+              onToggleStar={() => toggleProjectStar(project)}
             />
           ))}
         </div>
@@ -458,6 +516,7 @@ export default function Projects({
               onOpenProjectNotes={openProjectNotes}
               onDeleteProject={deleteProject}
               onProjectClick={handleProjectClick}
+              onToggleStar={() => toggleProjectStar(project)}
             />
           ))}
         </div>

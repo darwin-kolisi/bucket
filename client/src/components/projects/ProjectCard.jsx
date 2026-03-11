@@ -14,6 +14,7 @@ export default function ProjectCard({
   onOpenProjectNotes,
   onDeleteProject,
   onProjectClick,
+  onToggleStar,
 }) {
   const handleCardClick = (e) => {
     if (!e.target.closest('.options-container')) {
@@ -36,6 +37,11 @@ export default function ProjectCard({
   const handleDelete = () => {
     onDeleteProject(project.id);
   };
+
+  const handleToggleStar = () => {
+    onToggleStar?.();
+  };
+
 
   const formatStatus = (status) => {
     if (!status) return 'In Progress';
@@ -111,6 +117,8 @@ export default function ProjectCard({
           onDuplicate={handleDuplicate}
           onOpenNotes={handleOpenNotes}
           onDelete={handleDelete}
+          onToggleStar={handleToggleStar}
+          isStarred={!!project.starredAt}
         />
       </div>
 

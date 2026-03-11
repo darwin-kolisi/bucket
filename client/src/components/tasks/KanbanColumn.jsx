@@ -8,6 +8,7 @@ function DraggableTask({
   onDuplicateTask,
   onDeleteTask,
   onToggleSubtask,
+  onToggleStar,
 }) {
   const {
     attributes,
@@ -41,6 +42,7 @@ function DraggableTask({
         onDuplicateTask={onDuplicateTask}
         onDeleteTask={onDeleteTask}
         onToggleSubtask={onToggleSubtask}
+        onToggleStar={onToggleStar}
       />
     </div>
   );
@@ -54,6 +56,7 @@ export default function KanbanColumn({
   onDuplicateTask,
   onDeleteTask,
   onToggleSubtask,
+  onToggleStar,
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
@@ -82,6 +85,7 @@ export default function KanbanColumn({
               onDuplicateTask={() => onDuplicateTask(task.id)}
               onDeleteTask={() => onDeleteTask(task.id)}
               onToggleSubtask={onToggleSubtask}
+              onToggleStar={onToggleStar}
             />
           ))
         ) : (

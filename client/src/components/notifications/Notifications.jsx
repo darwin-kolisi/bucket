@@ -442,12 +442,15 @@ export default function Notifications() {
                           ? unstarNotification(notification.id)
                           : starNotification(notification.id)
                       }
-                      className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+                      className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
                         notification.starred
                           ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
                           : 'border-gray-200 text-gray-700 hover:bg-gray-100'
                       }`}>
-                      {notification.starred ? 'Unstar' : 'Star'}
+                      <span className="text-sm leading-none">
+                        {notification.starred ? '★' : '☆'}
+                      </span>
+                      {notification.starred ? 'Starred' : 'Star'}
                     </button>
                     <button
                       type="button"
