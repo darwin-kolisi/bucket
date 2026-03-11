@@ -432,10 +432,10 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
                       onClick={item.onClick}
                       className={`group w-full border-l-2 px-5 py-4 text-left transition hover:bg-gray-50 ${
                         isOverdue
-                          ? 'border-red-400'
+                          ? 'border-l-red-400'
                           : isUrgent
-                          ? 'border-orange-400'
-                          : 'border-transparent'
+                          ? 'border-l-orange-400'
+                          : 'border-l-transparent'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-4">
@@ -534,7 +534,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
                         if (targetProject && onProjectSelect) onProjectSelect(targetProject);
                       }}
                       className={`group w-full border-l-2 px-5 py-4 text-left transition hover:bg-gray-50 ${
-                        isUrgent ? 'border-orange-400' : 'border-transparent'
+                        isUrgent ? 'border-l-orange-400' : 'border-l-transparent'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-4">
