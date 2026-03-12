@@ -335,6 +335,13 @@ const toOptionalTrimmedString = (value) => {
   return trimmed || null;
 };
 
+const parseOptionalLimit = (value) => {
+  if (value === undefined || value === null || value === '') return null;
+  const parsed = Number.parseInt(value.toString(), 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) return 50;
+  return Math.min(parsed, 200);
+};
+
 const normalizeTaskPriority = (value) => {
   if (value === undefined) return undefined;
   const normalized = value?.toString().trim().toLowerCase();
@@ -689,6 +696,8 @@ router.get('/projects', requireAuth, async (req, res) => {
   const searchQuery = req.query.q?.toString().trim().toLowerCase() || '';
   const statusFilter = normalizeStatusFilter(req.query.status);
   const sortOption = req.query.sort?.toString() || 'newest';
+  const limit = parseOptionalLimit(req.query.limit);
+  const cursor = toOptionalTrimmedString(req.query.cursor);
   const workspace = workspaceId || (await getDefaultWorkspace(req.user.id))?.id;
 
   if (!workspace) {
@@ -780,10 +789,29 @@ router.get('/projects', requireAuth, async (req, res) => {
     if (starredA !== starredB) {
       return starredB - starredA;
     }
-    return compareBySort(a, b);
+    const order = compareBySort(a, b);
+    if (order !== 0) return order;
+    return a.id > b.id ? -1 : a.id < b.id ? 1 : 0;
   });
 
-  res.json({ projects: filtered });
+  if (!limit) {
+    return res.json({ projects: filtered });
+  }
+
+  let startIndex = 0;
+  if (cursor) {
+    const cursorIndex = filtered.findIndex((project) => project.id === cursor);
+    if (cursorIndex >= 0) {
+      startIndex = cursorIndex + 1;
+    }
+  }
+
+  const slice = filtered.slice(startIndex, startIndex + limit + 1);
+  const hasMore = slice.length > limit;
+  const paged = hasMore ? slice.slice(0, limit) : slice;
+  const nextCursor = hasMore ? paged[paged.length - 1]?.id : null;
+
+  return res.json({ projects: paged, nextCursor, hasMore });
 });
 
 router.post('/projects', requireAuth, async (req, res) => {
@@ -1262,6 +1290,8 @@ router.get('/notes', requireAuth, async (req, res) => {
   const projectId = toOptionalTrimmedString(req.query.projectId);
   const taskId = toOptionalTrimmedString(req.query.taskId);
   const searchQuery = toOptionalTrimmedString(req.query.q);
+  const limit = parseOptionalLimit(req.query.limit);
+  const cursor = toOptionalTrimmedString(req.query.cursor);
 
   if (workspaceId) {
     const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
@@ -1317,10 +1347,20 @@ router.get('/notes', requireAuth, async (req, res) => {
         : {}),
     },
     include: noteInclude,
-    orderBy: { updatedAt: 'desc' },
+    orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+    ...(limit ? { take: limit + 1 } : {}),
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
 
-  res.json({ notes: notes.map(toUiNote) });
+  if (!limit) {
+    return res.json({ notes: notes.map(toUiNote) });
+  }
+
+  const hasMore = notes.length > limit;
+  const sliced = hasMore ? notes.slice(0, limit) : notes;
+  const nextCursor = hasMore ? sliced[sliced.length - 1]?.id : null;
+
+  return res.json({ notes: sliced.map(toUiNote), nextCursor, hasMore });
 });
 
 router.post('/notes', requireAuth, async (req, res) => {

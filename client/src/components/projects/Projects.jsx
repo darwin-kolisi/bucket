@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ProjectCard from './ProjectCard';
 import AddProjectModal from './AddProjectModal';
@@ -26,6 +26,10 @@ export default function Projects({
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
   const [sortOption, setSortOption] = useState('newest');
+  const [projectsCursor, setProjectsCursor] = useState('');
+  const [hasMoreProjects, setHasMoreProjects] = useState(false);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const projectsDropdownRef = useRef(null);
   const {
     projectsView,
@@ -39,8 +43,22 @@ export default function Projects({
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   const effectiveStatusFilter =
     statusFilter === 'in-progress' ? 'on-track' : statusFilter;
+  const PAGE_SIZE = 24;
 
-  const refreshProjects = async () => {
+  const mergeProjects = useCallback((current, incoming) => {
+    if (!incoming.length) return current;
+    const seen = new Set(current.map((project) => project.id));
+    return [...current, ...incoming.filter((project) => !seen.has(project.id))];
+  }, []);
+
+  const refreshProjects = useCallback(async ({ cursor = '', append = false } = {}) => {
+    if (append) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoadingProjects(true);
+      setProjectsCursor('');
+      setHasMoreProjects(false);
+    }
     try {
       const params = new URLSearchParams();
       if (searchQuery?.trim()) {
@@ -55,6 +73,10 @@ export default function Projects({
       if (selectedWorkspaceId) {
         params.set('workspaceId', selectedWorkspaceId);
       }
+      params.set('limit', PAGE_SIZE.toString());
+      if (cursor) {
+        params.set('cursor', cursor);
+      }
       const query = params.toString();
       const response = await fetch(
         `${apiBase}/api/projects${query ? `?${query}` : ''}`,
@@ -63,14 +85,38 @@ export default function Projects({
         }
       );
       if (!response.ok) {
+        if (!append) {
+          setVisibleProjects([]);
+        }
+        setProjectsCursor('');
+        setHasMoreProjects(false);
         return;
       }
       const data = await response.json();
-      setVisibleProjects(data.projects || []);
+      const nextProjects = Array.isArray(data?.projects) ? data.projects : [];
+      setVisibleProjects((prev) =>
+        append ? mergeProjects(prev, nextProjects) : nextProjects
+      );
+      setProjectsCursor(data?.nextCursor || '');
+      setHasMoreProjects(Boolean(data?.nextCursor));
     } catch (error) {
-      // noop for now
+      if (!append) {
+        setVisibleProjects([]);
+      }
+      setProjectsCursor('');
+      setHasMoreProjects(false);
+    } finally {
+      setIsLoadingProjects(false);
+      setIsLoadingMore(false);
     }
-  };
+  }, [
+    apiBase,
+    effectiveStatusFilter,
+    mergeProjects,
+    searchQuery,
+    selectedWorkspaceId,
+    sortOption,
+  ]);
 
   const refreshProjectsCache = async () => {
     try {
@@ -244,7 +290,7 @@ export default function Projects({
 
   useEffect(() => {
     refreshProjects();
-  }, [effectiveStatusFilter, searchQuery, sortOption, selectedWorkspaceId]);
+  }, [refreshProjects]);
 
   const projectsToRender = visibleProjects
     .map((project, index) => ({ project, index }))
@@ -524,6 +570,23 @@ export default function Projects({
     );
   };
 
+  const renderLoadMore = () => {
+    if (isLoadingProjects || projectsToRender.length === 0) {
+      return null;
+    }
+    return (
+      <div className="flex items-center justify-center px-4 pb-8">
+        <button
+          type="button"
+          onClick={() => refreshProjects({ cursor: projectsCursor, append: true })}
+          disabled={!hasMoreProjects || isLoadingMore}
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
+          {isLoadingMore ? 'Loading...' : hasMoreProjects ? 'Load more' : 'All projects loaded'}
+        </button>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="flex-1 page-shell">
@@ -596,6 +659,7 @@ export default function Projects({
           : projectsView === 'board'
             ? renderBoardView()
             : renderListView()}
+        {renderLoadMore()}
       </div>
 
       {isProjectModalOpen && (
