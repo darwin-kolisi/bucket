@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/app/providers/Provider';
 import { useErrorToast } from '@/components/ui/ErrorToastProvider';
 
@@ -98,6 +99,7 @@ export default function Sidebar({
   isOpen = false,
   onClose,
 }) {
+  const router = useRouter();
   const {
     unreadNotificationsCount,
     workspaces,
@@ -880,7 +882,10 @@ export default function Sidebar({
                   <div className="space-y-1">
                     <button
                       type="button"
-                      onClick={openWorkspaceModal}
+                      onClick={() => {
+                        setIsWorkspaceMenuOpen(false);
+                        router.push('/workspaces/new');
+                      }}
                       className="flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50">
                       <span className="text-base leading-none">+</span>
                       Add workspace

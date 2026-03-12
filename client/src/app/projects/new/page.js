@@ -107,7 +107,7 @@ export default function NewProjectPage() {
 
   return (
     <Layout>
-      <div className="flex-1 app-dots page-shell">
+      <div className="flex-1 page-shell">
         <div className="px-5 md:px-8 pt-6 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center">
@@ -139,7 +139,7 @@ export default function NewProjectPage() {
               id="new-project-form"
               onSubmit={handleSubmit}
               className="space-y-5">
-              <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
+              <div className="surface-card rounded-2xl border border-gray-200 bg-white p-6">
                 <div className="flex items-start justify-between gap-4 mb-6">
                   <div>
                     <h2 className="text-xs uppercase tracking-wide text-gray-500">
@@ -210,7 +210,7 @@ export default function NewProjectPage() {
                 )}
               </div>
 
-              <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-4 sm:hidden">
+              <div className="surface-card rounded-2xl border border-gray-200 bg-white p-4 sm:hidden">
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   <button
                     type="button"
@@ -229,7 +229,7 @@ export default function NewProjectPage() {
             </form>
 
             <aside className="space-y-4">
-              <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
+              <div className="surface-card rounded-2xl border border-gray-200 bg-white p-5">
                 <div className="text-xs uppercase tracking-wide text-gray-500">
                   Summary
                 </div>

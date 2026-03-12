@@ -301,7 +301,7 @@ export default function BinPage() {
           </div>
         </div>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-gray-200 bg-white p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="w-full sm:w-[220px]">
               <AppSelect

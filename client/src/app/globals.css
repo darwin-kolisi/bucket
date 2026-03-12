@@ -258,9 +258,6 @@ body {
   border: 1px solid var(--border-subtle);
 }
 
-.surface-card:hover {
-  border-color: var(--border-strong);
-}
 
 .surface-panel {
   background: var(--surface-1);
