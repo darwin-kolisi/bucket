@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/app/providers/Provider';
 import AppSelect from '@/components/ui/AppSelect';
@@ -77,7 +77,7 @@ const getTypeIcon = (type) => {
   if (normalized.includes('overdue') || normalized.includes('due')) {
     return (
       <svg
-        className="h-5 w-5 text-red-500"
+        className="h-4.5 w-4.5 text-red-500"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth="1.5"
@@ -94,7 +94,7 @@ const getTypeIcon = (type) => {
   if (normalized.includes('completed')) {
     return (
       <svg
-        className="h-5 w-5 text-green-500"
+        className="h-4.5 w-4.5 text-green-500"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth="1.5"
@@ -111,7 +111,7 @@ const getTypeIcon = (type) => {
   if (normalized.includes('project')) {
     return (
       <svg
-        className="h-5 w-5 text-indigo-500"
+        className="h-4.5 w-4.5 text-indigo-500"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth="1.5"
@@ -127,7 +127,7 @@ const getTypeIcon = (type) => {
 
   return (
     <svg
-      className="h-5 w-5 text-gray-500"
+      className="h-4.5 w-4.5 text-gray-500"
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth="1.5"
@@ -153,11 +153,16 @@ const matchesQuery = (notification, query) => {
 
 export default function Notifications() {
   const router = useRouter();
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState('');
+  const [hasMore, setHasMore] = useState(false);
   const {
-    notifications,
     markNotificationAsRead,
     markNotificationAsUnread,
     markAllNotificationsAsRead,
@@ -170,8 +175,10 @@ export default function Notifications() {
     unstarNotification,
     starSelectedNotifications,
     unstarSelectedNotifications,
-    isNotificationsLoading,
+    selectedWorkspaceId,
   } = useAppContext();
+
+  const PAGE_SIZE = 40;
 
   const filterOptions = [
     { label: 'All', value: 'all' },
@@ -180,22 +187,143 @@ export default function Notifications() {
     { label: 'High Priority', value: 'high' },
   ];
 
-  const filteredNotifications = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
+  const normalizedQuery = searchQuery.trim().toLowerCase();
 
+  const sortNotifications = useCallback((items) => {
+    return [...items].sort((left, right) => {
+      const leftStarred = left?.starredAt ? new Date(left.starredAt).getTime() : 0;
+      const rightStarred = right?.starredAt ? new Date(right.starredAt).getTime() : 0;
+      if (rightStarred !== leftStarred) {
+        return rightStarred - leftStarred;
+      }
+
+      const leftDate = left?.createdAt ? new Date(left.createdAt).getTime() : 0;
+      const rightDate = right?.createdAt ? new Date(right.createdAt).getTime() : 0;
+      if (rightDate !== leftDate) {
+        return rightDate - leftDate;
+      }
+
+      if (left?.id && right?.id) {
+        return right.id.localeCompare(left.id);
+      }
+
+      return 0;
+    });
+  }, []);
+
+  const isNotificationVisible = useCallback(
+    (notification) => {
+      if (!notification) return false;
+      if (filter === 'unread' && notification.read) return false;
+      if (filter === 'starred' && !notification.starred) return false;
+      if (filter === 'high' && notification.priority !== 'high') return false;
+      if (normalizedQuery && !matchesQuery(notification, normalizedQuery)) return false;
+      return true;
+    },
+    [filter, normalizedQuery]
+  );
+
+  const mergeNotifications = useCallback(
+    (current, incoming) => {
+      if (!incoming.length) return current;
+      const seen = new Set(current.map((item) => item.id));
+      const merged = [...current, ...incoming.filter((item) => !seen.has(item.id))];
+      return sortNotifications(merged);
+    },
+    [sortNotifications]
+  );
+
+  const fetchNotifications = useCallback(
+    async ({ cursor = '', append = false } = {}) => {
+      if (append) {
+        setIsLoadingMore(true);
+      } else {
+        setIsLoading(true);
+      }
+
+      try {
+        const params = new URLSearchParams();
+        params.set('limit', PAGE_SIZE.toString());
+        if (cursor) {
+          params.set('cursor', cursor);
+        }
+        if (selectedWorkspaceId) {
+          params.set('workspaceId', selectedWorkspaceId);
+        }
+        if (filter === 'unread') {
+          params.set('unread', 'true');
+        }
+        if (filter === 'starred') {
+          params.set('starred', 'true');
+        }
+        if (filter === 'high') {
+          params.set('priority', 'high');
+        }
+        if (normalizedQuery) {
+          params.set('q', normalizedQuery);
+        }
+
+        const response = await fetch(`${apiBase}/api/notifications?${params.toString()}`, {
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          if (!append) {
+            setNotifications([]);
+          }
+          setNextCursor('');
+          setHasMore(false);
+          return;
+        }
+
+        const data = await response.json();
+        const nextItems = Array.isArray(data?.notifications) ? data.notifications : [];
+
+        setNotifications((prev) =>
+          append ? mergeNotifications(prev, nextItems) : sortNotifications(nextItems)
+        );
+        setNextCursor(data?.nextCursor || '');
+        setHasMore(Boolean(data?.nextCursor));
+      } catch (error) {
+        if (!append) {
+          setNotifications([]);
+        }
+        setNextCursor('');
+        setHasMore(false);
+      } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [
+      apiBase,
+      filter,
+      mergeNotifications,
+      normalizedQuery,
+      selectedWorkspaceId,
+      sortNotifications,
+    ]
+  );
+
+  const filteredNotifications = useMemo(() => {
     return notifications.filter((notification) => {
       if (filter === 'unread' && notification.read) return false;
       if (filter === 'starred' && !notification.starred) return false;
       if (filter === 'high' && notification.priority !== 'high') return false;
       return matchesQuery(notification, normalizedQuery);
     });
-  }, [filter, notifications, searchQuery]);
+  }, [filter, notifications, normalizedQuery]);
 
   useEffect(() => {
     setSelectedIds((prev) =>
       prev.filter((id) => filteredNotifications.some((notification) => notification.id === id))
     );
   }, [filteredNotifications]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+    fetchNotifications();
+  }, [fetchNotifications, filter, normalizedQuery, selectedWorkspaceId]);
 
   const selectedNotifications = useMemo(
     () => filteredNotifications.filter((notification) => selectedIds.includes(notification.id)),
@@ -237,19 +365,59 @@ export default function Notifications() {
   const handleSelectedReadToggle = async () => {
     if (selectedIds.length === 0) return;
     if (selectedUnreadCount > 0) {
-      await markSelectedNotificationsAsRead(selectedIds);
+      const updates = await markSelectedNotificationsAsRead(selectedIds);
+      if (updates?.length) {
+        setNotifications((prev) => {
+          const next = prev
+            .map((notification) =>
+              updates.find((item) => item.id === notification.id) || notification
+            )
+            .filter((notification) => isNotificationVisible(notification));
+          return sortNotifications(next);
+        });
+      }
       return;
     }
-    await markSelectedNotificationsAsUnread(selectedIds);
+    const updates = await markSelectedNotificationsAsUnread(selectedIds);
+    if (updates?.length) {
+      setNotifications((prev) => {
+        const next = prev
+          .map((notification) =>
+            updates.find((item) => item.id === notification.id) || notification
+          )
+          .filter((notification) => isNotificationVisible(notification));
+        return sortNotifications(next);
+      });
+    }
   };
 
   const handleSelectedStarToggle = async () => {
     if (selectedIds.length === 0) return;
     if (selectedStarredCount === selectedIds.length) {
-      await unstarSelectedNotifications(selectedIds);
+      const updates = await unstarSelectedNotifications(selectedIds);
+      if (updates?.length) {
+        setNotifications((prev) => {
+          const next = prev
+            .map((notification) =>
+              updates.find((item) => item.id === notification.id) || notification
+            )
+            .filter((notification) => isNotificationVisible(notification));
+          return sortNotifications(next);
+        });
+      }
       return;
     }
-    await starSelectedNotifications(selectedIds);
+    const updates = await starSelectedNotifications(selectedIds);
+    if (updates?.length) {
+      setNotifications((prev) => {
+        const next = prev
+          .map((notification) =>
+            updates.find((item) => item.id === notification.id) || notification
+          )
+          .filter((notification) => isNotificationVisible(notification));
+        return sortNotifications(next);
+      });
+    }
   };
 
   const handleDeleteSelected = async () => {
@@ -257,6 +425,9 @@ export default function Notifications() {
     const deleted = await deleteSelectedNotifications(selectedIds);
     if (deleted) {
       setSelectedIds([]);
+      setNotifications((prev) =>
+        prev.filter((notification) => !selectedIds.includes(notification.id))
+      );
     }
   };
 
@@ -264,18 +435,35 @@ export default function Notifications() {
     const deleted = await deleteAllNotifications();
     if (deleted) {
       setSelectedIds([]);
+      setNotifications([]);
+      setNextCursor('');
+      setHasMore(false);
     }
   };
 
+  const handleMarkAllRead = async () => {
+    await markAllNotificationsAsRead();
+    setNotifications((prev) => {
+      const updated = prev.map((notification) =>
+        notification.read ? notification : { ...notification, read: true, readAt: new Date().toISOString() }
+      );
+      if (filter === 'unread') {
+        return [];
+      }
+      return updated;
+    });
+  };
+
   return (
-    <div className="mx-auto max-w-[1400px] p-6">
+    <div className="page-shell mx-auto max-w-[1400px] p-6">
       <section className="surface-card overflow-hidden rounded-2xl border border-gray-200 bg-white">
         <div className="border-b border-gray-200 p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-gray-900">Activity Feed</h2>
               <p className="mt-0.5 text-xs text-gray-500">
-                {filteredNotifications.length} matching items
+                Showing {filteredNotifications.length}
+                {hasMore ? '+' : ''} items
                 {selectedIds.length > 0 ? ` • ${selectedIds.length} selected` : ''}
               </p>
             </div>
@@ -309,7 +497,7 @@ export default function Notifications() {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={markAllNotificationsAsRead}
+                  onClick={handleMarkAllRead}
                   disabled={!notifications.some((notification) => !notification.read)}
                   className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
                   Mark all read
@@ -352,12 +540,12 @@ export default function Notifications() {
           </div>
         </div>
 
-        <div className="divide-y divide-gray-200">
-          {isNotificationsLoading && (
+        <div className="divide-y divide-gray-100 dark:divide-transparent">
+          {isLoading && (
             <div className="p-6 text-sm text-gray-500">Loading notifications...</div>
           )}
 
-          {!isNotificationsLoading && filteredNotifications.length > 0 ? (
+          {!isLoading && filteredNotifications.length > 0 ? (
             filteredNotifications.map((notification) => (
               <article
                 key={notification.id}
@@ -375,7 +563,7 @@ export default function Notifications() {
                 </div>
 
                 <div
-                  className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg ${getTypeIconWrapStyles(
+                  className={`mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg ${getTypeIconWrapStyles(
                     notification.type
                   )}`}>
                   {getTypeIcon(notification.type)}
@@ -439,29 +627,88 @@ export default function Notifications() {
                       type="button"
                       onClick={() =>
                         notification.starred
-                          ? unstarNotification(notification.id)
-                          : starNotification(notification.id)
+                          ? unstarNotification(notification.id).then((updated) => {
+                              if (updated) {
+                                setNotifications((prev) =>
+                                  sortNotifications(
+                                    prev
+                                      .map((item) =>
+                                        item.id === updated.id ? updated : item
+                                      )
+                                      .filter((item) => isNotificationVisible(item))
+                                  )
+                                );
+                              }
+                            })
+                          : starNotification(notification.id).then((updated) => {
+                              if (updated) {
+                                setNotifications((prev) =>
+                                  sortNotifications(
+                                    prev
+                                      .map((item) =>
+                                        item.id === updated.id ? updated : item
+                                      )
+                                      .filter((item) => isNotificationVisible(item))
+                                  )
+                                );
+                              }
+                            })
                       }
-                      className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+                      className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
                         notification.starred
                           ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
                           : 'border-gray-200 text-gray-700 hover:bg-gray-100'
                       }`}>
-                      {notification.starred ? 'Unstar' : 'Star'}
+                      <span className="text-sm leading-none">
+                        {notification.starred ? '★' : '☆'}
+                      </span>
+                      {notification.starred ? 'Starred' : 'Star'}
                     </button>
                     <button
                       type="button"
                       onClick={() =>
                         notification.read
-                          ? markNotificationAsUnread(notification.id)
-                          : markNotificationAsRead(notification.id)
+                          ? markNotificationAsUnread(notification.id).then((updated) => {
+                              if (updated) {
+                                setNotifications((prev) =>
+                                  sortNotifications(
+                                    prev
+                                      .map((item) =>
+                                        item.id === updated.id ? updated : item
+                                      )
+                                      .filter((item) => isNotificationVisible(item))
+                                  )
+                                );
+                              }
+                            })
+                          : markNotificationAsRead(notification.id).then((updated) => {
+                              if (updated) {
+                                setNotifications((prev) =>
+                                  sortNotifications(
+                                    prev
+                                      .map((item) =>
+                                        item.id === updated.id ? updated : item
+                                      )
+                                      .filter((item) => isNotificationVisible(item))
+                                  )
+                                );
+                              }
+                            })
                       }
                       className="rounded-lg border border-blue-200 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">
                       {notification.read ? 'Mark unread' : 'Mark read'}
                     </button>
                     <button
                       type="button"
-                      onClick={() => deleteNotification(notification.id)}
+                      onClick={() =>
+                        deleteNotification(notification.id).then((deleted) => {
+                          if (deleted) {
+                            setNotifications((prev) =>
+                              prev.filter((item) => item.id !== notification.id)
+                            );
+                          }
+                        })
+                      }
                       className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50">
                       Delete
                     </button>
@@ -471,7 +718,7 @@ export default function Notifications() {
             ))
           ) : null}
 
-          {!isNotificationsLoading && filteredNotifications.length === 0 && (
+          {!isLoading && filteredNotifications.length === 0 && (
             <div className="p-10 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
                 <svg
@@ -494,6 +741,18 @@ export default function Notifications() {
             </div>
           )}
         </div>
+
+        {!isLoading && filteredNotifications.length > 0 && (
+          <div className="flex items-center justify-center border-t border-gray-200 bg-gray-50 px-4 py-4">
+            <button
+              type="button"
+              onClick={() => fetchNotifications({ cursor: nextCursor, append: true })}
+              disabled={!hasMore || isLoadingMore}
+              className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
+              {isLoadingMore ? 'Loading...' : hasMore ? 'Load more' : 'All caught up'}
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

@@ -14,7 +14,13 @@ const sortNotifications = (items) =>
 
     const leftDate = left?.createdAt ? new Date(left.createdAt).getTime() : 0;
     const rightDate = right?.createdAt ? new Date(right.createdAt).getTime() : 0;
-    return rightDate - leftDate;
+    if (rightDate !== leftDate) {
+      return rightDate - leftDate;
+    }
+    if (left?.id && right?.id) {
+      return right.id.localeCompare(left.id);
+    }
+    return 0;
   });
 
 const upsertNotification = (items, notification) => {
@@ -55,7 +61,7 @@ export function Provider({ children }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [projectsView, setProjectsView] = useState('list');
-  const [theme, setTheme] = useState('system');
+  const [theme, setTheme] = useState('light');
   const [resolvedTheme, setResolvedTheme] = useState('light');
 
   const [projects, setProjects] = useState([]);
@@ -469,21 +475,23 @@ export function Provider({ children }) {
 
   const deleteNotification = useCallback(
     async (notificationId) => {
-      if (!notificationId) return;
+      if (!notificationId) return false;
       try {
         const response = await fetch(`${apiBase}/api/notifications/${notificationId}`, {
           method: 'DELETE',
           credentials: 'include',
         });
 
-        if (!response.ok) return;
+        if (!response.ok) return false;
 
         setNotifications((prev) =>
           prev.filter((notification) => notification.id !== notificationId)
         );
+        return true;
       } catch (error) {
         // noop for now
       }
+      return false;
     },
     [apiBase]
   );

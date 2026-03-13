@@ -117,14 +117,14 @@ export default function ProfilePage() {
           </div>
           <Link
             href="/settings"
-            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50">
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
             Open Settings
           </Link>
         </div>
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
           {/* Profile Details */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h2 className="text-sm font-semibold text-gray-900">
               Account Details
             </h2>
@@ -190,7 +190,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Account Info */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h2 className="text-sm font-semibold text-gray-900">
               Account Info
             </h2>

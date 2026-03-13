@@ -91,6 +91,10 @@ export default function Layout({ children }) {
   };
 
   const handleBackToProjects = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+      return;
+    }
     router.push('/projects');
   };
 
@@ -172,7 +176,7 @@ export default function Layout({ children }) {
           <div className={contentClassName}>{children}</div>
         </main>
       </div>
-      <Footer isCollapsed={isSidebarCollapsed} isMobile={isMobile} />
+      <Footer isCollapsed={isSidebarCollapsed} />
     </div>
   );
 }

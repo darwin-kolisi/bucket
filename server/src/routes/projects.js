@@ -335,6 +335,13 @@ const toOptionalTrimmedString = (value) => {
   return trimmed || null;
 };
 
+const parseOptionalLimit = (value) => {
+  if (value === undefined || value === null || value === '') return null;
+  const parsed = Number.parseInt(value.toString(), 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) return 50;
+  return Math.min(parsed, 200);
+};
+
 const normalizeTaskPriority = (value) => {
   if (value === undefined) return undefined;
   const normalized = value?.toString().trim().toLowerCase();
@@ -689,6 +696,8 @@ router.get('/projects', requireAuth, async (req, res) => {
   const searchQuery = req.query.q?.toString().trim().toLowerCase() || '';
   const statusFilter = normalizeStatusFilter(req.query.status);
   const sortOption = req.query.sort?.toString() || 'newest';
+  const limit = parseOptionalLimit(req.query.limit);
+  const cursor = toOptionalTrimmedString(req.query.cursor);
   const workspace = workspaceId || (await getDefaultWorkspace(req.user.id))?.id;
 
   if (!workspace) {
@@ -758,27 +767,51 @@ router.get('/projects', requireAuth, async (req, res) => {
     });
   }
 
-  if (sortOption === 'oldest') {
-    filtered = [...filtered].sort((a, b) => {
+  const compareBySort = (a, b) => {
+    if (sortOption === 'oldest') {
       const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
       const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
       return dateA - dateB;
-    });
-  } else if (sortOption === 'due-soon') {
-    filtered = [...filtered].sort((a, b) => {
+    }
+    if (sortOption === 'due-soon') {
       const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
       const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
       return dueA - dueB;
-    });
-  } else {
-    filtered = [...filtered].sort((a, b) => {
-      const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-      const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-      return dateB - dateA;
-    });
+    }
+    const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return dateB - dateA;
+  };
+
+  filtered = [...filtered].sort((a, b) => {
+    const starredA = a.starredAt ? new Date(a.starredAt).getTime() : 0;
+    const starredB = b.starredAt ? new Date(b.starredAt).getTime() : 0;
+    if (starredA !== starredB) {
+      return starredB - starredA;
+    }
+    const order = compareBySort(a, b);
+    if (order !== 0) return order;
+    return a.id > b.id ? -1 : a.id < b.id ? 1 : 0;
+  });
+
+  if (!limit) {
+    return res.json({ projects: filtered });
   }
 
-  res.json({ projects: filtered });
+  let startIndex = 0;
+  if (cursor) {
+    const cursorIndex = filtered.findIndex((project) => project.id === cursor);
+    if (cursorIndex >= 0) {
+      startIndex = cursorIndex + 1;
+    }
+  }
+
+  const slice = filtered.slice(startIndex, startIndex + limit + 1);
+  const hasMore = slice.length > limit;
+  const paged = hasMore ? slice.slice(0, limit) : slice;
+  const nextCursor = hasMore ? paged[paged.length - 1]?.id : null;
+
+  return res.json({ projects: paged, nextCursor, hasMore });
 });
 
 router.post('/projects', requireAuth, async (req, res) => {
@@ -869,7 +902,7 @@ router.get('/projects/:id', requireAuth, async (req, res) => {
 });
 
 router.patch('/projects/:id', requireAuth, async (req, res) => {
-  const { name, description, dueDate, startDate } = req.body || {};
+  const { name, description, dueDate, startDate, starred } = req.body || {};
 
   if (name !== undefined && !name?.toString().trim()) {
     return res.status(400).json({ error: 'Project name is required' });
@@ -925,6 +958,7 @@ router.patch('/projects/:id', requireAuth, async (req, res) => {
         dueDate === null ? null : dueDate !== undefined ? nextProjectDueDate : undefined,
       startDate:
         startDate === null ? null : startDate ? parseDateInput(startDate) : undefined,
+      starredAt: starred === true ? new Date() : starred === false ? null : undefined,
     },
     include: {
       tasks: {
@@ -1082,7 +1116,17 @@ router.post('/projects/:id/tasks', requireAuth, async (req, res) => {
 });
 
 router.patch('/tasks/:id', requireAuth, async (req, res) => {
-  const { title, description, dueDate, assigneeId, status, order, priority, subtasks } =
+  const {
+    title,
+    description,
+    dueDate,
+    assigneeId,
+    status,
+    order,
+    priority,
+    subtasks,
+    starred,
+  } =
     req.body || {};
 
   if (title !== undefined && !title?.toString().trim()) {
@@ -1149,6 +1193,7 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
       order,
       priority: priority !== undefined ? normalizedPriority : undefined,
       subtasks: resolved.subtasks,
+      starredAt: starred === true ? new Date() : starred === false ? null : undefined,
     },
   });
 
@@ -1245,6 +1290,8 @@ router.get('/notes', requireAuth, async (req, res) => {
   const projectId = toOptionalTrimmedString(req.query.projectId);
   const taskId = toOptionalTrimmedString(req.query.taskId);
   const searchQuery = toOptionalTrimmedString(req.query.q);
+  const limit = parseOptionalLimit(req.query.limit);
+  const cursor = toOptionalTrimmedString(req.query.cursor);
 
   if (workspaceId) {
     const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
@@ -1300,10 +1347,20 @@ router.get('/notes', requireAuth, async (req, res) => {
         : {}),
     },
     include: noteInclude,
-    orderBy: { updatedAt: 'desc' },
+    orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+    ...(limit ? { take: limit + 1 } : {}),
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
 
-  res.json({ notes: notes.map(toUiNote) });
+  if (!limit) {
+    return res.json({ notes: notes.map(toUiNote) });
+  }
+
+  const hasMore = notes.length > limit;
+  const sliced = hasMore ? notes.slice(0, limit) : notes;
+  const nextCursor = hasMore ? sliced[sliced.length - 1]?.id : null;
+
+  return res.json({ notes: sliced.map(toUiNote), nextCursor, hasMore });
 });
 
 router.post('/notes', requireAuth, async (req, res) => {
@@ -1532,6 +1589,16 @@ router.delete('/workspaces/:id', requireAuth, async (req, res) => {
   }
   if (membership.role !== 'owner' || membership.workspace.ownerId !== req.user.id) {
     return res.status(403).json({ error: 'Only workspace owners can delete this workspace' });
+  }
+
+  const totalWorkspaces = await prisma.workspaceMember.count({
+    where: {
+      userId: req.user.id,
+      workspace: { deletedAt: null },
+    },
+  });
+  if (totalWorkspaces <= 1) {
+    return res.status(400).json({ error: 'You cannot delete your only workspace' });
   }
 
   const [projectsCount, tasksCount] = await prisma.$transaction([

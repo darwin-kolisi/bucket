@@ -67,6 +67,7 @@ model Project {
   description String?
   startDate   DateTime?
   dueDate     DateTime?
+  starredAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
@@ -89,6 +90,7 @@ model Task {
   priority    String     @default("Medium")
   subtasks    Json?
   dueDate     DateTime?
+  starredAt   DateTime?
   assigneeId  String?
   order       Int?
   createdAt   DateTime  @default(now())

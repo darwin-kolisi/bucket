@@ -69,10 +69,14 @@ export default function Notes() {
 
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [isLoadingNotes, setIsLoadingNotes] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savingEditId, setSavingEditId] = useState('');
   const [deletingId, setDeletingId] = useState('');
   const [hasLoadedProjects, setHasLoadedProjects] = useState(false);
+  const [notesCursor, setNotesCursor] = useState('');
+  const [hasMoreNotes, setHasMoreNotes] = useState(false);
+  const PAGE_SIZE = 20;
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) || null,
@@ -207,8 +211,14 @@ export default function Notes() {
     }
   }, [apiBase, selectedWorkspaceId]);
 
-  const fetchNotes = useCallback(async () => {
-    setIsLoadingNotes(true);
+  const fetchNotes = useCallback(async ({ cursor = '', append = false } = {}) => {
+    if (append) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoadingNotes(true);
+      setNotesCursor('');
+      setHasMoreNotes(false);
+    }
     try {
       const params = new URLSearchParams();
       if (selectedProjectId) {
@@ -223,6 +233,10 @@ export default function Notes() {
       if (searchQuery.trim()) {
         params.set('q', searchQuery.trim());
       }
+      params.set('limit', PAGE_SIZE.toString());
+      if (cursor) {
+        params.set('cursor', cursor);
+      }
 
       const query = params.toString();
       const response = await fetch(`${apiBase}/api/notes${query ? `?${query}` : ''}`, {
@@ -232,17 +246,33 @@ export default function Notes() {
       if (!response.ok) {
         const message = await readApiError(response, 'Failed to load notes.');
         pushError(message);
-        setNotes([]);
+        if (!append) {
+          setNotes([]);
+        }
+        setNotesCursor('');
+        setHasMoreNotes(false);
         return;
       }
 
       const data = await response.json();
-      setNotes(Array.isArray(data?.notes) ? data.notes : []);
+      const nextNotes = Array.isArray(data?.notes) ? data.notes : [];
+      setNotes((prev) => {
+        if (!append) return nextNotes;
+        const seen = new Set(prev.map((note) => note.id));
+        return [...prev, ...nextNotes.filter((note) => !seen.has(note.id))];
+      });
+      setNotesCursor(data?.nextCursor || '');
+      setHasMoreNotes(Boolean(data?.nextCursor));
     } catch (requestError) {
-      setNotes([]);
+      if (!append) {
+        setNotes([]);
+      }
+      setNotesCursor('');
+      setHasMoreNotes(false);
       pushError('Failed to load notes.');
     } finally {
       setIsLoadingNotes(false);
+      setIsLoadingMore(false);
     }
   }, [
     apiBase,
@@ -401,7 +431,7 @@ export default function Notes() {
   };
 
   return (
-    <div className="mx-auto max-w-[1400px] p-6">
+    <div className="page-shell mx-auto max-w-[1400px] p-6">
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5">
         <h2 className="mb-4 text-sm font-semibold text-gray-900">Filters</h2>
         <div className="grid gap-4 md:grid-cols-3">
@@ -493,7 +523,8 @@ export default function Notes() {
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-gray-900">Notes</h2>
               <span className="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                {notes.length} {notes.length === 1 ? 'note' : 'notes'}
+                Showing {notes.length}
+                {hasMoreNotes ? '+' : ''} {notes.length === 1 ? 'note' : 'notes'}
               </span>
             </div>
 
@@ -628,6 +659,15 @@ export default function Notes() {
                     </div>
                   );
                 })}
+                <div className="flex items-center justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => fetchNotes({ cursor: notesCursor, append: true })}
+                    disabled={!hasMoreNotes || isLoadingMore}
+                    className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
+                    {isLoadingMore ? 'Loading...' : hasMoreNotes ? 'Load more' : 'All notes loaded'}
+                  </button>
+                </div>
               </div>
             )}
           </div>

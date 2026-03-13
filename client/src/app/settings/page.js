@@ -136,13 +136,13 @@ export default function SettingsPage() {
           </div>
           <Link
             href="/profile"
-            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50">
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
             View Profile
           </Link>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h2 className="text-sm font-semibold text-gray-900">Appearance</h2>
             <p className="mt-0.5 text-xs text-gray-500">Choose your interface theme</p>
 
@@ -188,7 +188,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h2 className="text-sm font-semibold text-gray-900">Preferences</h2>
             <p className="mt-0.5 text-xs text-gray-500">Language and timezone settings</p>
 
@@ -218,7 +218,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6">
           <h2 className="text-sm font-semibold text-gray-900">Delete Account</h2>
           <p className="mt-0.5 text-xs text-gray-500">
             Permanently delete your account and all data for {isLoadingAccount ? '...' : profileEmail}

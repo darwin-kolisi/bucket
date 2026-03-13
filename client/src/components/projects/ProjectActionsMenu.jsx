@@ -11,6 +11,8 @@ export default function ProjectActionsMenu({
   onDuplicate,
   onOpenNotes,
   onDelete,
+  onToggleStar,
+  isStarred = false,
   className = '',
   buttonClassName = '',
 }) {
@@ -71,6 +73,19 @@ export default function ProjectActionsMenu({
               Notes
             </button>
           </MenuItem>
+          {onToggleStar && <div className="my-1 h-px bg-gray-200" />}
+          {onToggleStar && (
+            <MenuItem>
+              <button
+                onClick={(event) => handleAction(event, onToggleStar)}
+                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+                <span className="text-[14px] text-gray-400">
+                  {isStarred ? '★' : '☆'}
+                </span>
+                {isStarred ? 'Unstar' : 'Star'}
+              </button>
+            </MenuItem>
+          )}
           <div className="my-1 h-px bg-gray-200" />
           <MenuItem>
             <button

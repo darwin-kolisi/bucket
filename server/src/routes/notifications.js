@@ -15,6 +15,7 @@ import { requireAuth } from './utils.js';
 const router = express.Router();
 
 const parseLimit = (rawValue) => {
+  if (rawValue === undefined || rawValue === null || rawValue === '') return null;
   const parsed = Number.parseInt(rawValue?.toString() || '', 10);
   if (!Number.isInteger(parsed) || parsed <= 0) return 50;
   return Math.min(parsed, 200);
@@ -54,6 +55,7 @@ const buildNotificationWhere = ({
   type,
   starredFilter,
   ids,
+  searchQuery,
   includeDeleted = false,
 }) => {
   const where = {
@@ -95,6 +97,20 @@ const buildNotificationWhere = ({
 
   if (ids?.length) {
     where.id = { in: ids };
+  }
+
+  if (searchQuery) {
+    where.AND = [
+      ...(where.AND || []),
+      {
+        OR: [
+          { title: { contains: searchQuery, mode: 'insensitive' } },
+          { message: { contains: searchQuery, mode: 'insensitive' } },
+          { project: { name: { contains: searchQuery, mode: 'insensitive' } } },
+          { task: { title: { contains: searchQuery, mode: 'insensitive' } } },
+        ],
+      },
+    ];
   }
 
   return where;
@@ -169,7 +185,7 @@ const findTrashedNotification = (notificationId, userId, include = notificationI
   });
 
 router.get('/notifications/trash', requireAuth, async (req, res) => {
-  const limit = parseLimit(req.query.limit);
+  const limit = parseLimit(req.query.limit) ?? 50;
   const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
 
   if (workspaceId) {
@@ -197,12 +213,14 @@ router.get('/notifications/trash', requireAuth, async (req, res) => {
 });
 
 router.get('/notifications', requireAuth, async (req, res) => {
-  const limit = parseLimit(req.query.limit);
+  const limit = parseLimit(req.query.limit) ?? 50;
   const unreadFilter = parseBoolean(req.query.unread);
   const starredFilter = parseBoolean(req.query.starred);
   const priority = parsePriority(req.query.priority);
   const type = toOptionalTrimmedString(req.query.type);
   const workspaceId = toOptionalTrimmedString(req.query.workspaceId);
+  const searchQuery = toOptionalTrimmedString(req.query.q);
+  const cursor = toOptionalTrimmedString(req.query.cursor);
 
   if (workspaceId) {
     const allowed = await hasWorkspaceAccess(workspaceId, req.user.id);
@@ -219,13 +237,23 @@ router.get('/notifications', requireAuth, async (req, res) => {
       priority,
       type,
       starredFilter,
+      searchQuery,
     }),
     include: notificationInclude,
-    orderBy: [{ starredAt: 'desc' }, { createdAt: 'desc' }],
-    take: limit,
+    orderBy: [{ starredAt: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
 
-  res.json({ notifications: notifications.map(toApiNotification) });
+  const hasMore = notifications.length > limit;
+  const sliced = hasMore ? notifications.slice(0, limit) : notifications;
+  const nextCursor = hasMore ? sliced[sliced.length - 1]?.id : null;
+
+  res.json({
+    notifications: sliced.map(toApiNotification),
+    nextCursor,
+    hasMore,
+  });
 });
 
 router.patch('/notifications/:id/read', requireAuth, async (req, res) => {

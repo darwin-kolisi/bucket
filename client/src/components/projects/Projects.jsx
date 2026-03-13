@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ProjectCard from './ProjectCard';
 import AddProjectModal from './AddProjectModal';
@@ -26,6 +26,10 @@ export default function Projects({
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [showProjectsDropdown, setShowProjectsDropdown] = useState(false);
   const [sortOption, setSortOption] = useState('newest');
+  const [projectsCursor, setProjectsCursor] = useState('');
+  const [hasMoreProjects, setHasMoreProjects] = useState(false);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const projectsDropdownRef = useRef(null);
   const {
     projectsView,
@@ -39,8 +43,22 @@ export default function Projects({
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   const effectiveStatusFilter =
     statusFilter === 'in-progress' ? 'on-track' : statusFilter;
+  const PAGE_SIZE = 24;
 
-  const refreshProjects = async () => {
+  const mergeProjects = useCallback((current, incoming) => {
+    if (!incoming.length) return current;
+    const seen = new Set(current.map((project) => project.id));
+    return [...current, ...incoming.filter((project) => !seen.has(project.id))];
+  }, []);
+
+  const refreshProjects = useCallback(async ({ cursor = '', append = false } = {}) => {
+    if (append) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoadingProjects(true);
+      setProjectsCursor('');
+      setHasMoreProjects(false);
+    }
     try {
       const params = new URLSearchParams();
       if (searchQuery?.trim()) {
@@ -55,6 +73,10 @@ export default function Projects({
       if (selectedWorkspaceId) {
         params.set('workspaceId', selectedWorkspaceId);
       }
+      params.set('limit', PAGE_SIZE.toString());
+      if (cursor) {
+        params.set('cursor', cursor);
+      }
       const query = params.toString();
       const response = await fetch(
         `${apiBase}/api/projects${query ? `?${query}` : ''}`,
@@ -63,14 +85,38 @@ export default function Projects({
         }
       );
       if (!response.ok) {
+        if (!append) {
+          setVisibleProjects([]);
+        }
+        setProjectsCursor('');
+        setHasMoreProjects(false);
         return;
       }
       const data = await response.json();
-      setVisibleProjects(data.projects || []);
+      const nextProjects = Array.isArray(data?.projects) ? data.projects : [];
+      setVisibleProjects((prev) =>
+        append ? mergeProjects(prev, nextProjects) : nextProjects
+      );
+      setProjectsCursor(data?.nextCursor || '');
+      setHasMoreProjects(Boolean(data?.nextCursor));
     } catch (error) {
-      // noop for now
+      if (!append) {
+        setVisibleProjects([]);
+      }
+      setProjectsCursor('');
+      setHasMoreProjects(false);
+    } finally {
+      setIsLoadingProjects(false);
+      setIsLoadingMore(false);
     }
-  };
+  }, [
+    apiBase,
+    effectiveStatusFilter,
+    mergeProjects,
+    searchQuery,
+    selectedWorkspaceId,
+    sortOption,
+  ]);
 
   const refreshProjectsCache = async () => {
     try {
@@ -110,6 +156,7 @@ export default function Projects({
   const openCreateProjectModal = () => {
     setIsProjectModalOpen(true);
   };
+
 
   const createProject = async (projectData) => {
     try {
@@ -197,11 +244,63 @@ export default function Projects({
     }
   };
 
+  const applyProjectUpdate = (updatedProject) => {
+    setVisibleProjects((prev) =>
+      prev.map((project) => (project.id === updatedProject.id ? updatedProject : project))
+    );
+    setProjects((prev) =>
+      prev.map((project) => (project.id === updatedProject.id ? updatedProject : project))
+    );
+  };
+
+  const applyProjectImportance = (projectId, updates) => {
+    setVisibleProjects((prev) =>
+      prev.map((project) =>
+        project.id === projectId ? { ...project, ...updates } : project
+      )
+    );
+    setProjects((prev) =>
+      prev.map((project) =>
+        project.id === projectId ? { ...project, ...updates } : project
+      )
+    );
+  };
+
+  const toggleProjectStar = async (project) => {
+    if (!project?.id) return;
+    const nextStarred = !project.starredAt;
+    const previousStarredAt = project.starredAt;
+    applyProjectImportance(project.id, {
+      starredAt: nextStarred ? new Date().toISOString() : null,
+    });
+    try {
+      const response = await fetch(`${apiBase}/api/projects/${project.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ starred: nextStarred }),
+      });
+      if (!response.ok) throw new Error('Failed to toggle project star.');
+      const data = await response.json();
+      if (data?.project) applyProjectUpdate(data.project);
+    } catch (error) {
+      applyProjectImportance(project.id, { starredAt: previousStarredAt ?? null });
+    }
+  };
+
   useEffect(() => {
     refreshProjects();
-  }, [effectiveStatusFilter, searchQuery, sortOption, selectedWorkspaceId]);
+  }, [refreshProjects]);
 
-  const projectsToRender = visibleProjects;
+  const projectsToRender = visibleProjects
+    .map((project, index) => ({ project, index }))
+    .sort((a, b) => {
+      const starredA = a.project.starredAt ? new Date(a.project.starredAt).getTime() : 0;
+      const starredB = b.project.starredAt ? new Date(b.project.starredAt).getTime() : 0;
+      if (starredA !== starredB) return starredB - starredA;
+      return a.index - b.index;
+    })
+    .map(({ project }) => project);
 
   const formatDate = (value) => {
     if (!value) return 'No due date';
@@ -245,31 +344,17 @@ export default function Projects({
 
   const renderCalendarView = () => {
     return (
-      <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
+      <div className="px-4 md:px-8 pt-2 pb-20">
         <Calendar projects={projectsToRender} onProjectSelect={onProjectSelect} />
       </div>
     );
   };
 
   const renderListView = () => {
-    if (projectsToRender.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-8">
-          <ListIcon className="w-16 h-16 text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects found</h3>
-          <p className="text-sm text-gray-500 text-center max-w-sm">
-            {searchQuery || effectiveStatusFilter !== 'all'
-              ? 'No projects match your filters. Try adjusting your search or filter settings.'
-              : 'Get started by creating your first project.'}
-          </p>
-        </div>
-      );
-    }
-
     return (
-      <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
+      <div className="px-4 md:px-8 pt-2 pb-20">
         {/* Desktop table */}
-        <div className="hidden sm:block rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="hidden sm:block rounded-2xl border border-gray-200 bg-white overflow-hidden">
           <div className="grid grid-cols-[minmax(0,1fr)_160px_180px_220px_32px] items-center gap-4 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 border-b border-gray-200">
             <span className="translate-x-[30px]">Project</span>
             <span className="inline-flex items-center gap-2">
@@ -289,8 +374,20 @@ export default function Projects({
             </span>
             <span aria-hidden="true" />
           </div>
-          <div className="divide-y divide-gray-100">
-            {projectsToRender.map((project) => {
+          <div className="divide-y divide-gray-100 dark:divide-transparent">
+            {projectsToRender.length === 0 ? (
+              <div className="p-10 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                  <ListIcon className="h-6 w-6 text-gray-400" />
+                </div>
+                <p className="mt-3 text-sm font-medium text-gray-700">No projects found</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {searchQuery || effectiveStatusFilter !== 'all'
+                    ? 'No projects match your filters. Try adjusting your search or filter settings.'
+                    : 'Get started by creating your first project.'}
+                </p>
+              </div>
+            ) : projectsToRender.map((project) => {
               const completionPercentage =
                 project.totalTasks > 0
                   ? Math.round(
@@ -312,7 +409,7 @@ export default function Projects({
                         project.status
                       )}`}
                     />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-semibold text-gray-900 truncate">
                         {project.name}
                       </h3>
@@ -326,9 +423,9 @@ export default function Projects({
                     {formatDate(project.dueDate)}
                   </div>
                   <div className="inline-flex items-center gap-2 whitespace-nowrap text-xs text-gray-500">
-                    <span className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
+                    <span className="h-1.5 w-20 overflow-hidden rounded-full progress-track">
                       <span
-                        className="block h-full rounded-full bg-gray-900"
+                        className="block h-full rounded-full progress-fill"
                         style={{ width: `${completionPercentage}%` }}
                       />
                     </span>
@@ -346,6 +443,8 @@ export default function Projects({
                     onDuplicate={() => duplicateProject(project.id)}
                     onOpenNotes={() => openProjectNotes(project.id)}
                     onDelete={() => deleteProject(project.id)}
+                    onToggleStar={() => toggleProjectStar(project)}
+                    isStarred={!!project.starredAt}
                   />
                 </div>
               );
@@ -354,8 +453,20 @@ export default function Projects({
         </div>
 
         {/* Mobile list */}
-        <div className="sm:hidden rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden divide-y divide-gray-100">
-          {projectsToRender.map((project) => {
+        <div className="sm:hidden rounded-2xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
+          {projectsToRender.length === 0 ? (
+            <div className="p-10 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                <ListIcon className="h-6 w-6 text-gray-400" />
+              </div>
+              <p className="mt-3 text-sm font-medium text-gray-700">No projects found</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {searchQuery || effectiveStatusFilter !== 'all'
+                  ? 'No projects match your filters. Try adjusting your search or filter settings.'
+                  : 'Get started by creating your first project.'}
+              </p>
+            </div>
+          ) : projectsToRender.map((project) => {
             const completionPercentage =
               project.totalTasks > 0
                 ? Math.round(
@@ -392,6 +503,8 @@ export default function Projects({
                   onDuplicate={() => duplicateProject(project.id)}
                   onOpenNotes={() => openProjectNotes(project.id)}
                   onDelete={() => deleteProject(project.id)}
+                  onToggleStar={() => toggleProjectStar(project)}
+                  isStarred={!!project.starredAt}
                 />
               </div>
             );
@@ -404,20 +517,26 @@ export default function Projects({
   const renderBoardView = () => {
     if (projectsToRender.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-8">
-          <BoardIcon className="w-16 h-16 text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects found</h3>
-          <p className="text-sm text-gray-500 text-center max-w-sm">
-            {searchQuery || effectiveStatusFilter !== 'all'
-              ? 'No projects match your filters. Try adjusting your search or filter settings.'
-              : 'Get started by creating your first project.'}
-          </p>
+        <div className="px-4 md:px-8 pt-2 pb-20">
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="p-10 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                <BoardIcon className="h-6 w-6 text-gray-400" />
+              </div>
+              <p className="mt-3 text-sm font-medium text-gray-700">No projects found</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {searchQuery || effectiveStatusFilter !== 'all'
+                  ? 'No projects match your filters. Try adjusting your search or filter settings.'
+                  : 'Get started by creating your first project.'}
+              </p>
+            </div>
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="px-4 md:px-8 pt-2 pb-20 min-h-[calc(100vh-160px)]">
+      <div className="px-4 md:px-8 pt-2 pb-20">
         <div className="block md:hidden space-y-4">
           {projectsToRender.map((project) => (
             <ProjectCard
@@ -428,6 +547,7 @@ export default function Projects({
               onOpenProjectNotes={openProjectNotes}
               onDeleteProject={deleteProject}
               onProjectClick={handleProjectClick}
+              onToggleStar={() => toggleProjectStar(project)}
             />
           ))}
         </div>
@@ -442,6 +562,7 @@ export default function Projects({
               onOpenProjectNotes={openProjectNotes}
               onDeleteProject={deleteProject}
               onProjectClick={handleProjectClick}
+              onToggleStar={() => toggleProjectStar(project)}
             />
           ))}
         </div>
@@ -449,9 +570,26 @@ export default function Projects({
     );
   };
 
+  const renderLoadMore = () => {
+    if (isLoadingProjects || projectsToRender.length === 0) {
+      return null;
+    }
+    return (
+      <div className="flex items-center justify-center px-4 pb-8">
+        <button
+          type="button"
+          onClick={() => refreshProjects({ cursor: projectsCursor, append: true })}
+          disabled={!hasMoreProjects || isLoadingMore}
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
+          {isLoadingMore ? 'Loading...' : hasMoreProjects ? 'Load more' : 'All projects loaded'}
+        </button>
+      </div>
+    );
+  };
+
   return (
     <>
-      <div className="flex-1 overflow-y-auto min-h-screen">
+      <div className="flex-1 page-shell">
         <div className="px-5 md:px-8 pt-6 pb-2">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -459,8 +597,8 @@ export default function Projects({
                 <button
                   onClick={() => setProjectsView('list')}
                   className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'list'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    ? 'bg-white text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
                     }`}>
                   <ListIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">List</span>
@@ -468,8 +606,8 @@ export default function Projects({
                 <button
                   onClick={() => setProjectsView('board')}
                   className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'board'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    ? 'bg-white text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
                     }`}>
                   <BoardIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Board</span>
@@ -477,8 +615,8 @@ export default function Projects({
                 <button
                   onClick={() => setProjectsView('calendar')}
                   className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'calendar'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                    ? 'bg-white text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
                     }`}>
                   <CalendarIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Calendar</span>
@@ -521,6 +659,7 @@ export default function Projects({
           : projectsView === 'board'
             ? renderBoardView()
             : renderListView()}
+        {renderLoadMore()}
       </div>
 
       {isProjectModalOpen && (
