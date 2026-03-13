@@ -297,7 +297,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
             </div>
 
             {recentProjects.length > 0 ? (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-transparent">
                 {recentProjects.map((project) => (
                   <button
                     key={project.id}
@@ -316,9 +316,9 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
                           {project.description || 'No description'}
                         </p>
                         <div className="mt-2.5 flex items-center gap-3">
-                          <div className="h-1 flex-1 overflow-hidden rounded-full bg-gray-100">
+                          <div className="h-1 flex-1 overflow-hidden rounded-full progress-track">
                             <div
-                              className="h-full rounded-full bg-gray-900"
+                              className="h-full rounded-full progress-fill"
                               style={{
                                 width: `${project.totalTasks ? Math.round((project.completedTasks / project.totalTasks) * 100) : 0}%`,
                               }}
@@ -361,7 +361,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
             </div>
 
             <div className="p-5">
-              <div className="flex h-1.5 overflow-hidden rounded-full bg-gray-100">
+              <div className="flex h-1.5 overflow-hidden rounded-full progress-track">
                 {STATUS_ORDER.map((statusKey) => {
                   const count = dashboardData.statusCount[statusKey];
                   const pct = dashboardData.totalProjects

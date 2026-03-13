@@ -22,7 +22,7 @@ function SignUpContent() {
 
   return (
     <AuthLayout>
-      <main className="relative min-h-screen bg-white md:bg-gray-50 flex items-center justify-center px-0 md:px-6 py-0 md:py-12">
+      <main className="relative min-h-[100dvh] bg-white md:bg-gray-50 flex items-center justify-center px-0 md:px-6 py-0">
         <div className="w-full md:max-w-6xl">
           <section className="grid gap-6 md:gap-10 md:grid-cols-[140px_1fr] items-start w-full">
             <aside className="hidden md:flex flex-col gap-3">
@@ -34,15 +34,15 @@ function SignUpContent() {
               </Link>
             </aside>
 
-            <section className="relative bg-white md:rounded-lg md:border md:border-gray-200 p-6 md:p-8 md:shadow-sm min-h-screen md:min-h-0 flex flex-col justify-center md:mx-auto md:max-w-md md:w-full">
-              <span className="pointer-events-none hidden md:block absolute -left-6 top-0 h-[200vh] w-px -translate-y-1/2 border-l border-dashed border-gray-200" />
-              <span className="pointer-events-none hidden md:block absolute -right-6 top-0 h-[200vh] w-px -translate-y-1/2 border-l border-dashed border-gray-200" />
-              <span className="pointer-events-none hidden md:block absolute -top-6 left-0 h-px w-[200vw] -translate-x-1/2 border-t border-dashed border-gray-200" />
-              <span className="pointer-events-none hidden md:block absolute -bottom-6 left-0 h-px w-[200vw] -translate-x-1/2 border-t border-dashed border-gray-200" />
-              <span className="pointer-events-none hidden md:block absolute -left-6 -top-6 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-gray-200 bg-white" />
-              <span className="pointer-events-none hidden md:block absolute -right-6 -top-6 h-2.5 w-2.5 translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-gray-200 bg-white" />
-              <span className="pointer-events-none hidden md:block absolute -left-6 -bottom-6 h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rounded-[3px] border border-gray-200 bg-white" />
-              <span className="pointer-events-none hidden md:block absolute -right-6 -bottom-6 h-2.5 w-2.5 translate-x-1/2 translate-y-1/2 rounded-[3px] border border-gray-200 bg-white" />
+            <section className="relative bg-white md:rounded-lg md:border md:border-gray-200 p-6 md:p-8 md:shadow-sm flex flex-col justify-center md:mx-auto md:max-w-md md:w-full dark:border-[#2f2f2f] dark:shadow-none">
+              <span className="pointer-events-none hidden md:block absolute -left-6 top-0 h-full w-px border-l border-dashed border-gray-200 dark:border-[#2f2f2f]" />
+              <span className="pointer-events-none hidden md:block absolute -right-6 top-0 h-full w-px border-l border-dashed border-gray-200 dark:border-[#2f2f2f]" />
+              <span className="pointer-events-none hidden md:block absolute -top-6 left-0 h-px w-full border-t border-dashed border-gray-200 dark:border-[#2f2f2f]" />
+              <span className="pointer-events-none hidden md:block absolute -bottom-6 left-0 h-px w-full border-t border-dashed border-gray-200 dark:border-[#2f2f2f]" />
+              <span className="pointer-events-none hidden md:block absolute -left-6 -top-6 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-gray-200 bg-white dark:border-[#2f2f2f]" />
+              <span className="pointer-events-none hidden md:block absolute -right-6 -top-6 h-2.5 w-2.5 translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-gray-200 bg-white dark:border-[#2f2f2f]" />
+              <span className="pointer-events-none hidden md:block absolute -left-6 -bottom-6 h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rounded-[3px] border border-gray-200 bg-white dark:border-[#2f2f2f]" />
+              <span className="pointer-events-none hidden md:block absolute -right-6 -bottom-6 h-2.5 w-2.5 translate-x-1/2 translate-y-1/2 rounded-[3px] border border-gray-200 bg-white dark:border-[#2f2f2f]" />
 
               <Link href="/auth" className="absolute top-6 left-6 md:hidden text-xs text-gray-400 hover:text-gray-600" aria-label="Back to landing">
                 ← Back
@@ -76,7 +76,7 @@ function SignUpContent() {
                       errorCallbackURL: `${appOrigin}/auth/signup?status=exists`,
                     })
                   }
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-normal text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-md transition-colors">
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-normal text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-200 rounded-md transition-colors">
                   <GoogleIcon />
                   Sign up with Google
                 </button>

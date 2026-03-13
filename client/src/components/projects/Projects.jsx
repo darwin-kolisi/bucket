@@ -374,7 +374,7 @@ export default function Projects({
             </span>
             <span aria-hidden="true" />
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-transparent">
             {projectsToRender.length === 0 ? (
               <div className="p-10 text-center">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
@@ -423,9 +423,9 @@ export default function Projects({
                     {formatDate(project.dueDate)}
                   </div>
                   <div className="inline-flex items-center gap-2 whitespace-nowrap text-xs text-gray-500">
-                    <span className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
+                    <span className="h-1.5 w-20 overflow-hidden rounded-full progress-track">
                       <span
-                        className="block h-full rounded-full bg-gray-900"
+                        className="block h-full rounded-full progress-fill"
                         style={{ width: `${completionPercentage}%` }}
                       />
                     </span>

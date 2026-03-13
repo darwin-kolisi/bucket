@@ -540,7 +540,7 @@ export default function Notifications() {
           </div>
         </div>
 
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-100 dark:divide-transparent">
           {isLoading && (
             <div className="p-6 text-sm text-gray-500">Loading notifications...</div>
           )}

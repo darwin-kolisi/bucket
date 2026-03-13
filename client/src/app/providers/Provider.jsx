@@ -61,7 +61,7 @@ export function Provider({ children }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [projectsView, setProjectsView] = useState('list');
-  const [theme, setTheme] = useState('system');
+  const [theme, setTheme] = useState('light');
   const [resolvedTheme, setResolvedTheme] = useState('light');
 
   const [projects, setProjects] = useState([]);

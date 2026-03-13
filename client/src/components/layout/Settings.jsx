@@ -157,7 +157,11 @@ export default function SettingsModal({ isOpen, onClose }) {
                       setSelectedLanguage(language);
                       setShowLanguageDropdown(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 rounded-lg">
+                    className={`w-full text-left px-3 py-2 text-sm text-gray-900 rounded-lg ${
+                      selectedLanguage === language
+                        ? 'dark:bg-gray-100 dark:text-gray-900'
+                        : 'dark:text-gray-700 dark:hover:bg-gray-100'
+                    }`}>
                     {language}
                   </button>
                 ))}
@@ -193,7 +197,11 @@ export default function SettingsModal({ isOpen, onClose }) {
                       setSelectedTimezone(timezone);
                       setShowTimezoneDropdown(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 rounded-lg">
+                    className={`w-full text-left px-3 py-2 text-sm text-gray-900 rounded-lg ${
+                      selectedTimezone === timezone
+                        ? 'dark:bg-gray-100 dark:text-gray-900'
+                        : 'dark:text-gray-700 dark:hover:bg-gray-100'
+                    }`}>
                     {timezone}
                   </button>
                 ))}
