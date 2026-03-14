@@ -251,10 +251,10 @@ export default function SettingsModal({ isOpen, onClose }) {
         <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => setTheme('light')}
-            className={`p-3 border rounded-lg text-center transition-all ${
+            className={`p-3 border rounded-lg text-center transition-all dark:focus-visible:outline-none dark:focus-visible:ring-2 dark:focus-visible:ring-gray-600 dark:focus-visible:ring-offset-0 ${
               theme === 'light'
-                ? 'border-gray-900 bg-gray-50'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-gray-900 bg-gray-50 dark:border-gray-300 dark:bg-gray-100'
+                : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-500'
             }`}>
             <div className="w-full h-12 theme-preview-light border border-gray-200 rounded mb-2 flex items-center justify-center">
               <div className="w-4 h-4 theme-preview-light-swatch rounded"></div>
@@ -264,10 +264,10 @@ export default function SettingsModal({ isOpen, onClose }) {
 
           <button
             onClick={() => setTheme('dark')}
-            className={`p-3 border rounded-lg text-center transition-all ${
+            className={`p-3 border rounded-lg text-center transition-all dark:focus-visible:outline-none dark:focus-visible:ring-2 dark:focus-visible:ring-gray-600 dark:focus-visible:ring-offset-0 ${
               theme === 'dark'
-                ? 'border-gray-900 bg-gray-50'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-gray-900 bg-gray-50 dark:border-gray-300 dark:bg-gray-100'
+                : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-500'
             }`}>
             <div className="w-full h-12 bg-gray-800 border border-gray-600 rounded mb-2 flex items-center justify-center">
               <div className="w-4 h-4 bg-gray-600 rounded"></div>
@@ -277,10 +277,10 @@ export default function SettingsModal({ isOpen, onClose }) {
 
           <button
             onClick={() => setTheme('system')}
-            className={`p-3 border rounded-lg text-center transition-all ${
+            className={`p-3 border rounded-lg text-center transition-all dark:focus-visible:outline-none dark:focus-visible:ring-2 dark:focus-visible:ring-gray-600 dark:focus-visible:ring-offset-0 ${
               theme === 'system'
-                ? 'border-gray-900 bg-gray-50'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-gray-900 bg-gray-50 dark:border-gray-300 dark:bg-gray-100'
+                : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-500'
             }`}>
             <div className="w-full h-12 bg-gradient-to-r from-white to-gray-800 border border-gray-300 rounded mb-2 flex items-center justify-center">
               <div className="w-4 h-4 bg-gradient-to-r from-gray-200 to-gray-600 rounded"></div>

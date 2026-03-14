@@ -482,7 +482,7 @@ export default function Notifications() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50/80 p-3">
+          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-100 p-3">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <label className="flex items-center gap-3 text-sm text-gray-700">
                 <input
@@ -517,7 +517,7 @@ export default function Notifications() {
                 type="button"
                 onClick={handleSelectedReadToggle}
                 disabled={selectedIds.length === 0}
-                className="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
                 {selectedUnreadCount > 0 ? 'Mark selected read' : 'Mark selected unread'}
               </button>
               <button
@@ -695,7 +695,7 @@ export default function Notifications() {
                               }
                             })
                       }
-                      className="rounded-lg border border-blue-200 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">
+                      className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100">
                       {notification.read ? 'Mark unread' : 'Mark read'}
                     </button>
                     <button

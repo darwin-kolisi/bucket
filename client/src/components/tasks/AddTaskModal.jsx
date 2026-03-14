@@ -124,7 +124,7 @@ export default function AddTaskModal({
           </h1>
           <button
             onClick={onClose}
-            className="p-2 text-2xl text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+            className="btn-dark-hover p-2 text-2xl text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
             ×
           </button>
         </div>
@@ -238,7 +238,7 @@ export default function AddTaskModal({
                       setNewSubtask('');
                     }
                   }}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm text-black">
+                  className="btn-dark-hover px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm text-black">
                   Add
                 </button>
               </div>
@@ -260,7 +260,7 @@ export default function AddTaskModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-3 text-sm font-small text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+            className="btn-dark-hover w-full py-3 text-sm font-small text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
             Cancel
           </button>
         </div>
@@ -375,10 +375,10 @@ export default function AddTaskModal({
                 placeholder="Add subtask"
                 className="flex-1 px-2 py-1 border border-gray-200 rounded text-sm text-gray-900"
               />
-              <button
-                type="button"
-                onClick={() => {
-                  if (newSubtask.trim()) {
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newSubtask.trim()) {
                     setSubtasks([
                       ...subtasks,
                       {
@@ -390,7 +390,7 @@ export default function AddTaskModal({
                     setNewSubtask('');
                   }
                 }}
-                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm text-black">
+                className="btn-dark-hover px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm text-black">
                 Add
               </button>
             </div>
@@ -404,7 +404,7 @@ export default function AddTaskModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+              className="btn-dark-hover px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
               Cancel
             </button>
             <button

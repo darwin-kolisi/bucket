@@ -178,7 +178,7 @@ const Calendar = ({ projects = [], onProjectSelect }) => {
           key={index}
           onClick={(e) => handleDayClick(e, dateObj)}
           className={`
-            min-h-[80px] p-2 rounded-xl border transition-colors relative
+            btn-dark-hover min-h-[80px] p-2 rounded-xl border transition-colors relative
             ${
               dateObj.isCurrentMonth
                 ? 'bg-gray-50 border-gray-200'
@@ -186,7 +186,7 @@ const Calendar = ({ projects = [], onProjectSelect }) => {
             }
             ${
               dateObj.projects.length > 0 && dateObj.isCurrentMonth
-                ? 'ring-1 ring-gray-300 hover:bg-gray-100 cursor-pointer'
+                ? 'ring-1 ring-gray-300 hover:bg-gray-50 cursor-pointer'
                 : ''
             }
           `}>
@@ -263,7 +263,7 @@ const Calendar = ({ projects = [], onProjectSelect }) => {
                 <button
                   key={projectIndex}
                   onClick={() => handleProjectClick(project)}
-                  className="group flex w-full items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 text-left transition-colors">
+                  className="btn-dark-hover group flex w-full items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 text-left transition-colors">
                   <div className="flex-shrink-0 mt-1">
                     <div
                       className={`w-2 h-2 rounded-full ${getStatusColor(
@@ -297,7 +297,7 @@ const Calendar = ({ projects = [], onProjectSelect }) => {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigateMonth(-1)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600">
+          className="btn-dark-hover p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-600">
           <ChevronLeftIcon className="h-4 w-4" />
         </button>
 
@@ -307,7 +307,7 @@ const Calendar = ({ projects = [], onProjectSelect }) => {
 
         <button
           onClick={() => navigateMonth(1)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-700">
+          className="btn-dark-hover p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700">
           <ChevronRightIcon className="h-4 w-4" />
         </button>
       </div>
@@ -344,7 +344,7 @@ const Calendar = ({ projects = [], onProjectSelect }) => {
               <button
                 key={project.id}
                 onClick={() => handleProjectClick(project)}
-                className="group flex w-full items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 text-left">
+                className="btn-dark-hover group flex w-full items-start gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
                 <div className="flex-shrink-0 mt-1">
                   <div
                     className={`w-2 h-2 rounded-full ${getStatusColor(

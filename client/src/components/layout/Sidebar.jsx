@@ -6,17 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/app/providers/Provider';
 import { useErrorToast } from '@/components/ui/ErrorToastProvider';
 
-const getWorkspaceGif = (name) => {
-  const normalized = name?.toString().toLowerCase() || '';
-  if (normalized.includes('personal')) {
-    return '/personal-minecraft-sheep.gif';
-  }
-  if (normalized.includes('work')) {
-    return '/work-jake.gif';
-  }
-  return '/productive-cat.gif';
-};
-
 const WORKSPACE_TEMPLATES = [
   {
     id: 'work',
@@ -38,56 +27,21 @@ const WORKSPACE_TEMPLATES = [
   },
 ];
 
-const getWorkspaceTemplateIcon = (templateId) => {
-  if (templateId === 'work') {
-    return (
-      <svg
-        className="h-4 w-4 text-gray-700"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round">
-        <rect x="3" y="7" width="18" height="13" rx="2" />
-        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        <path d="M3 12h18" />
-      </svg>
-    );
-  }
+const getWorkspaceTemplateIcon = () => (
+  <span className="text-[12px] font-semibold leading-none text-gray-700">
+    ★
+  </span>
+);
 
-  if (templateId === 'personal') {
-    return (
-      <svg
-        className="h-4 w-4 text-gray-700"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round">
-        <path d="m3 11.5 9-8 9 8" />
-        <path d="M5.5 10.5V20a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1v-9.5" />
-      </svg>
-    );
+const getWorkspaceIconFromName = (name) => {
+  const normalized = name?.toString().toLowerCase() || '';
+  if (normalized.includes('personal')) {
+    return getWorkspaceTemplateIcon('personal');
   }
-
-  return (
-    <svg
-      className="h-4 w-4 text-gray-700"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round">
-      <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z" />
-      <path d="M4 8h16" />
-      <path d="M9 4v4" />
-      <path d="M15 4v4" />
-      <path d="M8 13h8" />
-    </svg>
-  );
+  if (normalized.includes('work')) {
+    return getWorkspaceTemplateIcon('work');
+  }
+  return getWorkspaceTemplateIcon('school');
 };
 
 export default function Sidebar({
@@ -696,9 +650,12 @@ export default function Sidebar({
           className={`relative flex h-[var(--chrome-height)] items-center justify-between px-5 transition-all duration-300 ${
             isMobile ? 'border-b border-gray-200' : ''
           }`}>
-        <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => router.push('/dashboard')}
+          className="flex items-center gap-3 bg-transparent p-0 text-left">
           <Image
-            src="/cat.gif"
+            src="/work-workspace.png"
             alt="logo"
             width={30}
             height={30}
@@ -716,7 +673,7 @@ export default function Sidebar({
               </span>
             </div>
           </div>
-        </div>
+        </button>
         {!isMobile && (
           <button
             onClick={onToggleCollapse}
@@ -817,14 +774,10 @@ export default function Sidebar({
 
                   {!isWorkspacesLoading && workspaces.length === 0 && (
                     <div className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                      <div className="relative h-28 w-full">
-                        <Image
-                          src="/productive-cat.gif"
-                          alt="Choose workspace"
-                          fill
-                          sizes="280px"
-                          className="object-cover"
-                        />
+                      <div className="flex h-28 w-full items-center justify-center rounded-lg bg-gray-50">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600">
+                          {getWorkspaceTemplateIcon('school')}
+                        </span>
                       </div>
                       <p className="px-3 py-2 text-xs text-gray-600">
                         Create your first workspace to get started.
@@ -846,17 +799,11 @@ export default function Sidebar({
                             }}
                             className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors ${
                               isSelected
-                                ? 'bg-gray-100 text-gray-900'
-                                : 'text-gray-700 hover:bg-gray-50'
+                                ? 'bg-white border border-gray-200 shadow-sm text-gray-900'
+                                : 'text-gray-700 hover:text-gray-900'
                             }`}>
-                            <div className="relative h-6 w-6 overflow-hidden rounded-md border border-gray-200">
-                              <Image
-                                src={getWorkspaceGif(workspace.name)}
-                                alt={workspace.name}
-                                fill
-                                sizes="24px"
-                                className="object-cover"
-                              />
+                            <div className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700">
+                              {getWorkspaceIconFromName(workspace.name)}
                             </div>
                             <span className="flex-1 truncate text-sm">{workspace.name}</span>
                             {isSelected && (
@@ -918,14 +865,8 @@ export default function Sidebar({
               type="button"
               onClick={() => setIsWorkspaceMenuOpen((current) => !current)}
               className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-left text-gray-700 transition hover:bg-gray-50">
-              <div className="relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                <Image
-                  src={getWorkspaceGif(selectedWorkspace?.name)}
-                  alt={selectedWorkspace?.name || 'Workspace'}
-                  fill
-                  sizes="24px"
-                  className="object-cover"
-                />
+              <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700">
+                {getWorkspaceIconFromName(selectedWorkspace?.name)}
               </div>
               {showFull && (
                 <>

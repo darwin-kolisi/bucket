@@ -178,7 +178,7 @@ export default function TaskCard({
         </div>
         <div className="relative" ref={menuButtonRef}>
           <button
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-lg cursor-pointer p-1 rounded-md bg-transparent border-none transition-colors flex-shrink-0"
+            className="btn-dark-hover text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-lg cursor-pointer p-1 rounded-md bg-transparent border-none transition-colors flex-shrink-0"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-expanded={isMenuOpen}>
             ⋯
@@ -191,7 +191,7 @@ export default function TaskCard({
                 className="fixed w-48 origin-top-right rounded-xl border border-gray-200 bg-white p-1 text-sm text-gray-900 shadow-lg z-50">
               <button
                 onClick={handleEdit}
-                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+                className="btn-dark-hover group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
               <svg
                 className="h-4 w-4 text-gray-400"
                 fill="none"
@@ -208,7 +208,7 @@ export default function TaskCard({
             </button>
             <button
               onClick={handleDuplicate}
-              className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+              className="btn-dark-hover group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
               <svg
                 className="h-4 w-4 text-gray-400"
                 fill="none"
@@ -225,7 +225,7 @@ export default function TaskCard({
             </button>
             <button
               onClick={handleOpenNotes}
-              className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+              className="btn-dark-hover group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
               <svg
                 className="h-4 w-4 text-gray-400"
                 fill="none"
@@ -246,7 +246,7 @@ export default function TaskCard({
             <div className="my-1 h-px bg-gray-200" />
             <button
               onClick={handleStarToggle}
-              className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+              className="btn-dark-hover group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
               <span className="text-[14px] text-gray-400">
                 {task.starredAt ? '★' : '☆'}
               </span>

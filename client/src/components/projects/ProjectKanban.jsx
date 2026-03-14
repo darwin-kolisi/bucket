@@ -376,14 +376,14 @@ export default function ProjectKanban({
         <button
           type="button"
           onClick={handleBack}
-          className="px-4 h-9.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition-colors">
+          className="btn-dark-hover px-4 h-9.5 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors">
           Back
         </button>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => router.push(`/notes?projectId=${project.id}`)}
-            className="px-3 h-9.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors inline-flex items-center gap-2">
+            className="btn-dark-hover px-3 h-9.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors inline-flex items-center gap-2">
             <svg
               className="h-4 w-4"
               fill="none"

@@ -402,7 +402,7 @@ export default function Projects({
                     if (e.target.closest('.options-container')) return;
                     handleProjectClick(project);
                   }}
-                  className="group grid grid-cols-[minmax(0,1fr)_160px_180px_220px_32px] items-center gap-3 px-4 py-4 transition-colors hover:bg-gray-50 cursor-pointer">
+                  className="btn-dark-hover group grid grid-cols-[minmax(0,1fr)_160px_180px_220px_32px] items-center gap-3 px-4 py-4 transition-colors hover:bg-gray-50 cursor-pointer">
                   <div className="flex min-w-0 items-start gap-3">
                     <span
                       className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${getStatusDotClasses(
@@ -481,7 +481,7 @@ export default function Projects({
                   if (e.target.closest('.options-container')) return;
                   handleProjectClick(project);
                 }}
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                className="btn-dark-hover flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors">
                 <span
                   className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${getStatusDotClasses(
                     project.status
@@ -580,7 +580,7 @@ export default function Projects({
           type="button"
           onClick={() => refreshProjects({ cursor: projectsCursor, append: true })}
           disabled={!hasMoreProjects || isLoadingMore}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
+          className="btn-dark-hover rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
           {isLoadingMore ? 'Loading...' : hasMoreProjects ? 'Load more' : 'All projects loaded'}
         </button>
       </div>
@@ -596,27 +596,27 @@ export default function Projects({
               <div className="view-toggle flex items-center rounded-lg border border-gray-200 bg-gray-100 p-1 gap-1 h-10.5">
                 <button
                   onClick={() => setProjectsView('list')}
-                  className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'list'
+                  className={`btn-dark-hover flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'list'
                     ? 'bg-white text-gray-900'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                     }`}>
                   <ListIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">List</span>
                 </button>
                 <button
                   onClick={() => setProjectsView('board')}
-                  className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'board'
+                  className={`btn-dark-hover flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'board'
                     ? 'bg-white text-gray-900'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                     }`}>
                   <BoardIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Board</span>
                 </button>
                 <button
                   onClick={() => setProjectsView('calendar')}
-                  className={`flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'calendar'
+                  className={`btn-dark-hover flex items-center gap-2 px-3 h-8 min-h-0 text-sm font-medium rounded-md transition-all duration-200 ${projectsView === 'calendar'
                     ? 'bg-white text-gray-900'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                     }`}>
                   <CalendarIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Calendar</span>
