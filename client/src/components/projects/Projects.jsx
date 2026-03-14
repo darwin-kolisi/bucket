@@ -374,7 +374,7 @@ export default function Projects({
             </span>
             <span aria-hidden="true" />
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-transparent">
+          <div>
             {projectsToRender.length === 0 ? (
               <div className="p-10 text-center">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
@@ -402,7 +402,7 @@ export default function Projects({
                     if (e.target.closest('.options-container')) return;
                     handleProjectClick(project);
                   }}
-                  className="btn-dark-hover group grid grid-cols-[minmax(0,1fr)_160px_180px_220px_32px] items-center gap-3 px-4 py-4 transition-colors hover:bg-gray-50 cursor-pointer">
+                  className="btn-dark-hover group grid grid-cols-[minmax(0,1fr)_160px_180px_220px_32px] items-center gap-3 border-t border-gray-100 px-4 py-4 transition-colors hover:bg-gray-50 cursor-pointer first:border-t-0">
                   <div className="flex min-w-0 items-start gap-3">
                     <span
                       className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${getStatusDotClasses(

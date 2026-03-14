@@ -540,7 +540,7 @@ export default function Notifications() {
           </div>
         </div>
 
-        <div className="divide-y divide-gray-100 dark:divide-transparent">
+        <div>
           {isLoading && (
             <div className="p-6 text-sm text-gray-500">Loading notifications...</div>
           )}
@@ -549,9 +549,9 @@ export default function Notifications() {
             filteredNotifications.map((notification) => (
               <article
                 key={notification.id}
-                className={`grid gap-3 p-4 transition-colors md:grid-cols-[auto_auto_minmax(0,1fr)_auto] ${
+                className={`grid gap-3 border-t border-gray-100 p-4 transition-colors md:grid-cols-[auto_auto_minmax(0,1fr)_auto] ${
                   !notification.read ? 'bg-gray-100/70' : 'bg-white'
-                } hover:bg-gray-50`}>
+                } hover:bg-gray-50 first:border-t-0`}>
                 <div className="pt-1">
                   <input
                     type="checkbox"

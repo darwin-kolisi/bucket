@@ -297,12 +297,12 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
             </div>
 
             {recentProjects.length > 0 ? (
-              <div className="divide-y divide-gray-100 dark:divide-transparent">
+              <div>
                 {recentProjects.map((project) => (
                   <button
                     key={project.id}
                     onClick={() => onProjectSelect && onProjectSelect(project)}
-                    className="group w-full px-5 py-4 text-left transition hover:bg-gray-50"
+                    className="group w-full border-t border-gray-100 px-5 py-4 text-left transition hover:bg-gray-50 first:border-t-0"
                   >
                     <div className="flex items-start gap-3">
                       <span
@@ -417,7 +417,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
             </div>
 
             {deadlineFeed.length > 0 ? (
-              <div className="divide-y divide-gray-100">
+              <div>
                 {deadlineFeed.map((item) => {
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
@@ -430,7 +430,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
                     <button
                       key={`${item.type}-${item.id}`}
                       onClick={item.onClick}
-                      className={`group w-full border-l-2 px-5 py-4 text-left transition hover:bg-gray-50 ${
+                      className={`group w-full border-l-2 border-t border-gray-100 px-5 py-4 text-left transition hover:bg-gray-50 first:border-t-0 ${
                         isOverdue
                           ? 'border-l-red-400'
                           : isUrgent
@@ -516,7 +516,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
             </div>
 
             {upcomingTasks.length > 0 ? (
-              <div className="divide-y divide-gray-100">
+              <div>
                 {upcomingTasks.map((task) => {
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
@@ -533,7 +533,7 @@ export default function Dashboard({ onProjectSelect, onNavigate }) {
                         );
                         if (targetProject && onProjectSelect) onProjectSelect(targetProject);
                       }}
-                      className={`group w-full border-l-2 px-5 py-4 text-left transition hover:bg-gray-50 ${
+                      className={`group w-full border-l-2 border-t border-gray-100 px-5 py-4 text-left transition hover:bg-gray-50 first:border-t-0 ${
                         isUrgent ? 'border-l-orange-400' : 'border-l-transparent'
                       }`}
                     >
