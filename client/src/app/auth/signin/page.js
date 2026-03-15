@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import AuthLayout from '@/components/layout/AuthLayout';
 import { GoogleIcon } from '@/components/icons/Icons';
 import { authClient } from '@/lib/auth-client';
@@ -19,79 +20,178 @@ function SignInContent() {
       error: searchParams.get('error'),
     };
   }, [searchParams]);
+  const showAlert = status === 'no_account' || error;
 
   return (
     <AuthLayout>
-      <main className="relative min-h-[100dvh] bg-white md:bg-gray-50 flex items-center justify-center px-0 md:px-6 py-0">
-        <div className="w-full md:max-w-6xl">
-          <section className="grid gap-6 md:gap-10 md:grid-cols-[140px_1fr] items-start w-full">
-            <aside className="hidden md:flex flex-col gap-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
-                Get started
+      {/* ── MOBILE ── */}
+      <div className="flex h-[100dvh] flex-col overflow-hidden lg:hidden">
+        {/* Decorative top — gif panel, takes ~55% of screen */}
+        <div
+          className="relative overflow-hidden bg-black"
+          style={{ flex: '0 0 55%' }}>
+          <div className="absolute inset-0 bg-[url('/overlay.gif')] bg-cover bg-center" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60" />
+          <div className="relative z-10 p-6">
+            <Link href="/auth" className="flex items-center gap-2">
+              <Image
+                src="/work-workspace.png"
+                alt="Bucket logo"
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+              <span className="text-sm font-semibold tracking-tight text-white">
+                Bucket
+              </span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Auth sheet — takes remaining 45%, no overflow, no dead space */}
+        <div className="surface-card relative z-10 flex min-h-0 flex-1 flex-col rounded-t-3xl px-6 py-8 shadow-xl">
+          <div className="flex flex-1 flex-col justify-between">
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight text-[color:var(--text-primary)]">
+                Welcome back
+              </h1>
+              <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+                Sign in to your Bucket workspace.
               </p>
-              <Link href="/auth" className="text-xs text-gray-400 hover:text-gray-600" aria-label="Back to landing">
-                ← Back
-              </Link>
-            </aside>
 
-            <section className="relative bg-white md:rounded-lg md:border md:border-gray-200 p-6 md:p-8 md:shadow-sm flex flex-col justify-center md:mx-auto md:max-w-md md:w-full dark:border-[#2f2f2f] dark:shadow-none">
-              <span className="pointer-events-none hidden md:block absolute -left-6 top-0 h-full w-px border-l border-dashed border-gray-200 dark:border-[#2f2f2f]" />
-              <span className="pointer-events-none hidden md:block absolute -right-6 top-0 h-full w-px border-l border-dashed border-gray-200 dark:border-[#2f2f2f]" />
-              <span className="pointer-events-none hidden md:block absolute -top-6 left-0 h-px w-full border-t border-dashed border-gray-200 dark:border-[#2f2f2f]" />
-              <span className="pointer-events-none hidden md:block absolute -bottom-6 left-0 h-px w-full border-t border-dashed border-gray-200 dark:border-[#2f2f2f]" />
-              <span className="pointer-events-none hidden md:block absolute -left-6 -top-6 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-gray-200 bg-white dark:border-[#2f2f2f]" />
-              <span className="pointer-events-none hidden md:block absolute -right-6 -top-6 h-2.5 w-2.5 translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-gray-200 bg-white dark:border-[#2f2f2f]" />
-              <span className="pointer-events-none hidden md:block absolute -left-6 -bottom-6 h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rounded-[3px] border border-gray-200 bg-white dark:border-[#2f2f2f]" />
-              <span className="pointer-events-none hidden md:block absolute -right-6 -bottom-6 h-2.5 w-2.5 translate-x-1/2 translate-y-1/2 rounded-[3px] border border-gray-200 bg-white dark:border-[#2f2f2f]" />
-
-              <Link href="/auth" className="absolute top-6 left-6 md:hidden text-xs text-gray-400 hover:text-gray-600" aria-label="Back to landing">
-                ← Back
-              </Link>
-
-              <header>
-                <h1 className="text-lg font-semibold text-gray-900">Sign in</h1>
-                <p className="mt-1.5 text-xs text-gray-500">
-                  Use your Google account to continue.
-                </p>
-              </header>
-
-              {(status === 'no_account' || error) && (
-                <section className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3" role="alert">
-                  <div className="font-semibold text-xs text-amber-900">No account found</div>
-                  <p className="mt-1 text-xs text-amber-800">
-                    You don&apos;t have an account yet. Please sign up first.
+              {showAlert && (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/30">
+                  <p className="text-[12px] font-semibold text-amber-900 dark:text-amber-200">
+                    No account found
                   </p>
-                </section>
+                  <p className="mt-0.5 text-[12px] text-amber-700 dark:text-amber-200/80">
+                    You don&apos;t have an account yet.{' '}
+                    <Link href="/auth/signup" className="font-medium underline">
+                      Sign up instead.
+                    </Link>
+                  </p>
+                </div>
               )}
+            </div>
 
-              <div className="mt-6">
-                <button
-                  type="button"
-                  onClick={() =>
-                    authClient.signIn.social({
-                      provider: 'google',
-                      requestSignUp: false,
-                      callbackURL: `${appOrigin}/dashboard`,
-                      newUserCallbackURL: `${appOrigin}/dashboard`,
-                      errorCallbackURL: `${appOrigin}/auth/signin?status=no_account`,
-                    })
-                  }
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-normal text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-200 rounded-md transition-colors">
-                  <GoogleIcon />
-                  Sign in with Google
-                </button>
-              </div>
+            <div className="mt-6 space-y-4">
+              <button
+                type="button"
+                onClick={() =>
+                  authClient.signIn.social({
+                    provider: 'google',
+                    requestSignUp: false,
+                    callbackURL: `${appOrigin}/dashboard`,
+                    newUserCallbackURL: `${appOrigin}/dashboard`,
+                    errorCallbackURL: `${appOrigin}/auth/signin?status=no_account`,
+                  })
+                }
+                className="btn-create flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium">
+                <GoogleIcon />
+                Continue with Google
+              </button>
 
-              <footer className="mt-6 pt-6 border-t border-gray-100 text-center text-xs text-gray-500">
+              <p className="text-center text-xs text-[color:var(--text-faint)]">
                 Don&apos;t have an account?{' '}
-                <Link href="/auth/signup" className="text-gray-900 font-medium hover:text-gray-700">
+                <Link
+                  href="/auth/signup"
+                  className="font-semibold text-[color:var(--text-primary)]">
                   Sign up
                 </Link>
-              </footer>
-            </section>
-          </section>
+              </p>
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
+
+      {/* ── DESKTOP ── */}
+      <div className="hidden min-h-screen lg:flex lg:items-stretch">
+        <div className="mx-auto flex w-full max-w-6xl gap-5 px-6 py-6">
+          {/* Left: gif panel */}
+          <div className="relative flex-[1.1] overflow-hidden rounded-3xl bg-black">
+            <div className="absolute inset-0 bg-[url('/overlay.gif')] bg-cover bg-center" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50" />
+            <div className="relative z-10 flex h-full flex-col justify-between p-10">
+              <Link href="/auth" className="flex items-center gap-2">
+                <Image
+                  src="/work-workspace.png"
+                  alt="Bucket logo"
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+                <span className="text-sm font-semibold tracking-tight text-white">
+                  Bucket
+                </span>
+              </Link>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-white/60">
+                  Welcome back
+                </p>
+                <h1 className="mt-2 text-3xl font-semibold text-white">
+                  Sign in to your workspace
+                </h1>
+                <p className="mt-2 text-sm text-white/70">
+                  Pick up exactly where you left off.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: form card */}
+          <div className="surface-card flex flex-[0.9] flex-col items-center justify-center rounded-3xl px-10 py-10">
+            <div className="w-full max-w-xs">
+              <h2 className="text-xl font-semibold tracking-tight text-[color:var(--text-primary)]">
+                Sign in
+              </h2>
+              <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+                Use your Google account to continue.
+              </p>
+
+              {showAlert && (
+                <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/30">
+                  <p className="text-[12px] font-semibold text-amber-900 dark:text-amber-200">
+                    No account found
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-amber-700 dark:text-amber-200/80">
+                    You don&apos;t have an account yet.{' '}
+                    <Link href="/auth/signup" className="font-medium underline">
+                      Sign up instead.
+                    </Link>
+                  </p>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() =>
+                  authClient.signIn.social({
+                    provider: 'google',
+                    requestSignUp: false,
+                    callbackURL: `${appOrigin}/dashboard`,
+                    newUserCallbackURL: `${appOrigin}/dashboard`,
+                    errorCallbackURL: `${appOrigin}/auth/signin?status=no_account`,
+                  })
+                }
+                className="btn-create mt-6 flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium">
+                <GoogleIcon />
+                Continue with Google
+              </button>
+
+              <div className="mt-6 border-t border-[color:var(--border-subtle)] pt-5">
+                <p className="text-center text-xs text-[color:var(--text-faint)]">
+                  Don&apos;t have an account?{' '}
+                  <Link
+                    href="/auth/signup"
+                    className="font-semibold text-[color:var(--text-primary)]">
+                    Sign up
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </AuthLayout>
   );
 }

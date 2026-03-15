@@ -1,3 +1,7 @@
 export default function AuthLayout({ children }) {
-  return <div className="min-h-screen bg-gray-50">{children}</div>;
+  return (
+    <div className="min-h-screen app-dots text-[color:var(--text-primary)]">
+      {children}
+    </div>
+  );
 }
