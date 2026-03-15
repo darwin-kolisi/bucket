@@ -138,9 +138,9 @@ function SignInContent() {
             </div>
           </div>
 
-          {/* Right: form card */}
-          <div className="surface-card flex flex-[0.9] flex-col items-center justify-center rounded-3xl px-10 py-10">
-            <div className="w-full max-w-xs">
+          {/* Right: form (no card on desktop) */}
+          <div className="flex flex-[0.9] flex-col justify-center px-10 py-10">
+            <div className="w-full max-w-sm">
               <h2 className="text-xl font-semibold tracking-tight text-[color:var(--text-primary)]">
                 Sign in
               </h2>

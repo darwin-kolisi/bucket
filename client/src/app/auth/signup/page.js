@@ -138,15 +138,12 @@ function SignUpContent() {
             </div>
           </div>
 
-          {/* Right: form card */}
-          <div className="surface-card flex flex-[0.9] flex-col items-center justify-center rounded-3xl border border-white/5 bg-[#050505] px-10 py-10 text-white shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
-            <div className="w-full max-w-xs">
+          {/* Right: form (no card on desktop) */}
+          <div className="flex flex-[0.9] flex-col justify-center px-10 py-10 text-white">
+            <div className="w-full max-w-sm">
               <h2 className="text-xl font-semibold tracking-tight text-white">
                 Create account
               </h2>
-              <p className="mt-1 text-sm text-white/70">
-                Create your account with Google.
-              </p>
 
               {showAlert && (
                 <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 dark:border-red-900/40 dark:bg-red-950/30">
@@ -177,18 +174,6 @@ function SignUpContent() {
                 <GoogleIcon />
                 Continue with Google
               </button>
-
-              <p className="mt-4 text-center text-[11px] leading-relaxed text-white/60">
-                By continuing, you agree to our{' '}
-                <Link href="/terms" className="underline">
-                  Terms
-                </Link>{' '}
-                and{' '}
-                <Link href="/privacy" className="underline">
-                  Privacy Policy
-                </Link>
-                .
-              </p>
 
               <div className="mt-5 border-t border-white/5 pt-5">
                 <p className="text-center text-xs text-white/60">

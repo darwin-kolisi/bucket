@@ -453,7 +453,7 @@ export default function Projects({
         </div>
 
         {/* Mobile list */}
-        <div className="sm:hidden rounded-2xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
+        <div className="sm:hidden rounded-2xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100 mobile-projects-list">
           {projectsToRender.length === 0 ? (
             <div className="p-10 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">

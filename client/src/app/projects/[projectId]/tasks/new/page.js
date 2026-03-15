@@ -187,6 +187,21 @@ export default function NewTaskPage() {
               </button>
             </div>
           </div>
+          <div className="sm:hidden mt-4 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="flex-1 h-11 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="new-task-form"
+              disabled={isSubmitting}
+              className="btn-create flex-1 h-11 text-sm font-medium rounded-lg transition-colors disabled:opacity-60">
+              {isSubmitting ? 'Creating...' : 'Add Task'}
+            </button>
+          </div>
         </div>
 
         <div className="px-5 md:px-8 pb-12">
@@ -195,62 +210,58 @@ export default function NewTaskPage() {
               id="new-task-form"
               onSubmit={handleSubmit}
               className="space-y-5">
-              <div className="surface-card rounded-2xl border border-gray-200 bg-white p-6">
-                <div className="flex items-start justify-between gap-4 mb-6">
+              <div className="task-form-stack">
+                <section className="task-form-panel">
+                  <div className="flex items-start justify-between gap-4 mb-6">
                   <div>
                     <h2 className="text-xs uppercase tracking-wide text-gray-500">
                       Task details
                     </h2>
                   </div>
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
-                    Required
-                  </span>
                 </div>
 
-                <div className="grid gap-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-1">
-                        Task Name
-                      </label>
-                      <input
-                        type="text"
-                        value={taskName}
-                        onChange={(e) => setTaskName(e.target.value)}
-                        placeholder="Draft release notes"
-                        className="w-full h-10.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900 bg-white"
-                        required
-                      />
+                  <div className="grid gap-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">
+                          Task Name
+                        </label>
+                        <input
+                          type="text"
+                          value={taskName}
+                          onChange={(e) => setTaskName(e.target.value)}
+                          placeholder="Draft release notes"
+                          className="w-full h-10.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900 bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">
+                          Due Date
+                        </label>
+                        <DatePicker
+                          value={dueDate}
+                          onChange={handleDueDateChange}
+                          max={projectDueMax || undefined}
+                          placeholder="Select date"
+                          onInvalid={handleDueDateInvalid}
+                        />
+                      </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-900 mb-1">
-                        Due Date
+                        Description
                       </label>
-                      <DatePicker
-                        value={dueDate}
-                        onChange={handleDueDateChange}
-                        max={projectDueMax || undefined}
-                        placeholder="Select date"
-                        onInvalid={handleDueDateInvalid}
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Clarify the goal, dependencies, or expected output."
+                        rows={4}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none text-gray-900 bg-white"
                       />
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Clarify the goal, dependencies, or expected output."
-                      rows={4}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none text-gray-900 bg-white"
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-900 mb-1">
                         Priority
@@ -258,7 +269,7 @@ export default function NewTaskPage() {
                       <select
                         value={priority}
                         onChange={(e) => setPriority(e.target.value)}
-                        className="w-full h-10.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900 bg-white">
+                        className="select-field w-full h-10.5 px-4 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900">
                         {priorityOptions.map((option) => (
                           <option key={option} value={option}>
                             {option}
@@ -266,113 +277,88 @@ export default function NewTaskPage() {
                         ))}
                       </select>
                     </div>
+                  </div>
 
+                  {error && (
+                    <div className="form-error mt-4" role="alert">
+                      <span className="form-error-dot" aria-hidden="true" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+                </section>
+
+                <section className="task-form-panel">
+                  <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-1">
-                        Status
-                      </label>
-                      <input
-                        type="text"
-                        value="To do"
-                        disabled
-                        className="w-full h-10.5 px-4 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500"
-                      />
+                      <h2 className="text-xs uppercase tracking-wide text-gray-500">
+                        Subtasks
+                      </h2>
                     </div>
+                    <span className="text-[11px] text-gray-400 uppercase tracking-wide">
+                      Optional
+                    </span>
                   </div>
-                </div>
 
-                {error && (
-                  <p className="text-sm text-red-600 mt-4">{error}</p>
-                )}
-              </div>
-
-              <div className="surface-card rounded-2xl border border-gray-200 bg-white p-6">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <h2 className="text-xs uppercase tracking-wide text-gray-500">
-                      Subtasks
-                    </h2>
+                  <div className="space-y-2 mb-3">
+                    {subtasks.map((subtask, index) => (
+                      <div
+                        key={subtask.id}
+                        className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={subtask.title}
+                          onChange={(e) => {
+                            const updated = [...subtasks];
+                            updated[index].title = e.target.value;
+                            setSubtasks(updated);
+                          }}
+                          className="flex-1 h-9 px-3 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSubtasks(subtasks.filter((_, i) => i !== index))
+                          }
+                          className="h-9 w-9 rounded-lg border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors">
+                          ×
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <span className="text-[11px] text-gray-400 uppercase tracking-wide">
-                    Optional
-                  </span>
-                </div>
 
-                <div className="space-y-2 mb-3">
-                  {subtasks.map((subtask, index) => (
-                    <div
-                      key={subtask.id}
-                      className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={subtask.title}
-                        onChange={(e) => {
-                          const updated = [...subtasks];
-                          updated[index].title = e.target.value;
-                          setSubtasks(updated);
-                        }}
-                        className="flex-1 h-9 px-3 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSubtasks(subtasks.filter((_, i) => i !== index))
+                  <div className="flex flex-wrap gap-2">
+                    <input
+                      type="text"
+                      value={newSubtask}
+                      onChange={(e) => setNewSubtask(e.target.value)}
+                      placeholder="Add subtask"
+                      className="flex-1 min-w-[180px] h-9 px-3 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newSubtask.trim()) {
+                          setSubtasks([
+                            ...subtasks,
+                            {
+                              id: Date.now(),
+                              title: newSubtask.trim(),
+                              completed: false,
+                            },
+                          ]);
+                          setNewSubtask('');
                         }
-                        className="h-9 w-9 rounded-lg border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors">
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                      }}
+                      className="px-4 h-9 rounded-lg border border-gray-200 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+                      Add subtask
+                    </button>
+                  </div>
+                </section>
 
-                <div className="flex flex-wrap gap-2">
-                  <input
-                    type="text"
-                    value={newSubtask}
-                    onChange={(e) => setNewSubtask(e.target.value)}
-                    placeholder="Add subtask"
-                    className="flex-1 min-w-[180px] h-9 px-3 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (newSubtask.trim()) {
-                        setSubtasks([
-                          ...subtasks,
-                          {
-                            id: Date.now(),
-                            title: newSubtask.trim(),
-                            completed: false,
-                          },
-                        ]);
-                        setNewSubtask('');
-                      }
-                    }}
-                    className="px-4 h-9 rounded-lg border border-gray-200 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
-                    Add subtask
-                  </button>
-                </div>
-              </div>
-
-              <div className="surface-card rounded-2xl border border-gray-200 bg-white p-4 sm:hidden">
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCancel}
-                    className="px-3 h-9.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-create px-4 h-9.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-60">
-                    {isSubmitting ? 'Creating...' : 'Add Task'}
-                  </button>
-                </div>
               </div>
             </form>
 
-            <aside className="space-y-4">
+            <aside className="space-y-4 hidden sm:block">
               <div className="surface-card rounded-2xl border border-gray-200 bg-white p-5">
                 <div className="text-xs uppercase tracking-wide text-gray-500">
                   Summary
