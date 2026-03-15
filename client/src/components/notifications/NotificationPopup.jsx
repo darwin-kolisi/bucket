@@ -206,7 +206,7 @@ export default function NotificationPopup({ isOpen: controlledOpen, onOpenChange
           />
         </svg>
         {unreadNotificationsCount > 0 && (
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-blue-500 ring-2 ring-white" />
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-green-500" />
         )}
       </button>
 
@@ -250,7 +250,7 @@ export default function NotificationPopup({ isOpen: controlledOpen, onOpenChange
                     openNotificationTarget(notification);
                   }}
                   className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
-                    !notification.read ? 'bg-blue-50/40' : ''
+                    !notification.read ? 'bg-blue-50/40 dark:bg-gray-50/70' : ''
                   }`}>
                   <div
                     className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${getIconBgClass(notification.type)}`}>
@@ -267,7 +267,7 @@ export default function NotificationPopup({ isOpen: controlledOpen, onOpenChange
                         {notification.title}
                       </p>
                       {!notification.read && (
-                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-500" />
+                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-green-500" />
                       )}
                     </div>
                     {notification.message && (

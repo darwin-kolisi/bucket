@@ -45,10 +45,10 @@ export default function ProjectsSortMenu({
       <button
         onClick={handleToggle}
         aria-expanded={isSortActive}
-        className={`flex items-center gap-2 px-3 h-9.5 !min-h-[38px] text-xs font-semibold transition-colors rounded-lg border border-gray-200 sm:px-4 sm:h-9.5 sm:text-sm ${
+        className={`btn-dark-hover flex items-center gap-2 px-3 h-9.5 !min-h-[38px] text-xs font-semibold transition-colors rounded-lg border border-gray-200 sm:px-4 sm:h-9.5 sm:text-sm ${
           isSortActive
             ? 'bg-gray-100 text-gray-900'
-            : 'bg-white text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+            : 'bg-white text-gray-700 hover:text-gray-900 hover:bg-gray-50'
         }`}>
         <span className="inline-flex items-center gap-2">
           <span>Sort</span>
@@ -59,7 +59,7 @@ export default function ProjectsSortMenu({
         <ChevronDownIcon className="h-4 w-4" />
       </button>
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-72 origin-top-right rounded-2xl border border-gray-100 bg-white p-3 text-xs text-gray-900 shadow-xl z-50">
+        <div className="absolute top-full right-0 mt-2 w-72 origin-top-right rounded-2xl border border-gray-200 bg-gray-100 p-3 text-xs text-gray-900 shadow-xl z-50">
           <div className="flex items-center justify-between px-1 pb-2">
             <span className="text-[11px] font-semibold text-gray-700">
               Sort & Filter
@@ -74,15 +74,15 @@ export default function ProjectsSortMenu({
             <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
               Status
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">
+            <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl border border-gray-200 bg-white p-1">
               {statusOptions.map((value) => (
                 <button
                   key={value}
                   onClick={() => handleStatusSelect(value)}
-                  className={`h-8 whitespace-nowrap rounded-lg px-2 text-[11px] font-semibold transition ${
+                  className={`btn-dark-hover h-8 whitespace-nowrap rounded-lg px-2 text-[11px] font-semibold transition ${
                     effectiveStatusFilter === value
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-white/60'
+                      ? 'bg-gray-100 text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                   }`}>
                   {value === 'on-track'
                     ? 'On Track'
@@ -97,15 +97,15 @@ export default function ProjectsSortMenu({
             <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
               Order
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">
+            <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl border border-gray-200 bg-white p-1">
               {orderOptions.map((option) => (
                 <button
                   key={option.id}
                   onClick={() => handleOrderSelect(option.id)}
-                  className={`h-8 whitespace-nowrap rounded-lg px-2 text-[11px] font-semibold transition ${
+                  className={`btn-dark-hover h-8 whitespace-nowrap rounded-lg px-2 text-[11px] font-semibold transition ${
                     sortOption === option.id
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-white/60'
+                      ? 'bg-gray-100 text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                   }`}>
                   {option.label}
                 </button>

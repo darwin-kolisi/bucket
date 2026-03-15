@@ -28,7 +28,7 @@ export default function ProjectActionsMenu({
       <Menu>
         <MenuButton
           onClick={(event) => event.stopPropagation()}
-          className={`rounded-md p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 ${buttonClassName}`.trim()}>
+          className={`btn-dark-hover rounded-md p-1 text-gray-400 transition hover:bg-gray-50 hover:text-gray-600 ${buttonClassName}`.trim()}>
           <EllipsisVerticalIcon className="h-4 w-4" />
         </MenuButton>
         <MenuItems
@@ -38,7 +38,7 @@ export default function ProjectActionsMenu({
           <MenuItem>
             <button
               onClick={(event) => handleAction(event, onEdit)}
-              className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+              className="btn-dark-hover group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
               <EditIcon className="h-4 w-4 text-gray-400" />
               Edit
             </button>
@@ -46,7 +46,7 @@ export default function ProjectActionsMenu({
           <MenuItem>
             <button
               onClick={(event) => handleAction(event, onDuplicate)}
-              className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+              className="btn-dark-hover group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
               <DuplicateIcon className="h-4 w-4 text-gray-400" />
               Duplicate
             </button>
@@ -54,7 +54,7 @@ export default function ProjectActionsMenu({
           <MenuItem>
             <button
               onClick={(event) => handleAction(event, onOpenNotes)}
-              className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+              className="btn-dark-hover group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
               <svg
                 className="h-4 w-4 text-gray-400"
                 fill="none"
@@ -78,7 +78,7 @@ export default function ProjectActionsMenu({
             <MenuItem>
               <button
                 onClick={(event) => handleAction(event, onToggleStar)}
-                className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
+                className="btn-dark-hover group flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-50 text-left">
                 <span className="text-[14px] text-gray-400">
                   {isStarred ? '★' : '☆'}
                 </span>

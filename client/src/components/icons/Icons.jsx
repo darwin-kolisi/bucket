@@ -25,6 +25,16 @@ export function GoogleIcon({ className = 'h-5 w-5' }) {
   );
 }
 
+export function BrandMark({ className = 'h-8 w-8' }) {
+  return (
+    <span
+      className={`relative inline-flex items-center justify-center rounded-[18px] bg-gradient-to-br from-slate-950 via-slate-800 to-slate-600 text-white shadow-sm ring-1 ring-white/20 dark:from-white dark:via-slate-100 dark:to-slate-200 dark:text-slate-900 dark:ring-black/10 ${className}`}>
+      <span className="text-[12px] font-semibold tracking-[0.12em]">B</span>
+      <span className="pointer-events-none absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-white/70 ring-1 ring-black/10 dark:bg-slate-900/80 dark:ring-white/20" />
+    </span>
+  );
+}
+
 export function ListIcon({ className = 'h-4 w-4' }) {
   return (
     <svg

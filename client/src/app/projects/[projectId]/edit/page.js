@@ -205,6 +205,21 @@ export default function EditProjectPage() {
               </button>
             </div>
           </div>
+          <div className="sm:hidden mt-4 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="flex-1 h-11 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="edit-project-form"
+              disabled={isSubmitting}
+              className="btn-create flex-1 h-11 text-sm font-medium rounded-lg transition-colors disabled:opacity-60">
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </div>
 
         <div className="px-5 md:px-8 pb-12">
@@ -220,9 +235,6 @@ export default function EditProjectPage() {
                       Project details
                     </h2>
                   </div>
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
-                    Required
-                  </span>
                 </div>
 
                 <div className="grid gap-4">
@@ -237,7 +249,6 @@ export default function EditProjectPage() {
                         onChange={(e) => setProjectName(e.target.value)}
                         placeholder="Launch roadmap"
                         className="w-full h-10.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-gray-900 bg-white"
-                        required
                       />
                     </div>
 
@@ -266,43 +277,18 @@ export default function EditProjectPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
-                      Status
-                    </label>
-                    <input
-                      type="text"
-                      value="Derived from tasks"
-                      disabled
-                      className="w-full h-10.5 px-4 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500"
-                    />
-                  </div>
                 </div>
 
                 {error && (
-                  <p className="text-sm text-red-600 mt-4">{error}</p>
+                  <div className="form-error mt-4" role="alert">
+                    <span className="form-error-dot" aria-hidden="true" />
+                    <span>{error}</span>
+                  </div>
                 )}
-              </div>
-
-              <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-4 sm:hidden">
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCancel}
-                    className="px-3 h-9.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-create px-4 h-9.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-60">
-                    {isSubmitting ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
               </div>
             </form>
 
-            <aside className="space-y-4">
+            <aside className="space-y-4 hidden sm:block">
               <div className="surface-card rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
                 <div className="text-xs uppercase tracking-wide text-gray-500">
                   Summary

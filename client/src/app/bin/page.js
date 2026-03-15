@@ -62,8 +62,10 @@ export default function BinPage() {
   const [activeTrashAction, setActiveTrashAction] = useState('');
 
   const currentWorkspace = useMemo(
-    () => workspaces.find((workspace) => workspace.id === selectedWorkspaceId) || null,
-    [selectedWorkspaceId, workspaces]
+    () =>
+      workspaces.find((workspace) => workspace.id === selectedWorkspaceId) ||
+      null,
+    [selectedWorkspaceId, workspaces],
   );
 
   const fetchTrash = useCallback(
@@ -72,23 +74,25 @@ export default function BinPage() {
         setIsTrashLoading(true);
       }
 
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       const query = buildTrashQuery(selectedWorkspaceId);
       const suffix = query ? `?${query}` : '';
       const notificationSuffix = suffix ? `${suffix}&limit=200` : '?limit=200';
 
       try {
-        const [projectsResponse, tasksResponse, notificationsResponse] = await Promise.all([
-          fetch(`${apiBase}/api/projects/trash${suffix}`, {
-            credentials: 'include',
-          }),
-          fetch(`${apiBase}/api/tasks/trash${suffix}`, {
-            credentials: 'include',
-          }),
-          fetch(`${apiBase}/api/notifications/trash${notificationSuffix}`, {
-            credentials: 'include',
-          }),
-        ]);
+        const [projectsResponse, tasksResponse, notificationsResponse] =
+          await Promise.all([
+            fetch(`${apiBase}/api/projects/trash${suffix}`, {
+              credentials: 'include',
+            }),
+            fetch(`${apiBase}/api/tasks/trash${suffix}`, {
+              credentials: 'include',
+            }),
+            fetch(`${apiBase}/api/notifications/trash${notificationSuffix}`, {
+              credentials: 'include',
+            }),
+          ]);
 
         if (
           !projectsResponse.ok ||
@@ -98,14 +102,17 @@ export default function BinPage() {
           throw new Error('Failed to load bin');
         }
 
-        const [projectsPayload, tasksPayload, notificationsPayload] = await Promise.all([
-          projectsResponse.json(),
-          tasksResponse.json(),
-          notificationsResponse.json(),
-        ]);
+        const [projectsPayload, tasksPayload, notificationsPayload] =
+          await Promise.all([
+            projectsResponse.json(),
+            tasksResponse.json(),
+            notificationsResponse.json(),
+          ]);
 
         setTrashData({
-          projects: Array.isArray(projectsPayload?.projects) ? projectsPayload.projects : [],
+          projects: Array.isArray(projectsPayload?.projects)
+            ? projectsPayload.projects
+            : [],
           tasks: Array.isArray(tasksPayload?.tasks) ? tasksPayload.tasks : [],
           notifications: Array.isArray(notificationsPayload?.notifications)
             ? notificationsPayload.notifications
@@ -119,7 +126,7 @@ export default function BinPage() {
         }
       }
     },
-    [pushError, selectedWorkspaceId]
+    [pushError, selectedWorkspaceId],
   );
 
   useEffect(() => {
@@ -128,7 +135,8 @@ export default function BinPage() {
 
   const runTrashAction = useCallback(
     async ({ actionKey, url, method, successKind }) => {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       setActiveTrashAction(actionKey);
 
       try {
@@ -157,7 +165,7 @@ export default function BinPage() {
         setActiveTrashAction('');
       }
     },
-    [fetchTrash, pushError, refreshNotifications, refreshProjects]
+    [fetchTrash, pushError, refreshNotifications, refreshProjects],
   );
 
   const handleRestoreProject = async (projectId) => {
@@ -170,7 +178,9 @@ export default function BinPage() {
   };
 
   const handleDeleteProjectPermanently = async (projectId) => {
-    const confirmed = window.confirm('Permanently delete this project from bin?');
+    const confirmed = window.confirm(
+      'Permanently delete this project from bin?',
+    );
     if (!confirmed) return;
 
     await runTrashAction({
@@ -212,7 +222,9 @@ export default function BinPage() {
   };
 
   const handleDeleteNotificationPermanently = async (notificationId) => {
-    const confirmed = window.confirm('Permanently delete this notification from bin?');
+    const confirmed = window.confirm(
+      'Permanently delete this notification from bin?',
+    );
     if (!confirmed) return;
 
     await runTrashAction({
@@ -231,7 +243,9 @@ export default function BinPage() {
       deletedAt: project.deletedAt,
       description: project.description || 'No description',
       meta: project.workspace?.name || 'Workspace project',
-      detail: project.dueDate ? `Due ${formatDateTime(project.dueDate)}` : 'No due date',
+      detail: project.dueDate
+        ? `Due ${formatDateTime(project.dueDate)}`
+        : 'No due date',
       restoreLabel: 'Restore project',
       deleteLabel: 'Delete permanently',
       onRestore: () => handleRestoreProject(project.id),
@@ -249,7 +263,9 @@ export default function BinPage() {
         description: task.subtitle || 'No description',
         meta: task.project?.name || 'Project unavailable',
         detail: task.date || 'No due date',
-        restoreLabel: parentProjectDeleted ? 'Restore project first' : 'Restore task',
+        restoreLabel: parentProjectDeleted
+          ? 'Restore project first'
+          : 'Restore task',
         deleteLabel: 'Delete permanently',
         onRestore: () => handleRestoreTask(task.id),
         onDelete: () => handleDeleteTaskPermanently(task.id),
@@ -264,7 +280,10 @@ export default function BinPage() {
       title: notification.title,
       deletedAt: notification.deletedAt,
       description: notification.message,
-      meta: notification.task?.title || notification.project?.name || 'Notification',
+      meta:
+        notification.task?.title ||
+        notification.project?.name ||
+        'Notification',
       detail: `Created ${formatDateTime(notification.createdAt)}`,
       restoreLabel: 'Restore notification',
       deleteLabel: 'Delete permanently',
@@ -273,11 +292,17 @@ export default function BinPage() {
       actionKeyBase: `notification:${notification.id}`,
     }));
 
-    const all = [...projects, ...tasks, ...notifications].sort((left, right) => {
-      const leftTime = left.deletedAt ? new Date(left.deletedAt).getTime() : 0;
-      const rightTime = right.deletedAt ? new Date(right.deletedAt).getTime() : 0;
-      return rightTime - leftTime;
-    });
+    const all = [...projects, ...tasks, ...notifications].sort(
+      (left, right) => {
+        const leftTime = left.deletedAt
+          ? new Date(left.deletedAt).getTime()
+          : 0;
+        const rightTime = right.deletedAt
+          ? new Date(right.deletedAt).getTime()
+          : 0;
+        return rightTime - leftTime;
+      },
+    );
 
     if (trashFilter === 'projects') return projects;
     if (trashFilter === 'tasks') return tasks;
@@ -287,8 +312,8 @@ export default function BinPage() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-[1400px] p-6">
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-[1400px] p-4 sm:p-6">
+        <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl font-semibold text-gray-900">Bin</h1>
             <p className="mt-1 text-sm text-gray-500">
@@ -296,14 +321,14 @@ export default function BinPage() {
               {TRASH_RETENTION_DAYS} days.
             </p>
           </div>
-          <div className="workspace-pill rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-gray-700">
+          <div className="workspace-pill surface-card self-start max-w-[85%] truncate rounded-lg px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-gray-700 sm:self-auto sm:max-w-none sm:rounded-full">
             {currentWorkspace ? currentWorkspace.name : 'All workspaces'}
           </div>
         </div>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="w-full sm:w-[220px]">
+        <section className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-[180px] shrink-0">
               <AppSelect
                 value={trashFilter}
                 onChange={setTrashFilter}
@@ -313,8 +338,8 @@ export default function BinPage() {
             <button
               type="button"
               onClick={() => fetchTrash()}
-              className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-              Refresh Bin
+              className="shrink-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+              Refresh
             </button>
           </div>
 
@@ -327,7 +352,9 @@ export default function BinPage() {
 
             {!isTrashLoading && combinedTrashItems.length === 0 ? (
               <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
-                <p className="text-sm font-medium text-gray-700">Bin is empty</p>
+                <p className="text-sm font-medium text-gray-700">
+                  Bin is empty
+                </p>
                 <p className="mt-1 text-xs text-gray-500">
                   Deleted projects, tasks, and notifications will appear here.
                 </p>
@@ -336,39 +363,51 @@ export default function BinPage() {
 
             {!isTrashLoading && combinedTrashItems.length > 0
               ? combinedTrashItems.map((item) => {
-                  const isRestoring = activeTrashAction === `${item.actionKeyBase}:restore`;
-                  const isDeletingItem = activeTrashAction === `${item.actionKeyBase}:delete`;
+                  const isRestoring =
+                    activeTrashAction === `${item.actionKeyBase}:restore`;
+                  const isDeletingItem =
+                    activeTrashAction === `${item.actionKeyBase}:delete`;
 
                   return (
                     <article
                       key={`${item.kind}:${item.id}`}
                       className="rounded-xl border border-gray-200 bg-gray-50/70 p-4">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex flex-col gap-3">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-gray-600">
                               {item.kind}
                             </span>
-                            <h3 className="text-sm font-semibold text-gray-900">{item.title}</h3>
+                            <h3 className="text-sm font-semibold text-gray-900">
+                              {item.title}
+                            </h3>
                           </div>
-                          <p className="mt-1 text-sm text-gray-600">{item.description}</p>
-                          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                            <span className="rounded bg-white px-2 py-1">{item.meta}</span>
-                            <span className="rounded bg-white px-2 py-1">{item.detail}</span>
-                            <span className="rounded bg-white px-2 py-1">
+                          <p className="mt-1 text-sm text-gray-600">
+                            {item.description}
+                          </p>
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-gray-500">
+                            <span className="rounded bg-white px-2 py-1 border border-gray-100">
+                              {item.meta}
+                            </span>
+                            <span className="rounded bg-white px-2 py-1 border border-gray-100">
+                              {item.detail}
+                            </span>
+                            <span className="rounded bg-white px-2 py-1 border border-gray-100">
                               Deleted {formatDateTime(item.deletedAt)}
                             </span>
-                            <span className="rounded bg-white px-2 py-1">
+                            <span className="rounded bg-white px-2 py-1 border border-gray-100">
                               Auto-purge {formatExpiryDate(item.deletedAt)}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                        <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             onClick={item.onRestore}
-                            disabled={item.restoreDisabled || Boolean(activeTrashAction)}
+                            disabled={
+                              item.restoreDisabled || Boolean(activeTrashAction)
+                            }
                             className="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">
                             {isRestoring ? 'Restoring...' : item.restoreLabel}
                           </button>

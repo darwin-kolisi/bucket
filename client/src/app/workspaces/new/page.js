@@ -1,5 +1,4 @@
 'use client';
-
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/layout/Layout';
@@ -27,71 +26,30 @@ const WORKSPACE_TEMPLATES = [
   },
 ];
 
-const getWorkspaceTemplateIcon = (templateId) => {
-  if (templateId === 'work') {
-    return (
-      <svg
-        className="h-4 w-4 text-gray-700"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round">
-        <rect x="3" y="7" width="18" height="13" rx="2" />
-        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        <path d="M3 12h18" />
-      </svg>
-    );
-  }
-
-  if (templateId === 'personal') {
-    return (
-      <svg
-        className="h-4 w-4 text-gray-700"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round">
-        <path d="m3 11.5 9-8 9 8" />
-        <path d="M5.5 10.5V20a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1v-9.5" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg
-      className="h-4 w-4 text-gray-700"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round">
-      <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z" />
-      <path d="M4 8h16" />
-      <path d="M9 4v4" />
-      <path d="M15 4v4" />
-      <path d="M8 13h8" />
-    </svg>
-  );
-};
+const getWorkspaceTemplateIcon = () => (
+  <span className="text-[12px] font-semibold leading-none text-gray-700">
+    ⋆｡𖦹
+  </span>
+);
 
 export default function NewWorkspacePage() {
   const router = useRouter();
   const { createWorkspace } = useAppContext();
   const { pushError } = useErrorToast();
-  const [selectedTemplateId, setSelectedTemplateId] = useState(WORKSPACE_TEMPLATES[0].id);
-  const [workspaceName, setWorkspaceName] = useState(WORKSPACE_TEMPLATES[0].defaultName);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(
+    WORKSPACE_TEMPLATES[0].id,
+  );
+  const [workspaceName, setWorkspaceName] = useState(
+    WORKSPACE_TEMPLATES[0].defaultName,
+  );
   const [isCreating, setIsCreating] = useState(false);
 
   const selectedTemplate = useMemo(
     () =>
-      WORKSPACE_TEMPLATES.find((template) => template.id === selectedTemplateId) ||
-      WORKSPACE_TEMPLATES[0],
-    [selectedTemplateId]
+      WORKSPACE_TEMPLATES.find(
+        (template) => template.id === selectedTemplateId,
+      ) || WORKSPACE_TEMPLATES[0],
+    [selectedTemplateId],
   );
 
   const handleTemplateSelect = (template) => {
@@ -101,7 +59,7 @@ export default function NewWorkspacePage() {
       const isPresetName = WORKSPACE_TEMPLATES.some(
         (workspaceTemplate) =>
           workspaceTemplate.defaultName.toLowerCase() ===
-          trimmedCurrentName.toLowerCase()
+          trimmedCurrentName.toLowerCase(),
       );
 
       if (!trimmedCurrentName || isPresetName) {
@@ -173,8 +131,8 @@ export default function NewWorkspacePage() {
                   onClick={() => handleTemplateSelect(template)}
                   className={`flex flex-col gap-2 rounded-xl border px-4 py-3 text-left transition ${
                     isSelected
-                      ? 'border-gray-900 bg-gray-50'
-                      : 'border-gray-200 bg-white'
+                      ? 'border-gray-300 bg-gray-100'
+                      : 'border-gray-200 bg-transparent'
                   }`}>
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100">
@@ -184,7 +142,9 @@ export default function NewWorkspacePage() {
                       {template.title}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500">{template.description}</p>
+                  <p className="text-xs text-gray-500">
+                    {template.description}
+                  </p>
                 </button>
               );
             })}

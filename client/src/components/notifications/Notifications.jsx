@@ -455,9 +455,9 @@ export default function Notifications() {
   };
 
   return (
-    <div className="page-shell mx-auto max-w-[1400px] p-6">
+    <div className="page-shell mx-auto max-w-[1400px] p-4 sm:p-6">
       <section className="surface-card overflow-hidden rounded-2xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 p-4">
+        <div className="border-b border-gray-200 p-4 sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-gray-900">Activity Feed</h2>
@@ -482,8 +482,8 @@ export default function Notifications() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50/80 p-3">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="mt-4 rounded-xl border border-gray-200 bg-gray-100 p-3">
+            <div className="hidden sm:flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <label className="flex items-center gap-3 text-sm text-gray-700">
                 <input
                   type="checkbox"
@@ -512,12 +512,12 @@ export default function Notifications() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="hidden sm:flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={handleSelectedReadToggle}
                 disabled={selectedIds.length === 0}
-                className="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
                 {selectedUnreadCount > 0 ? 'Mark selected read' : 'Mark selected unread'}
               </button>
               <button
@@ -537,10 +537,70 @@ export default function Notifications() {
                 Delete selected
               </button>
             </div>
+
+            <div className="sm:hidden space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={toggleSelectAllVisible}
+                    className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-400"
+                  />
+                  Select all
+                </label>
+                <button
+                  type="button"
+                  onClick={handleMarkAllRead}
+                  disabled={!notifications.some((notification) => !notification.read)}
+                  className="text-[11px] font-medium leading-none text-gray-600 transition hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-40">
+                  Mark all read
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={handleSelectedReadToggle}
+                  disabled={selectedIds.length === 0}
+                  className="whitespace-nowrap text-[11px] font-medium leading-none text-gray-600 transition hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-40">
+                  {selectedUnreadCount > 0 ? 'Mark read' : 'Mark unread'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSelectedStarToggle}
+                  disabled={selectedIds.length === 0}
+                  className="whitespace-nowrap text-[11px] font-medium leading-none text-amber-700 transition hover:text-amber-800 disabled:cursor-not-allowed disabled:opacity-40">
+                  {selectedStarredCount === selectedIds.length && selectedIds.length > 0
+                    ? 'Unstar'
+                    : 'Star'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteSelected}
+                  disabled={selectedIds.length === 0}
+                  className="whitespace-nowrap text-[11px] font-medium leading-none text-red-600 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40">
+                  Delete selected
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">
+                  {selectedIds.length > 0
+                    ? `${selectedIds.length} selected`
+                    : 'No selection'}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleDeleteAll}
+                  disabled={notifications.length === 0}
+                  className="text-[11px] font-medium leading-none text-red-600 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40">
+                  Delete all
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="divide-y divide-gray-100 dark:divide-transparent">
+        <div>
           {isLoading && (
             <div className="p-6 text-sm text-gray-500">Loading notifications...</div>
           )}
@@ -549,169 +609,257 @@ export default function Notifications() {
             filteredNotifications.map((notification) => (
               <article
                 key={notification.id}
-                className={`grid gap-3 p-4 transition-colors md:grid-cols-[auto_auto_minmax(0,1fr)_auto] ${
+                className={`border-t border-gray-100 p-4 transition-colors ${
                   !notification.read ? 'bg-gray-100/70' : 'bg-white'
-                } hover:bg-gray-50`}>
-                <div className="pt-1">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(notification.id)}
-                    onChange={() => toggleSelection(notification.id)}
-                    aria-label={`Select ${notification.title}`}
-                    className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-400"
-                  />
-                </div>
+                } hover:bg-gray-50 first:border-t-0`}>
+                <div className="flex items-start gap-3">
+                  <div className="pt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(notification.id)}
+                      onChange={() => toggleSelection(notification.id)}
+                      aria-label={`Select ${notification.title}`}
+                      className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-400"
+                    />
+                  </div>
 
-                <div
-                  className={`mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg ${getTypeIconWrapStyles(
-                    notification.type
-                  )}`}>
-                  {getTypeIcon(notification.type)}
-                </div>
+                  <div
+                    className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${getTypeIconWrapStyles(
+                      notification.type
+                    )}`}>
+                    {getTypeIcon(notification.type)}
+                  </div>
 
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <h3 className="text-sm font-semibold text-gray-900">{notification.title}</h3>
                     <span
-                      className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${getPriorityStyles(
+                      className={`rounded-lg border px-2 py-0.5 text-[11px] font-medium ${getPriorityStyles(
                         notification.priority
                       )}`}>
                       {notification.priority}
                     </span>
                     {notification.starred && (
-                      <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                      <span className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
                         Starred
                       </span>
                     )}
                     {!notification.read && (
-                      <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700">
+                      <span className="rounded-lg bg-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700">
                         Unread
                       </span>
                     )}
                   </div>
 
-                  <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
+                    <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    {notification.project?.name && (
-                      <button
-                        type="button"
-                        onClick={() => openSource(notification)}
-                        className="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700 hover:bg-gray-200">
-                        {notification.project.name}
-                      </button>
-                    )}
-                    {notification.task?.title && (
-                      <span className="rounded bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
-                        {notification.task.title}
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      {notification.project?.name && (
+                        <button
+                          type="button"
+                          onClick={() => openSource(notification)}
+                          className="notif-tag notif-tag--project">
+                          {notification.project.name}
+                        </button>
+                      )}
+                      {notification.task?.title && (
+                        <span className="notif-tag notif-tag--task">
+                          {notification.task.title}
+                        </span>
+                      )}
+                      <span className="notif-tag notif-tag--type">
+                        {formatTypeLabel(notification.type)}
                       </span>
-                    )}
-                    <span className="rounded bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-500">
-                      {formatTypeLabel(notification.type)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-3 md:flex-col md:items-end md:justify-between">
-                  <div className="text-right">
-                    <div className="text-xs font-medium text-gray-600">
-                      {formatRelativeTime(notification.createdAt)}
                     </div>
-                    <div className="text-[11px] text-gray-500">
-                      {formatDateTime(notification.createdAt)}
-                    </div>
-                  </div>
 
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        notification.starred
-                          ? unstarNotification(notification.id).then((updated) => {
-                              if (updated) {
-                                setNotifications((prev) =>
-                                  sortNotifications(
-                                    prev
-                                      .map((item) =>
-                                        item.id === updated.id ? updated : item
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span className="font-medium text-gray-600">{formatRelativeTime(notification.createdAt)}</span>
+                        <span>·</span>
+                        <span>{formatDateTime(notification.createdAt)}</span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-[5px] sm:hidden">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            notification.starred
+                              ? unstarNotification(notification.id).then((updated) => {
+                                  if (updated) {
+                                    setNotifications((prev) =>
+                                      sortNotifications(
+                                        prev
+                                          .map((item) =>
+                                            item.id === updated.id ? updated : item
+                                          )
+                                          .filter((item) => isNotificationVisible(item))
                                       )
-                                      .filter((item) => isNotificationVisible(item))
-                                  )
-                                );
-                              }
-                            })
-                          : starNotification(notification.id).then((updated) => {
-                              if (updated) {
-                                setNotifications((prev) =>
-                                  sortNotifications(
-                                    prev
-                                      .map((item) =>
-                                        item.id === updated.id ? updated : item
+                                    );
+                                  }
+                                })
+                              : starNotification(notification.id).then((updated) => {
+                                  if (updated) {
+                                    setNotifications((prev) =>
+                                      sortNotifications(
+                                        prev
+                                          .map((item) =>
+                                            item.id === updated.id ? updated : item
+                                          )
+                                          .filter((item) => isNotificationVisible(item))
                                       )
-                                      .filter((item) => isNotificationVisible(item))
-                                  )
-                                );
-                              }
-                            })
-                      }
-                      className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
-                        notification.starred
-                          ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
-                          : 'border-gray-200 text-gray-700 hover:bg-gray-100'
-                      }`}>
-                      <span className="text-sm leading-none">
-                        {notification.starred ? '★' : '☆'}
-                      </span>
-                      {notification.starred ? 'Starred' : 'Star'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        notification.read
-                          ? markNotificationAsUnread(notification.id).then((updated) => {
-                              if (updated) {
-                                setNotifications((prev) =>
-                                  sortNotifications(
-                                    prev
-                                      .map((item) =>
-                                        item.id === updated.id ? updated : item
-                                      )
-                                      .filter((item) => isNotificationVisible(item))
-                                  )
-                                );
-                              }
-                            })
-                          : markNotificationAsRead(notification.id).then((updated) => {
-                              if (updated) {
-                                setNotifications((prev) =>
-                                  sortNotifications(
-                                    prev
-                                      .map((item) =>
-                                        item.id === updated.id ? updated : item
-                                      )
-                                      .filter((item) => isNotificationVisible(item))
-                                  )
-                                );
-                              }
-                            })
-                      }
-                      className="rounded-lg border border-blue-200 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">
-                      {notification.read ? 'Mark unread' : 'Mark read'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        deleteNotification(notification.id).then((deleted) => {
-                          if (deleted) {
-                            setNotifications((prev) =>
-                              prev.filter((item) => item.id !== notification.id)
-                            );
+                                    );
+                                  }
+                                })
                           }
-                        })
-                      }
-                      className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50">
-                      Delete
-                    </button>
+                          className={`text-[11px] font-medium transition ${
+                            notification.starred
+                              ? 'text-amber-700 hover:text-amber-800'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}>
+                          {notification.starred ? 'Starred' : 'Star'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            notification.read
+                              ? markNotificationAsUnread(notification.id).then((updated) => {
+                                  if (updated) {
+                                    setNotifications((prev) =>
+                                      sortNotifications(
+                                        prev
+                                          .map((item) =>
+                                            item.id === updated.id ? updated : item
+                                          )
+                                          .filter((item) => isNotificationVisible(item))
+                                      )
+                                    );
+                                  }
+                                })
+                              : markNotificationAsRead(notification.id).then((updated) => {
+                                  if (updated) {
+                                    setNotifications((prev) =>
+                                      sortNotifications(
+                                        prev
+                                          .map((item) =>
+                                            item.id === updated.id ? updated : item
+                                          )
+                                          .filter((item) => isNotificationVisible(item))
+                                      )
+                                    );
+                                  }
+                                })
+                          }
+                          className="text-[11px] font-medium text-gray-600 transition hover:text-gray-900">
+                          {notification.read ? 'Mark unread' : 'Mark read'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            deleteNotification(notification.id).then((deleted) => {
+                              if (deleted) {
+                                setNotifications((prev) =>
+                                  prev.filter((item) => item.id !== notification.id)
+                                );
+                              }
+                            })
+                          }
+                          className="text-[11px] font-medium text-red-600 transition hover:text-red-700">
+                          Delete
+                        </button>
+                      </div>
+
+                      <div className="hidden sm:flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            notification.starred
+                              ? unstarNotification(notification.id).then((updated) => {
+                                  if (updated) {
+                                    setNotifications((prev) =>
+                                      sortNotifications(
+                                        prev
+                                          .map((item) =>
+                                            item.id === updated.id ? updated : item
+                                          )
+                                          .filter((item) => isNotificationVisible(item))
+                                      )
+                                    );
+                                  }
+                                })
+                              : starNotification(notification.id).then((updated) => {
+                                  if (updated) {
+                                    setNotifications((prev) =>
+                                      sortNotifications(
+                                        prev
+                                          .map((item) =>
+                                            item.id === updated.id ? updated : item
+                                          )
+                                          .filter((item) => isNotificationVisible(item))
+                                      )
+                                    );
+                                  }
+                                })
+                          }
+                          className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+                            notification.starred
+                              ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                              : 'border-gray-200 text-gray-700 hover:bg-gray-100'
+                          }`}>
+                          <span className="text-sm leading-none">
+                            {notification.starred ? '★' : '☆'}
+                          </span>
+                          {notification.starred ? 'Starred' : 'Star'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            notification.read
+                              ? markNotificationAsUnread(notification.id).then((updated) => {
+                                  if (updated) {
+                                    setNotifications((prev) =>
+                                      sortNotifications(
+                                        prev
+                                          .map((item) =>
+                                            item.id === updated.id ? updated : item
+                                          )
+                                          .filter((item) => isNotificationVisible(item))
+                                      )
+                                    );
+                                  }
+                                })
+                              : markNotificationAsRead(notification.id).then((updated) => {
+                                  if (updated) {
+                                    setNotifications((prev) =>
+                                      sortNotifications(
+                                        prev
+                                          .map((item) =>
+                                            item.id === updated.id ? updated : item
+                                          )
+                                          .filter((item) => isNotificationVisible(item))
+                                      )
+                                    );
+                                  }
+                                })
+                          }
+                          className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                          {notification.read ? 'Mark unread' : 'Mark read'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            deleteNotification(notification.id).then((deleted) => {
+                              if (deleted) {
+                                setNotifications((prev) =>
+                                  prev.filter((item) => item.id !== notification.id)
+                                );
+                              }
+                            })
+                          }
+                          className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </article>

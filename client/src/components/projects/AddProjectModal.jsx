@@ -68,7 +68,7 @@ export default function AddProjectModal({
           </h1>
           <button
             onClick={onClose}
-            className="p-2 text-2xl text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+            className="btn-dark-hover p-2 text-2xl text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50">
             ×
           </button>
         </div>
@@ -138,7 +138,7 @@ export default function AddProjectModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+            className="btn-dark-hover w-full py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
             Cancel
           </button>
         </div>
@@ -215,7 +215,7 @@ export default function AddProjectModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+              className="btn-dark-hover px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
               Cancel
             </button>
             <button

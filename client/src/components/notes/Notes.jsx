@@ -512,7 +512,7 @@ export default function Notes() {
             <button
               type="submit"
               disabled={isSaving}
-              className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50">
+              className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
               {isSaving ? 'Saving...' : 'Add Note'}
             </button>
           </div>
