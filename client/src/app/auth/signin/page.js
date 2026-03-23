@@ -86,7 +86,7 @@ function SignInContent() {
                     errorCallbackURL: `${appOrigin}/auth/signin?status=no_account`,
                   })
                 }
-                className="btn-create flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium">
+                className="btn-create auth-google-btn flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium">
                 <GoogleIcon />
                 Continue with Google
               </button>
@@ -173,7 +173,7 @@ function SignInContent() {
                     errorCallbackURL: `${appOrigin}/auth/signin?status=no_account`,
                   })
                 }
-                className="btn-create mt-6 flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium">
+                className="btn-create auth-google-btn mt-6 flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium">
                 <GoogleIcon />
                 Continue with Google
               </button>

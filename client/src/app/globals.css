@@ -35,9 +35,9 @@
   --text-muted: #8a8a8a;
   --text-faint: #555555;
   --dot-color: rgba(255, 255, 255, 0.04);
-  --create-btn-bg: var(--surface-1);
-  --create-btn-text: var(--text-primary);
-  --create-btn-border: var(--border-subtle);
+  --create-btn-bg: #ffffff;
+  --create-btn-text: #0f172a;
+  --create-btn-border: #e5e7eb;
   --status-red: #991b1b;
   --status-amber: #d6a35d;
   --status-green: #78b896;
@@ -439,9 +439,20 @@ body {
 }
 
 .dark .btn-create:hover {
-  background-color: var(--app-bg);
-  border-color: var(--border-subtle);
+  background-color: #f5f5f5;
+  border-color: #e5e7eb;
   opacity: 1;
+}
+
+.dark .auth-google-btn {
+  background-color: #ffffff;
+  border-color: #e5e7eb;
+  color: #0f172a;
+}
+
+.dark .auth-google-btn:hover {
+  background-color: #f5f5f5;
+  border-color: #e5e7eb;
 }
 
 .kanban-drop {

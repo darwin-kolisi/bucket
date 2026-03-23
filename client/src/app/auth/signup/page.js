@@ -49,13 +49,13 @@ function SignUpContent() {
         </div>
 
         {/* Auth sheet */}
-        <div className="surface-card relative z-10 flex min-h-0 flex-1 flex-col rounded-t-3xl border border-white/5 bg-[#050505] px-6 py-8 text-white shadow-[0_-12px_30px_rgba(0,0,0,0.55)]">
+        <div className="surface-card relative z-10 flex min-h-0 flex-1 flex-col rounded-t-3xl px-6 py-8 shadow-xl">
           <div className="flex flex-1 flex-col justify-between">
             <div>
-              <h1 className="text-xl font-semibold tracking-tight text-white">
+              <h1 className="text-xl font-semibold tracking-tight text-[color:var(--text-primary)]">
                 Build your workspace
               </h1>
-              <p className="mt-1 text-sm text-white/70">
+              <p className="mt-1 text-sm text-[color:var(--text-muted)]">
                 Bucket keeps projects, notes, and tasks organized in one place.
               </p>
 
@@ -86,16 +86,16 @@ function SignUpContent() {
                     errorCallbackURL: `${appOrigin}/auth/signup?status=exists`,
                   })
                 }
-                className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white px-4 py-3 text-sm font-medium text-black transition hover:bg-white/90">
+                className="btn-create auth-google-btn flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium">
                 <GoogleIcon />
                 Continue with Google
               </button>
 
-              <p className="text-center text-xs text-white/60">
+              <p className="text-center text-xs text-[color:var(--text-faint)]">
                 Already have an account?{' '}
                 <Link
                   href="/auth/signin"
-                  className="font-semibold text-white">
+                  className="font-semibold text-[color:var(--text-primary)]">
                   Sign in
                 </Link>
               </p>
@@ -139,9 +139,9 @@ function SignUpContent() {
           </div>
 
           {/* Right: form (no card on desktop) */}
-          <div className="flex flex-[0.9] flex-col justify-center px-10 py-10 text-white">
+          <div className="flex flex-[0.9] flex-col justify-center px-10 py-10">
             <div className="w-full max-w-sm">
-              <h2 className="text-xl font-semibold tracking-tight text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-[color:var(--text-primary)]">
                 Create account
               </h2>
 
@@ -170,17 +170,17 @@ function SignUpContent() {
                     errorCallbackURL: `${appOrigin}/auth/signup?status=exists`,
                   })
                 }
-                className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white px-4 py-3 text-sm font-medium text-black transition hover:bg-white/90">
+                className="btn-create auth-google-btn mt-6 flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-medium">
                 <GoogleIcon />
                 Continue with Google
               </button>
 
-              <div className="mt-5 border-t border-white/5 pt-5">
-                <p className="text-center text-xs text-white/60">
+              <div className="mt-5 border-t border-[color:var(--border-subtle)] pt-5">
+                <p className="text-center text-xs text-[color:var(--text-faint)]">
                   Already have an account?{' '}
                   <Link
                     href="/auth/signin"
-                    className="font-semibold text-white">
+                    className="font-semibold text-[color:var(--text-primary)]">
                     Sign in
                   </Link>
                 </p>
